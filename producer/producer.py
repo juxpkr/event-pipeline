@@ -1,41 +1,35 @@
 import json
 import time
 from kafka import KafkaProducer
+import os
 
-# Kafka 서버 연결 설정
-# docker-compose 내부에서 다른 컨테이너에 접근할 때는 '컨테이너 이름:포트'를 사용한다.
+script_dir = os.path.dirname(os.path.abspath(__file__))
+data_file_path = os.path.join(script_dir, "sample_data.json")
+
+
+# --- [핵심 수정] 환경 변수를 사용해 카프카 주소 동적으로 설정 ---
+# 환경 변수 KAFKA_HOST가 있으면 그 값을 쓰고, 없으면 기본값인 localhost:9092를 사용
+KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_HOST", "localhost:9092")
+print(f"Connecting to Kafka at {KAFKA_BOOTSTRAP_SERVERS}...")
+
+
+# 카프카 프로듀서 설정
 producer = KafkaProducer(
-    bootstrap_servers=['kafka:29092'],
-    value_serializer=lambda v: json.dumps(v).encode('utf-8')
+    bootstrap_servers=[KAFKA_BOOTSTRAP_SERVERS],
+    value_serializer=lambda v: json.dumps(v).encode("utf-8"),
 )
 
-# 보낼 데이터
-users = ['user_A', 'user_B', 'user_C', 'user_D']
-products = ['product_1', 'product_2', 'product_3', 'product_4', 'product_5']
+topic_name = "raw-travel-data"
 
-def generate_log():
-    import random
-    user_id = random.choice(users)
-    product_id = random.choice(products)
-    event_type = random.choice(['click', 'view', 'purchase'])
+# JSON 파일 읽기
+print(f"Opening data file from: {data_file_path}")
+with open(data_file_path, "r") as f:
+    for line in f:
+        data = json.loads(line)
+        print(f"Sending data: {data}")
+        # 토픽으로 데이터 전송
+        producer.send(topic_name, value=data)
+        time.sleep(1)  # 1초 간격으로 전송
 
-    return {
-        'user_id': user_id,
-        'event_time': time.time(),
-        'event_type': event_type,
-        'product_id': product_id
-    }
-
-# 'e-commerce-logs'라는 Kafka 토픽에 데이터 전송
-topic_name = 'e-commerce-logs'
-
-print(f"[{time.ctime()}] Starting Kafka Producer...")
-
-for i in range(100):
-    log_data = generate_log()
-    producer.send(topic_name, log_data)
-    print(f"[{time.ctime()}] Sent message: {log_data}")
-    time.sleep(1)
-
-print(f"[{time.ctime()}] All messages sent.")
-producer.close()
+producer.flush()
+print("All data sent.")
