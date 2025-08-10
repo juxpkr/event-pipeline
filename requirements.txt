@@ -1,0 +1,13 @@
+# Core libraries for Spark and Kafka interaction
+pyspark==3.5.0
+delta-spark==3.0.0
+kafka-python
+
+# For Airflow development (IDE support & autocompletion)
+apache-airflow==2.9.2
+apache-airflow-providers-docker
+apache-airflow-providers-apache-kafka
+
+# For Parquet file interaction with Pandas (optional but recommended)
+pandas
+pyarrow

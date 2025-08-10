@@ -1,35 +1,94 @@
+import websocket
 import json
-import time
-from kafka import KafkaProducer
 import os
+from kafka import KafkaProducer
+from kafka.admin import KafkaAdminClient, NewTopic
+from kafka.errors import TopicAlreadyExistsError
 
-script_dir = os.path.dirname(os.path.abspath(__file__))
-data_file_path = os.path.join(script_dir, "sample_data.json")
-
-
-# --- [핵심 수정] 환경 변수를 사용해 카프카 주소 동적으로 설정 ---
-# 환경 변수 KAFKA_HOST가 있으면 그 값을 쓰고, 없으면 기본값인 localhost:9092를 사용
+# --- 설정 ---
+# Kafka 접속 정보 (환경 변수 우선)
 KAFKA_BOOTSTRAP_SERVERS = os.environ.get("KAFKA_HOST", "localhost:9092")
-print(f"Connecting to Kafka at {KAFKA_BOOTSTRAP_SERVERS}...")
+# 구독할 Kafka 토픽 이름
+TOPIC_NAME = "realtime-crypto-ticker"
+# 구독할 암호화폐 목록
+COIN_LIST = [
+    "KRW-BTC",
+    "KRW-ETH",
+    "KRW-XRP",
+    "KRW-SOL",
+    "KRW-DOGE",
+    "KRW-USDT",
+    "KRW-STRIKE",
+    "KRW-PROVE",
+    "KRW-ENA",
+    "KRW-ERA",
+    "KRW-XLM",
+]
 
+# --- Kafka 토픽 생성 ---
+print(f"Connecting to Kafka Admin at {KAFKA_BOOTSTRAP_SERVERS}...")
+try:
+    admin_client = KafkaAdminClient(bootstrap_servers=[KAFKA_BOOTSTRAP_SERVERS])
+    topic = NewTopic(name=TOPIC_NAME, num_partitions=1, replication_factor=1)
+    admin_client.create_topics([topic], validate_only=False)
+    print(f"Topic '{TOPIC_NAME}' created or already exists.")
+except TopicAlreadyExistsError:
+    print(f"Topic '{TOPIC_NAME}' already exists.")
+except Exception as e:
+    print(f"Failed to create Kafka topic. Error: {e}")
+finally:
+    if "admin_client" in locals():
+        admin_client.close()
 
-# 카프카 프로듀서 설정
+# --- Kafka 프로듀서 생성 ---
+print(f"Initializing Kafka Producer to {KAFKA_BOOTSTRAP_SERVERS}...")
 producer = KafkaProducer(
     bootstrap_servers=[KAFKA_BOOTSTRAP_SERVERS],
     value_serializer=lambda v: json.dumps(v).encode("utf-8"),
 )
 
-topic_name = "raw-travel-data"
 
-# JSON 파일 읽기
-print(f"Opening data file from: {data_file_path}")
-with open(data_file_path, "r") as f:
-    for line in f:
-        data = json.loads(line)
-        print(f"Sending data: {data}")
-        # 토픽으로 데이터 전송
-        producer.send(topic_name, value=data)
-        time.sleep(1)  # 1초 간격으로 전송
+# --- 웹소켓 콜백 함수 정의 ---
+def on_message(ws, message):
+    data = json.loads(message)
+    # 수신된 데이터를 Kafka 토픽으로 즉시 전송
+    producer.send(TOPIC_NAME, value=data)
+    print(f"Sent data to Kafka for coin: {data.get('code', 'N/A')}")
 
-producer.flush()
-print("All data sent.")
+
+def on_error(ws, error):
+    print(f"Error occurred: {error}")
+
+
+def on_close(ws, close_status_code, close_msg):
+    print("### WebSocket Connection Closed ###")
+
+
+def on_open(ws):
+    print("### WebSocket Connection Opened ###")
+    subscribe_message = [
+        {"ticket": "captin-realtime-stream"},
+        {"type": "ticker", "codes": COIN_LIST},
+    ]
+    ws.send(json.dumps(subscribe_message))
+
+
+# --- 메인 실행 ---
+if __name__ == "__main__":
+    ws_url = "wss://api.upbit.com/websocket/v1"
+    ws_app = websocket.WebSocketApp(
+        ws_url,
+        on_open=on_open,
+        on_message=on_message,
+        on_error=on_error,
+        on_close=on_close,
+    )
+    try:
+        print("Starting real-time crypto producer...")
+        # 웹소켓 연결을 계속 유지하며 데이터 수신
+        ws_app.run_forever()
+    except KeyboardInterrupt:
+        print("Stopping producer...")
+    finally:
+        producer.close()
+        print("Kafka producer closed.")

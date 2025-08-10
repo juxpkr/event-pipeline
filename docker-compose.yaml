@@ -7,7 +7,6 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-  
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
@@ -27,19 +26,7 @@ services:
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-  
-  producer:
-    build: ./producer
-    container_name: producer
-    depends_on:
-      - kafka
-    environment:
-      PYTHONUNBUFFERED: 1
-    volumes:
-      - ./producer:/app
-    working_dir: /app
-    command: python producer.py
-  
+
   minio:
     image: minio/minio:latest
     container_name: minio
@@ -50,6 +37,14 @@ services:
       MINIO_ROOT_USER: minioadmin
       MINIO_ROOT_PASSWORD: minioadmin
     command: minio server /data --console-address ":9001"
+
+  mc:
+    image: minio/mc
+    container_name: mc
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c " sleep 10; mc alias set myminio http://minio:9000 minioadmin minioadmin && mc mb myminio/my-bucket; exit 0; "
 
   spark-master:
     image: apache/spark:3.5.0
@@ -67,8 +62,9 @@ services:
       - ./spark-ivy-cache:/home/spark/.ivy2
     environment:
       - SPARK_LOCAL_DIRS=/tmp
-    
-  spark-worker: # 새로운 'spark-worker' 서비스 추가
+
+  spark-worker:
+    # 새로운 'spark-worker' 서비스 추가
     image: apache/spark:3.5.0
     container_name: spark-worker
     user: root
@@ -80,7 +76,6 @@ services:
       - ./spark-ivy-cache:/home/spark/.ivy2
     environment:
       - SPARK_LOCAL_DIRS=/tmp
-  
   # --- 아래부터 Airflow 관련 서비스 추가 ---
 
   postgres:

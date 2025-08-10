@@ -1,2 +1,33 @@
 postgres-data/
 logs/
+__pycache__/
+.vscode/
+spark-ivy-cache/
+.venv/
+
+# dbt 관련
+dbt_packages/
+target/
+dbt_modules/
+.dbt/
+profiles.yml
+
+# Spark 관련 
+metastore_db/
+derby.log
+spark-warehouse/
+
+# IDE/Editor 관련
+.idea/
+*.swp
+*.swo
+*~
+
+# OS 관련
+.DS_Store
+Thumbs.db
+
+# 임시/테스트 파일
+*.tmp
+*.bak
+test_output/
