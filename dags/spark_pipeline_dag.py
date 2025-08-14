@@ -15,7 +15,7 @@ with DAG(
     # 1번 임무: Producer 실행
     run_producer_task = BashOperator(
         task_id="run_kafka_producer",
-        bash_command="python /app/producer/producer.py",
+        bash_command="python /app/src/producer/producer.py",
         # Airflow 컨테이너 내부에서 실행될 때 사용할 환경 변수 설정
         env={"KAFKA_HOST": "kafka:29092"},
     )
@@ -30,7 +30,7 @@ with DAG(
             --driver-memory 2g \
             --conf spark.driver.host=127.0.0.1 \
             --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.602,org.postgresql:postgresql:42.7.3 \
-            /app/build_travel_datamart.py
+            /app/src/processing/spark_processor.py
         """,
         network_mode="de-pipeline-template_default",
         auto_remove=True,

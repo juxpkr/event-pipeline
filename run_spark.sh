@@ -6,4 +6,4 @@
 MSYS_NO_PATHCONV=1 docker-compose exec spark-master /opt/spark/bin/spark-submit \
   --master spark://spark-master:7077 \
   --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.5.0,io.delta:delta-spark_2.12:3.0.0,org.apache.hadoop:hadoop-aws:3.3.4,com.amazonaws:aws-java-sdk-bundle:1.12.602 \
-  /app/build_travel_datamart.py
+  /app/src/processing/spark_processor.py
