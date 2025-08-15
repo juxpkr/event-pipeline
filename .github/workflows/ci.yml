@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. 우리 GitHub repo 코드를 작업 환경으로 가져온다
+    # 1. GitHub repo 코드를 작업 환경으로 가져온다
     - name: Checkout repository
       uses: actions/checkout@v4
 
