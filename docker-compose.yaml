@@ -64,7 +64,6 @@ services:
       - SPARK_LOCAL_DIRS=/tmp
 
   spark-worker:
-    # 새로운 'spark-worker' 서비스 추가
     image: apache/spark:3.5.0
     container_name: spark-worker
     user: root
@@ -76,7 +75,6 @@ services:
       - ./spark-ivy-cache:/home/spark/.ivy2
     environment:
       - SPARK_LOCAL_DIRS=/tmp
-  # --- 아래부터 Airflow 관련 서비스 추가 ---
 
   postgres:
     image: postgres:13
@@ -120,7 +118,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-      # --- [핵심 수정] Docker 소켓 연결 통로 추가! ---
+      # Docker 소켓 연결 통로 추가
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/app
     command: webserver
@@ -138,7 +136,7 @@ services:
       - ./dags:/opt/airflow/dags
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-      # --- [핵심 수정] Docker 소켓 연결 통로 추가! ---
+      # -Docker 소켓 연결 통로 추가
       - /var/run/docker.sock:/var/run/docker.sock
       - .:/app
     command: scheduler
