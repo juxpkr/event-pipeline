@@ -12,7 +12,7 @@ with DAG(
     catchup=False,
     tags=["spark", "pipeline"],
 ) as dag:
-    # 1번 임무: Producer 실행
+    # 1. Producer 실행
     run_producer_task = BashOperator(
         task_id="run_kafka_producer",
         bash_command="python /app/src/producer/producer.py",
@@ -20,7 +20,7 @@ with DAG(
         env={"KAFKA_HOST": "kafka:29092"},
     )
 
-    # 2번 임무: Spark 실행
+    # 2. Spark 실행
     run_spark_task = DockerOperator(
         task_id="run_spark_job",
         image="apache/spark:3.5.0",
@@ -35,7 +35,7 @@ with DAG(
         network_mode="de-pipeline-template_default",
         auto_remove=True,
         docker_url="unix://var/run/docker.sock",
-        # source 경로는 캡틴의 PC 실제 경로에 맞게 확인/수정!
+        # source 경로를 컨테이너의 /app으로 마운트
         mounts=[
             Mount(
                 source="c/Dev/projects/de-pipeline-template", target="/app", type="bind"
@@ -44,5 +44,5 @@ with DAG(
         user="root",
     )
 
-    # 임무 순서 정의: Producer가 성공하면 Spark 실행!
+    # 실행 순서 정의: Producer가 성공하면 Spark 실행
     run_producer_task >> run_spark_task
