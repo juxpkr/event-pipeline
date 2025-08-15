@@ -21,19 +21,33 @@ jobs:
       with:
         python-version: '3.10'
     
-    # 3. 라이브러리들을 설치한다
+    # 3. 캐시 설정 및 복원
+    # actions/cache 라는 GitHub 공식 캐싱 사용
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        # 이 경로에 있는 파일들을 캐싱
+        path: ~/.cache/pip
+        # 캐시를 구분하는 key. requirements.txt 파일 내용이 바뀌면 key도 바뀜
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        # 정확한 key가 없을 때, 비슷한 이전 key라도 사용할지 결정 (백업용)
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    # 4. 의존성 설치 (캐시 적용됨)
+    # 캐시가 있다면, 이 단계는 다운로드 하는 대신 캐시에서 파일을 가져옴. 빠르게 끝남
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         pip install black flake8
     
-    # 4. [코드 품질 검사] 코드가 스타일 규칙(black)에 맞는지 검사한다
+    # 5. [코드 품질 검사] 코드가 스타일 규칙(black)에 맞는지 검사한다
     - name: Check code formatting with Black
       run: |
         black . --check
 
-    # 5. [코드 품질 검사] 코드에 문법적 오류나, 잠재적 버그(flake8)가 있는지 검사한다.
+    # 6. [코드 품질 검사] 코드에 문법적 오류나, 잠재적 버그(flake8)가 있는지 검사한다.
     - name: Lint with Flake8
       run: |
         flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
