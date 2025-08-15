@@ -59,6 +59,14 @@ pip-delete-this-directory.txt
 .env.*.local
 config/*.yaml
 !config/*.example.yaml
+config/config.ini
+!config/config.example.ini
+
+# Claude Code 관련
+.claude/
+CLAUDE.md
+ARCHITECTURE_DESIGN.md
+REFACTOR_PLAN.md
 
 # Airflow 관련
 plugins/
@@ -69,3 +77,6 @@ unittests.cfg
 # MinIO/S3 관련
 .minio/
 checkpoints/
+
+# GitHub Actions (로컬 테스트용)
+.github/
