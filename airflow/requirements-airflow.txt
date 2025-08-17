@@ -1,0 +1,5 @@
+# Airflow core and providers
+apache-airflow==2.9.2
+apache-airflow-providers-docker
+apache-airflow-providers-apache-kafka
+apache-airflow-providers-cncf-kubernetes # k8s 연동을 위해 미리 추가
