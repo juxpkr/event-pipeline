@@ -85,6 +85,7 @@ services:
     volumes:
       - .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
+      - spark-jars:/opt/spark/jars
     environment:
       - SPARK_LOCAL_DIRS=/tmp
 
@@ -194,21 +195,21 @@ services:
     command: scheduler
 
   jupyter-lab:
-    #image: jupyter/pyspark-notebook:spark-3.5.0
     build: .
     container_name: jupyter-lab
+    depends_on:
+      - spark-master
     ports:
       - "8888:8888"
     volumes:
       - .:/app
+      - spark-jars:/opt/spark/jars
     networks:
       - data-network
-    environment:
-      # Spark 클러스터에 접속하도록 설정
-      - SPARK_MASTER=spark://spark-master:7077
 
 volumes:
   minio-data:
+  spark-jars:
 
 
 networks:

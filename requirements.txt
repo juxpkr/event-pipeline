@@ -6,8 +6,8 @@ ipykernel==6.29.5
 jupyter-client==8.6.2
 
 # Core libraries for Spark and data interaction
-pyspark==3.5.0
-delta-spark==3.0.0
+pyspark==3.4.3
+delta-spark==2.4.0
 kafka-python-ng  # kafka-python보다 최근까지 더 활발히 유지보수되는 포크 버전
 boto3            # MinIO(S3) 통신에 필요
 
