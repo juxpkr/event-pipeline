@@ -1,13 +1,26 @@
-# Core libraries for Spark and Kafka interaction
+# Jupyter Lab and core components
+jupyterlab==4.2.4
+notebook==7.2.1
+jupyter-server==2.14.2
+ipykernel==6.29.5
+jupyter-client==8.6.2
+
+# Core libraries for Spark and data interaction
 pyspark==3.5.0
 delta-spark==3.0.0
-kafka-python
+kafka-python-ng  # kafka-python보다 최근까지 더 활발히 유지보수되는 포크 버전
+boto3            # MinIO(S3) 통신에 필요
 
-# For Airflow development (IDE support & autocompletion)
-apache-airflow==2.9.2
-apache-airflow-providers-docker
-apache-airflow-providers-apache-kafka
+# Source data connection
+google-cloud-bigquery
+pyarrow          # BigQuery, Pandas 등에서 효율적인 데이터 처리를 위해 필요
 
-# For Parquet file interaction with Pandas (optional but recommended)
+# Data processing libraries
 pandas
-pyarrow
+
+# Environment variable management
+python-dotenv==1.0.1
+
+# Code quality tools
+black==23.12.1
+flake8==7.0.0

@@ -75,3 +75,6 @@ unittests.cfg
 # MinIO/S3 관련
 .minio/
 checkpoints/
+
+# Secrets files
+.secrets/
