@@ -8,7 +8,7 @@ WORKDIR /app
 USER root
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-    openjdk-17-jre-headless \
+    openjdk-17-jdk-headless \
     procps \
     curl \
     && apt-get clean
@@ -21,10 +21,9 @@ ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# S3 통신에 필요한 Java 라이브러리(JAR)를 Docker가 직접 다운로드
-RUN mkdir -p /opt/spark/jars && \
-    curl -o /opt/spark/jars/hadoop-aws-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar && \
-    curl -o /opt/spark/jars/aws-java-sdk-bundle-1.12.367.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.367/aws-java-sdk-bundle-1.12.367.jar
+# JAR 파일 디렉토리 생성 (Volume으로 spark-master와 공유)
+RUN mkdir -p /opt/spark/jars
+
 # 6. 현재 디렉토리의 모든 파일들을 컨테이너의 작업 디렉토리(/app)로 복사한다.
 COPY . .
 

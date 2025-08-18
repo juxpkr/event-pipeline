@@ -1,3 +1,8 @@
+# Java 환경 확인
+echo "JAVA_HOME: $JAVA_HOME"
+echo "Java version:"
+java -version
+
 # docker-compose.yml에서 받은 첫 번째 인자($1)를 확인
 if [ "$1" = "master" ]; then
   # 인자가 "master"이면, 마스터 데몬을 실행
