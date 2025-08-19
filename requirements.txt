@@ -22,5 +22,5 @@ pandas
 python-dotenv==1.0.1
 
 # Code quality tools
-black==23.12.1
+black==24.4.2
 flake8==7.0.0
