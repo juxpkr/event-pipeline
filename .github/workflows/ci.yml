@@ -42,10 +42,10 @@ jobs:
         pip install -r requirements.txt
         pip install black flake8
     
-    # 5. [코드 품질 검사] 코드가 스타일 규칙(black)에 맞는지 검사한다
+    # 5. [코드 품질 검사] 코드가 스타일 규칙(black)에 맞는지 검사한다 (Jupyter 노트북 제외)
     - name: Check code formatting with Black
       run: |
-        black . --check
+        black . --check --exclude=".*\.ipynb"
 
     # 6. [코드 품질 검사] 코드에 문법적 오류나, 잠재적 버그(flake8)가 있는지 검사한다.
     - name: Lint with Flake8

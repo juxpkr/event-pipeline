@@ -56,15 +56,6 @@ services:
     volumes:
       - minio-data:/data
 
-  mc:
-    image: minio/mc
-    container_name: mc
-    networks:
-      - data-network
-    depends_on:
-      - minio
-    entrypoint: >
-      /bin/sh -c " sleep 10; mc alias set myminio http://minio:9000 minioadmin minioadmin && mc mb myminio/my-bucket; exit 0; "
 
   spark-master:
     #image: apache/spark:3.5.0
