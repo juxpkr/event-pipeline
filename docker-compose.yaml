@@ -56,13 +56,13 @@ services:
     volumes:
       - minio-data:/data
 
-
   spark-master:
     #image: apache/spark:3.5.0
     build:
       context: ./spark-base
     container_name: spark-master
-    command: master
+    command: >
+      bash -c " /opt/spark/sbin/start-master.sh && tail -f /dev/null "
     user: root # 나중에 배포할때 수정
     depends_on:
       - minio
@@ -95,6 +95,26 @@ services:
     volumes:
       - .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
+    environment:
+      - SPARK_LOCAL_DIRS=/tmp
+
+  spark-thrift-server:
+    build:
+      context: ./spark-base
+    container_name: spark-thrift-server
+    command: >
+      bash -c " /opt/spark/sbin/start-thriftserver.sh \  --master spark://spark-master:7077 \  --conf spark.sql.hive.thriftserver.authentication=NONE &&  tail -f /dev/null "
+    user: root # 나중에 배포할때 수정
+    networks:
+      - data-network
+    depends_on:
+      - spark-master # 반드시 Master가 실행된 후에 실행되어야함
+    ports:
+      - "10000:10000" # dbt 연결용
+    volumes:
+      - .:/app
+      - ./spark-ivy-cache:/home/spark/.ivy2
+      - spark-jars:/opt/spark/jars
     environment:
       - SPARK_LOCAL_DIRS=/tmp
 
@@ -146,6 +166,7 @@ services:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
       - AIRFLOW__WEBSERVER__SECRET_KEY=your_secret_key_here
+      - PROJECT_ROOT=/opt/airflow
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/ariflow/src
@@ -172,6 +193,7 @@ services:
     environment:
       - AIRFLOW__CORE__EXECUTOR=LocalExecutor
       - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=postgresql+psycopg2://airflow:airflow@postgres/airflow
+      - PROJECT_ROOT=/opt/airflow
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
@@ -192,11 +214,26 @@ services:
       - spark-master
     ports:
       - "8888:8888"
+    environment:
+      - PROJECT_ROOT=/app
     volumes:
       - .:/app
       - spark-jars:/opt/spark/jars
     networks:
       - data-network
+
+  dbt:
+    build:
+      context: ./transforms
+    container_name: dbt
+    env_file:
+      - ./.env
+    networks:
+      - data-network
+    volumes:
+      - ./transforms:/app
+    # 이 컨테이너는 시작된 후, tail 명령을 실행하며 계속 살아있게 된다.
+    command: [ "tail", "-f", "/dev/null" ]
 
 volumes:
   minio-data:

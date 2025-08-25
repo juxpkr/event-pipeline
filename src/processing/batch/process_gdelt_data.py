@@ -1,8 +1,19 @@
 import os
+import sys
 import logging
+from pathlib import Path
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import from_json, col
 from pyspark.sql.types import StructType, StructField, StringType, LongType, DoubleType
+from dotenv import load_dotenv
+
+# .env 파일 로드
+load_dotenv()
+
+# 프로젝트 루트를 Python path에 추가 (Docker 환경변수 우선, 없으면 자동 계산)
+project_root = os.getenv("PROJECT_ROOT", str(Path(__file__).resolve().parents[3]))
+sys.path.insert(0, project_root)
+
 from src.utils.spark_builder import get_spark_session
 
 logging.basicConfig(
@@ -17,15 +28,19 @@ def define_schema() -> StructType:
     # Kafka에서 들어오는 GDELT JSON 데이터의 스키마를 정의한다.
     return StructType(
         [
-            StructField("event_date", StringType(), True),
+            StructField("GlobalEventID", StringType(), True),
+            StructField("Day", StringType(), True),
+            StructField("MonthYear", StringType(), True),
+            StructField("Year", StringType(), True),
+            StructField("FractionDate", StringType(), True),
+            StructField("Actor1Code", StringType(), True),
+            StructField("Actor1Name", StringType(), True),
             StructField("Actor1CountryCode", StringType(), True),
+            StructField("Actor1KnownGroupCode", StringType(), True),
+            StructField("Actor1EthnicCode", StringType(), True),
+            StructField("AvgTone", StringType(), True),
             StructField("EventRootCode", StringType(), True),
-            StructField("day_of_week", LongType(), True),
-            StructField("event_count", LongType(), True),
-            StructField("avg_conflict_score", DoubleType(), True),
-            StructField("stddev_conflict_score", DoubleType(), True),
-            StructField("avg_tone", DoubleType(), True),
-            StructField("unique_source_count", LongType(), True),
+            StructField("QuadClass", StringType(), True),
         ]
     )
 
@@ -35,7 +50,7 @@ def process_kafka_to_delta(spark: SparkSession, schema: StructType):
 
     kafka_topic = "gdelt_events"
     minio_path = "s3a://silver/gdelt_events"
-    checkpoint_path = "s3a://checkpoints/gdelt_events"
+    checkpoint_path = "s3a://checkpoints/gdelt_events_silver"
     kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 
     logger.info(f"Reading stream from Kafka topic: {kafka_topic}...")
@@ -61,6 +76,8 @@ def process_kafka_to_delta(spark: SparkSession, schema: StructType):
         processed_df.writeStream.format("delta")
         .outputMode("append")
         .option("checkpointLocation", checkpoint_path)
+        .option("mergeSchema", "true")  # 스키마 자동 병합
+        .trigger(availableNow=True)
         .start(minio_path)
     )
 
