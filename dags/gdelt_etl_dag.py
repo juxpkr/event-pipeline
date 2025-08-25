@@ -27,7 +27,7 @@ with DAG(
     # 1. GDELT 데이터 추출
     task_run_producer = BashOperator(
         task_id="run_gdelt_producer",
-        bash_command=f"python {project_root}/src/ingestion/gdelt/gdelt_producer.py",
+        bash_command=f"python {project_root}/src/ingestion/gdelt/producer_gdelt_microbatch.py",
     )
 
     # 2. Spark로 데이터 처리
@@ -45,10 +45,9 @@ with DAG(
     """
     task_run_dbt = BashOperator(
         task_id="run_dbt_transform",
-        bash_command=f"cd {project_root}/my_dbt_project && dbt run",
+        bash_command=f"cd {project_root}/transforms && dbt run",
     )
     """
 
     # Task 순서 정의 (의존설 설정)
-    task_run_producer >> task_run_spark_processor
-    # >> task_run_dbt
+    # task_run_producer >> task_run_spark_processor >> task_run_dbt
