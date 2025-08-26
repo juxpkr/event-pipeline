@@ -61,8 +61,7 @@ services:
     build:
       context: ./spark-base
     container_name: spark-master
-    command: >
-      bash -c " /opt/spark/sbin/start-master.sh && tail -f /dev/null "
+    command: master
     user: root # 나중에 배포할때 수정
     depends_on:
       - minio
@@ -102,15 +101,14 @@ services:
     build:
       context: ./spark-base
     container_name: spark-thrift-server
-    command: >
-      bash -c " /opt/spark/sbin/start-thriftserver.sh \  --master spark://spark-master:7077 \  --conf spark.sql.hive.thriftserver.authentication=NONE &&  tail -f /dev/null "
+    command: thrift-http
     user: root # 나중에 배포할때 수정
     networks:
       - data-network
     depends_on:
       - spark-master # 반드시 Master가 실행된 후에 실행되어야함
     ports:
-      - "10000:10000" # dbt 연결용
+      - "10001:10001" # dbt 연결용
     volumes:
       - .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
