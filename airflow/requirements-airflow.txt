@@ -2,14 +2,11 @@
 apache-airflow==2.9.2
 apache-airflow-providers-docker
 apache-airflow-providers-apache-kafka
-apache-airflow-providers-cncf-kubernetes # k8s 연동을 위해 미리 추가
+apache-airflow-providers-cncf-kubernetes 
 
 # Python packages for task execution
 pyspark==3.4.3
-kafka-python-ng  # Producer에서 Kafka 통신용
-google-cloud-bigquery  # BigQuery 연동용
-python-dotenv  # 환경변수 로딩용
+kafka-python-ng  
+google-cloud-bigquery  
+python-dotenv 
 
-# dbt
-dbt-core==1.6.14
-dbt-spark[PyHive]==1.6.1
