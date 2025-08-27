@@ -2,18 +2,18 @@
 <configuration>
     <property>
         <name>hive.server2.transport.mode</name>
-        <value>http</value>
+        <value>binary</value>
     </property>
     <property>
-        <name>hive.server2.thrift.http.port</name>
+        <name>hive.server2.thrift.port</name>
         <value>10001</value>
-    </property>
-    <property>
-        <name>hive.server2.thrift.http.path</name>
-        <value>cliservice</value>
     </property>
     <property>
         <name>hive.server2.thrift.bind.host</name>
         <value>0.0.0.0</value>
+    </property>
+    <property>
+        <name>hive.server2.authentication</name>
+        <value>NOSASL</value>
     </property>
 </configuration>

@@ -62,10 +62,11 @@ COPY --from=builder /opt/spark /opt/spark
 COPY requirements-spark.txt . 
 RUN pip install --no-cache-dir -r requirements-spark.txt
 
-# Spark 실행을 위한 스크립트와 Hive 설정을 컨테이너 안으로 복사하고 실행 권한을 준다.
+# Spark 실행을 위한 스크립트와 설정 파일들을 컨테이너 안으로 복사하고 실행 권한을 준다.
 # 이 파일들은 자주 바뀔 수 있으므로, 가장 마지막에 복사한다.
 COPY entrypoint.sh /opt/entrypoint.sh
 COPY hive-site.xml /opt/spark/conf/
+COPY spark-defaults.conf /opt/spark/conf/
 RUN chmod +x /opt/entrypoint.sh
 
 # 이 컨테이너가 시작될 때 실행할 기본 명령어를 설정한다.

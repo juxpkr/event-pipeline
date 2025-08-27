@@ -32,7 +32,9 @@ elif [ "${ROLE}" = "thrift-http" ]; then
   echo "Starting Spark Thrift Server in HTTP mode..."
   # 컨테이너가 꺼지지 않도록 tail과 함께 실행
   /opt/spark/sbin/start-thriftserver.sh \
-  --master spark://spark-master:7077 &
+  --master spark://spark-master:7077 \
+  --conf spark.cores.max=2 \
+  --conf spark.executor.memory=1g &
   exec tail -f /dev/null
 
 else
