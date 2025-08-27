@@ -18,21 +18,21 @@ with DAG(
     """,
 ) as dag:
     # --- Task 정의 ---
-    
+
     # Airflow 컨테이너 내부의 프로젝트 루트 경로
     project_root = "/opt/airflow"
-    
+
     # 1. GDELT Raw 데이터 Producer (Kafka로 전송)
     task_raw_producer = BashOperator(
         task_id="gdelt_raw_producer",
         bash_command=f"python {project_root}/src/ingestion/gdelt/producer_gdelt_raw.py",
     )
-    
+
     # 2. Spark Processor (Kafka → MinIO Silver Table)
     task_silver_processor = BashOperator(
-        task_id="gdelt_silver_processor", 
-        bash_command=f"python {project_root}/src/processors/gdelt_silver_processor.py",
+        task_id="gdelt_silver_processor",
+        bash_command=f"python {project_root}/src/processing/batch/gdelt_silver_processor.py",
     )
-    
+
     # Task 순서 정의 (Producer → Processor)
     task_raw_producer >> task_silver_processor

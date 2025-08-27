@@ -2,6 +2,7 @@
 GDELT Raw Data Producer - ZIP 파일에서 순수 RAW 데이터를 Kafka로 전송
 정제나 컬럼명 매핑 없이 순수 RAW 데이터만 전송
 """
+
 import os
 import requests
 import zipfile
@@ -40,7 +41,7 @@ def get_latest_gdelt_data_url():
                 url = line.split(" ")[2]
                 logger.info(f"✅ Found latest GDELT data URL: {url}")
                 return url
-                
+
         logger.warning("⚠️ export.CSV.zip not found")
         return None
 
@@ -60,15 +61,15 @@ def send_raw_data_to_kafka(url: str, producer: KafkaProducer):
         with zipfile.ZipFile(io.BytesIO(response.content)) as z:
             csv_filename = z.namelist()[0]
             logger.info(f"📄 Processing RAW file: {csv_filename}")
-            
+
             with z.open(csv_filename) as c:
                 # CSV 파일을 한 줄씩 읽어서 처리
                 # GDELT CSV는 탭으로 구분되어 있고, 헤더가 없음
                 reader = csv.reader(io.TextIOWrapper(c, "utf-8"), delimiter="\t")
-                
+
                 record_count = 0
                 batch_records = []
-                
+
                 for row_num, row in enumerate(reader, 1):
                     try:
                         # 순수 RAW 데이터 - 컬럼명 없이 리스트 형태로
@@ -76,37 +77,39 @@ def send_raw_data_to_kafka(url: str, producer: KafkaProducer):
                             "raw_data": row,  # 전체 컬럼을 리스트로 (컬럼명 없음)
                             "row_number": row_num,
                             "source_file": csv_filename,
-                            "extracted_time": time.strftime('%Y-%m-%d %H:%M:%S'),
+                            "extracted_time": time.strftime("%Y-%m-%d %H:%M:%S"),
                             "source_url": url,
-                            "total_columns": len(row)
+                            "total_columns": len(row),
                         }
-                        
+
                         batch_records.append(raw_record)
                         record_count += 1
-                        
+
                         # 배치 전송 (100개씩)
                         if len(batch_records) >= 100:
                             for record in batch_records:
                                 producer.send(KAFKA_TOPIC, record)
                             batch_records = []
-                            
+
                         # 진행상황 로그 (1000개마다)
                         if record_count % 1000 == 0:
                             logger.info(f"📤 Sent {record_count} RAW records...")
-                            
+
                     except Exception as e:
                         logger.warning(f"⚠️ Error processing row {row_num}: {e}")
                         continue
-                
+
                 # 남은 배치 전송
                 if batch_records:
                     for record in batch_records:
                         producer.send(KAFKA_TOPIC, record)
 
         producer.flush()
-        logger.info(f"🎉 Successfully sent {record_count} RAW records from {csv_filename}")
+        logger.info(
+            f"🎉 Successfully sent {record_count} RAW records from {csv_filename}"
+        )
         logger.info(f"📤 RAW data sent to Kafka topic: '{KAFKA_TOPIC}'")
-        
+
         return record_count
 
     except Exception as e:
@@ -125,7 +128,7 @@ def main():
             value_serializer=lambda v: json.dumps(v, default=str).encode("utf-8"),
             batch_size=16384,
             linger_ms=100,
-            compression_type='gzip'
+            compression_type="gzip",
         )
         logger.info("✅ Kafka producer created successfully")
     except Exception as e:
@@ -139,7 +142,7 @@ def main():
         logger.info(f"📊 Total RAW records processed: {total_records}")
     else:
         logger.error("❌ Could not get latest GDELT URL")
-    
+
     producer.close()
     logger.info("✅ Raw Producer closed successfully")
 
