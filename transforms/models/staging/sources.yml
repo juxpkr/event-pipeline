@@ -1,20 +1,24 @@
 version: 2
 
 sources:
-  - name: gdelt_silver_layer
+  - name: gdelt_silver_layer 
     description: "MinIO S3에 저장된 GDELT Silver Layer (Delta Lake 형식)"
     schema: default
-    tables:
-      - name: gdelt_events
-        description: "15분마다 수집되는 GDELT 실시간 이벤트 데이터 (Raw)"
+    tables: 
+      - name: gdelt_silver_events
+        description: "15분마다 수집되는 GDELT 실시간 이벤트 데이터 (Silver)"
         columns:
-          - name: GlobalEventID
+          - name: global_event_id
             description: "GDELT 고유 이벤트 ID"
-          - name: Day
-            description: "이벤트 발생일 (YYYYMMDD 형식)"
-          - name: Actor1CountryCode
+          - name: day
+            description: "이벤트 발생일"
+          - name: actor1_country_code
             description: "주체 국가 코드 (ISO 3자리)"
-          - name: EventRootCode
+          - name: event_root_code
             description: "CAMEO 이벤트 루트 코드"
-          - name: AvgTone
+          - name: avg_tone
             description: "이벤트 톤 (-100~100, 부정적~긍정적)"
+          - name: actor1_name
+            description: "주체 이름"
+          - name: processed_time
+            description: "데이터 처리 시간"
