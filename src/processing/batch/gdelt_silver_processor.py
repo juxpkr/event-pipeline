@@ -278,16 +278,31 @@ def main():
             logger.warning("⚠️ No records to save!")
             return
 
-        # Raw Delta Table로 저장 (정제된 형태지만 Raw 버킷에 저장)
-        logger.info("💾 Saving to Raw Delta Table...")
-        raw_path = "s3a://raw/gdelt_events"
+        # Silver Delta Table로 저장 (정제된 데이터를 Silver 버킷에 저장)
+        logger.info("💾 Saving to Silver Delta Table...")
+        silver_path = "s3a://silver/gdelt_events"
+        table_name = "default.gdelt_silver_events"
 
-        silver_df.write.format("delta").mode("overwrite").option(
-            "path", raw_path
-        ).save()
+        logger.info("✍️ 데이터 저장 및 테이블 등록 중...")
+        # 1단계: Delta Lake로 데이터 저장
+        (silver_df.write
+         .format("delta")
+         .mode("overwrite")
+         .save(silver_path))
+         
+        # 2단계: 메타스토어에 External Table 등록
+        spark.sql(f"""
+            CREATE TABLE IF NOT EXISTS {table_name}
+            USING DELTA
+            LOCATION '{silver_path}'
+        """)
+        
+        logger.info(f"✅ 테이블 등록 성공: {table_name}")
+        logger.info(f"📍 Delta Location: {silver_path}")
 
-        logger.info(f"🎉 Successfully saved {total_records} records to Raw table!")
-        logger.info(f"📍 Location: {raw_path}")
+        logger.info("✅ 테이블 등록 성공 : gdelt_silver_events")
+        logger.info(f"🎉 Successfully saved {total_records} records to Silver table!")
+        logger.info(f"📍 Location: {silver_path}")
 
         # 샘플 데이터 확인
         logger.info("🔍 Sample Silver data:")

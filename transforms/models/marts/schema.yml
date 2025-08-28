@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: gdelt_daily_events
-    description: "15분 microbatch GDELT 데이터를 일별/국가별/이벤트 타입별로 집계"
+  - name: gdelt_microbatch_country_analysis
+    description: "GDELT 마이크로배치 데이터의 국가별/이벤트 타입별 분석 (Gold Layer)"
     columns:
       - name: event_date
         description: "이벤트 발생 날짜"
@@ -10,30 +10,37 @@ models:
           - not_null
 
       - name: actor1_country_code
-        description: "이벤트 발생 국가 코드"
+        description: "주체 국가 코드"
         tests:
           - not_null
           
       - name: event_root_code
-        description: "GDELT 이벤트 루트 코드"
+        description: "CAMEO 이벤트 루트 코드"
         tests:
           - not_null
           
-      - name: total_events_15min
-        description: "15분간 발생한 이벤트 총 개수"
+      - name: total_events
+        description: "총 이벤트 수"
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 0"
               
       - name: average_tone
-        description: "이벤트의 평균 톤 (-100~100)"
-        tests:
-          - not_null
+        description: "평균 이벤트 톤 (-100~100)"
+        
+      - name: min_tone
+        description: "최소 이벤트 톤"
+        
+      - name: max_tone
+        description: "최대 이벤트 톤"
           
       - name: unique_actors
-        description: "관련된 고유 액터 수"
+        description: "고유 액터 수"
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               expression: ">= 1"
+              
+      - name: last_processed_time
+        description: "마지막 데이터 처리 시간"

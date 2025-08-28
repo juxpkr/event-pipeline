@@ -25,7 +25,7 @@ with DAG(
     # 1. GDELT Raw 데이터 Producer (Kafka로 전송)
     task_raw_producer = BashOperator(
         task_id="gdelt_raw_producer",
-        bash_command=f"python {project_root}/src/ingestion/gdelt/producer_gdelt_raw.py",
+        bash_command=f"python {project_root}/src/ingestion/gdelt/gdelt_raw_producer.py",
     )
 
     # 2. Spark Processor (Kafka → MinIO Silver Table)

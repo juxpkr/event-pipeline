@@ -32,8 +32,14 @@ RUN curl -o /tmp/spark.tgz https://archive.apache.org/dist/spark/spark-${SPARK_V
 RUN curl -o ${SPARK_HOME}/jars/delta-core_2.12-2.4.0.jar https://repo1.maven.org/maven2/io/delta/delta-core_2.12/2.4.0/delta-core_2.12-2.4.0.jar && \
     curl -o ${SPARK_HOME}/jars/delta-storage-2.4.0.jar https://repo1.maven.org/maven2/io/delta/delta-storage/2.4.0/delta-storage-2.4.0.jar && \
     curl -o ${SPARK_HOME}/jars/hadoop-aws-3.3.4.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.4/hadoop-aws-3.3.4.jar && \
-    curl -o ${SPARK_HOME}/jars/aws-java-sdk-bundle-1.12.367.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.367/aws-java-sdk-bundle-1.12.367.jar
+    curl -o ${SPARK_HOME}/jars/aws-java-sdk-bundle-1.12.367.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.367/aws-java-sdk-bundle-1.12.367.jar && \
+    curl -o ${SPARK_HOME}/jars/postgresql-42.7.3.jar https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar && \
+    curl -o ${SPARK_HOME}/jars/commons-logging-1.2.jar https://repo1.maven.org/maven2/commons-logging/commons-logging/1.2/commons-logging-1.2.jar
 
+# BoneCP용 PostgreSQL JAR를 시스템 전역에 복사 (Java 17 호환)
+RUN mkdir -p /usr/share/java && \
+    cp ${SPARK_HOME}/jars/postgresql-42.7.3.jar /usr/share/java/ && \
+    cp ${SPARK_HOME}/jars/postgresql-42.7.3.jar /usr/lib/jvm/java-17-openjdk-amd64/lib/
 
 # -- Builder에서 결과물만 빠르게 복사 -- 
 FROM python:3.10-slim-bookworm
@@ -56,6 +62,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 # 이미 다운로드/압축해제한 Spark 폴더(JAR 포함)를 복사 (1초만에 됨)
 COPY --from=builder /opt/spark /opt/spark
+
+# Builder에서 시스템 전역에 복사한 PostgreSQL JAR도 복사
+RUN mkdir -p /usr/share/java /usr/lib/jvm/java-17-openjdk-amd64/lib
+COPY --from=builder /usr/share/java/postgresql-42.7.3.jar /usr/share/java/
+COPY --from=builder /usr/lib/jvm/java-17-openjdk-amd64/lib/postgresql-42.7.3.jar /usr/lib/jvm/java-17-openjdk-amd64/lib/
 
 # PySpark와 Delta Lake 라이브러리를 설치한다. (이것도 캐시 최적화 적용)
 # spark-base 폴더에 이 파일이 있어야 함
