@@ -56,6 +56,7 @@ def get_spark_session(app_name: str, master: str = None) -> SparkSession:
             "spark.sql.catalog.spark_catalog",
             "org.apache.spark.sql.delta.catalog.DeltaCatalog",
         )
+        .config("spark.sql.catalogImplementation", "hive")
         .enableHiveSupport()
     )
 

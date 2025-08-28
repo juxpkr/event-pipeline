@@ -1,3 +1,11 @@
+{{
+  config(
+    materialized='table',
+    file_format='delta',
+    location_root='s3a://gold/'
+  )
+}}
+
 with source_data as (
     SELECT * FROM {{ ref('stg_gdelt_microbatch_events') }}
 )
