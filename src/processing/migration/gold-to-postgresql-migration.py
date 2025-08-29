@@ -32,7 +32,9 @@ def main():
             except Exception as e2:
                 logger.info(f"두 번째 방법도 실패: {e2}")
                 # 직접 Delta 파일 읽기 시도
-                gold_df = spark.read.format("delta").load("s3a://gold/gdelt_microbatch_country_analysis")
+                gold_df = spark.read.format("delta").load(
+                    "s3a://gold/gdelt_microbatch_country_analysis"
+                )
 
         record_count = gold_df.count()
         logger.info(f"📊 Found {record_count} records in Gold table")
