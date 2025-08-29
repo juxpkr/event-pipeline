@@ -258,6 +258,11 @@ services:
       - ./.env
     networks:
       - data-network
+    environment:
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
+      - AWS_ENDPOINT_URL=${MINIO_ENDPOINT}
+      - AWS_S3_ALLOW_UNSAFE_RENAME=true
     volumes:
       - ./transforms:/app
     # 이 컨테이너는 시작된 후, tail 명령을 실행하며 계속 살아있게 된다.
