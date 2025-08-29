@@ -9,9 +9,10 @@ spark-ivy-cache/
 dbt_packages/
 target/
 dbt_modules/
-.dbt/
-!.dbt/profiles.yml  # profiles.yml만 git에 포함
-profiles.yml
+transforms/logs/
+transforms/target/
+# .dbt 폴더는 포함하되 개인 설정만 제외  
+.dbt/.user.yml
 
 # Spark 관련 
 metastore_db/
