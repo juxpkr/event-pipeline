@@ -10,6 +10,7 @@ dbt_packages/
 target/
 dbt_modules/
 .dbt/
+!.dbt/profiles.yml  # profiles.yml만 git에 포함
 profiles.yml
 
 # Spark 관련 
