@@ -78,3 +78,12 @@ checkpoints/
 
 # Secrets files
 .secrets/
+
+# Superset 관련 (개발 환경별 캐시/설정)
+superset/.superset/
+superset/superset.db
+superset/superset_home/
+superset/.cache/
+superset/celerybeat-schedule
+superset/superset-celery.pid
+superset/*.log
