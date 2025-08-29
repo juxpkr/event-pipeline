@@ -278,7 +278,6 @@ services:
     networks:
       - data-network
     environment:
-      - SUPERSET_SECRET_KEY=your_secret_key_here
       - SUPERSET_CONFIG_PATH=/app/superset_home/superset_config.py
     volumes:
       - ./superset:/app/superset_home
