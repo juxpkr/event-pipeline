@@ -285,22 +285,19 @@ def main():
 
         logger.info("✍️ 데이터 저장 및 테이블 등록 중...")
         # 1단계: Delta Lake로 데이터 저장
-        (silver_df.write
-         .format("delta")
-         .mode("overwrite")
-         .save(silver_path))
-         
+        (silver_df.write.format("delta").mode("overwrite").save(silver_path))
+
         # 2단계: 메타스토어에 External Table 등록
-        spark.sql(f"""
+        spark.sql(
+            f"""
             CREATE TABLE IF NOT EXISTS {table_name}
             USING DELTA
             LOCATION '{silver_path}'
-        """)
-        
+        """
+        )
+
         logger.info(f"✅ 테이블 등록 성공: {table_name}")
         logger.info(f"📍 Delta Location: {silver_path}")
-
-        logger.info("✅ 테이블 등록 성공 : gdelt_silver_events")
         logger.info(f"🎉 Successfully saved {total_records} records to Silver table!")
         logger.info(f"📍 Location: {silver_path}")
 

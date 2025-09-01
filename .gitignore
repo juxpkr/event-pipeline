@@ -9,8 +9,10 @@ spark-ivy-cache/
 dbt_packages/
 target/
 dbt_modules/
-.dbt/
-profiles.yml
+transforms/logs/
+transforms/target/
+# .dbt 폴더는 포함하되 개인 설정만 제외  
+.dbt/.user.yml
 
 # Spark 관련 
 metastore_db/
@@ -78,3 +80,12 @@ checkpoints/
 
 # Secrets files
 .secrets/
+
+# Superset 관련 (개발 환경별 캐시/설정)
+superset/.superset/
+superset/superset.db
+superset/superset_home/
+superset/.cache/
+superset/celerybeat-schedule
+superset/superset-celery.pid
+superset/*.log

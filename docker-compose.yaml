@@ -258,10 +258,35 @@ services:
       - ./.env
     networks:
       - data-network
+    environment:
+      - AWS_ACCESS_KEY_ID=${MINIO_ACCESS_KEY}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_SECRET_KEY}
+      - AWS_ENDPOINT_URL=${MINIO_ENDPOINT}
+      - AWS_S3_ALLOW_UNSAFE_RENAME=true
     volumes:
       - ./transforms:/app
     # 이 컨테이너는 시작된 후, tail 명령을 실행하며 계속 살아있게 된다.
     command: [ "tail", "-f", "/dev/null" ]
+
+  superset:
+    image: apache/superset:4.0.2
+    container_name: superset
+    depends_on:
+      - postgres
+    ports:
+      - "8088:8088"
+    networks:
+      - data-network
+    environment:
+      - SUPERSET_CONFIG_PATH=/app/superset_home/superset_config.py
+    volumes:
+      - ./superset:/app/superset_home
+    command: >
+      bash -c "pip install psycopg2-binary &&
+               superset db upgrade &&
+               superset fab create-admin --username admin --firstname Admin --lastname User --email admin@superset.com --password admin &&
+               superset init &&
+               superset run -h 0.0.0.0 -p 8088"
 
 volumes:
   minio-data:
