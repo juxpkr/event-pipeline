@@ -64,8 +64,8 @@ services:
       - ./config/minio/minio.env
     volumes:
       - ./config/minio:/config
-    entrypoint: ["/bin/sh"]
-    command: ["/config/setup-minio.sh"]
+    entrypoint: [ "/bin/sh" ]
+    command: [ "/config/setup-minio.sh" ]
 
   spark-master:
     build:
@@ -218,6 +218,7 @@ services:
       timeout: 5s
       retries: 3
       start_period: 30s
+    restart: unless-stopped
 
   postgres:
     image: ${POSTGRES_IMAGE}
@@ -301,7 +302,7 @@ services:
       - ./config/airflow/airflow.env
     volumes:
       - ./dags:/opt/airflow/dags
-      - ./src:/opt/ariflow/src
+      - ./src:/opt/airflow/src
       - ./config:/opt/airflow/config
       - ./.secrets:/opt/airflow/.secrets
       - ./.env:/opt/airflow/.env
