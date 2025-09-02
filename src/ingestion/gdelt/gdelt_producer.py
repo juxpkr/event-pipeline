@@ -72,11 +72,24 @@ def main():
 
     # 4. BigQuery에서 데이터 가져오기
     query = """
-        SELECT Actor1CountryCode, COUNT(*) AS event_count
-        FROM `gdelt-bq.gdeltv2.events`
-        WHERE Year = 2024 AND Actor1CountryCode IS NOT NULL
-        GROUP BY Actor1CountryCode
-        LIMIT 20
+        SELECT
+          SQLDATE,
+          Year,
+          Actor1CountryCode,
+          Actor2CountryCode,
+          EventCode,
+          QuadClass,
+          GoldsteinScale,
+          AvgTone,
+          NumMentions,
+          ActionGeo_CountryCode
+        FROM
+          `gdelt-bq.gdeltv2.events`
+        WHERE
+          SQLDATE >= 20250801
+        ORDER BY
+          SQLDATE DESC
+        LIMIT 5000
     """
     try:
         print("BigQuery에 쿼리 실행 중...")
