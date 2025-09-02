@@ -1,0 +1,31 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  # - "first_rules.yml"
+  # - "second_rules.yml"
+
+scrape_configs:
+  # Prometheus itself
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Spark Master
+  - job_name: 'spark-master'
+    static_configs:
+      - targets: ['spark-master:7071']
+    scrape_interval: 30s
+
+  # Spark Worker  
+  - job_name: 'spark-worker'
+    static_configs:
+      - targets: ['spark-worker:7071']
+    scrape_interval: 30s
+
+  # Spark Thrift Server
+  - job_name: 'spark-thrift-server'
+    static_configs:
+      - targets: ['spark-thrift-server:7071']
+    scrape_interval: 30s

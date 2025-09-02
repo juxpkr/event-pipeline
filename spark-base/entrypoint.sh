@@ -39,20 +39,12 @@ elif [ "${ROLE}" = "thrift-http" ]; then
   # 30초 후 Thrift 서버 시작
   echo "Starting Spark Thrift Server in BINARY mode with all packages..."
   # 컨테이너가 꺼지지 않도록 tail과 함께 실행
-  exec /opt/spark/bin/spark-submit \
-    --class org.apache.spark.sql.hive.thriftserver.HiveThriftServer2 \
-    --master spark://spark-master:7077 \
-    --packages "io.delta:delta-core_2.12:${DELTA_SPARK_VERSION},org.apache.hadoop:hadoop-aws:${HADOOP_AWS_VERSION},com.amazonaws:aws-java-sdk-bundle:${AWS_SDK_VERSION},org.postgresql:postgresql:${POSTGRESQL_JDBC_VERSION}" \
-    --conf spark.driver.extraClassPath=/opt/spark/jars/postgresql-42.7.3.jar \
-    --conf spark.hive.server2.transport.mode=binary \
-    --conf spark.hive.server2.thrift.port=10001 \
-    --conf spark.sql.catalog.spark_catalog=org.apache.spark.sql.delta.catalog.DeltaCatalog \
-    --conf spark.sql.extensions=io.delta.sql.DeltaSparkSessionExtension \
-    --conf spark.sql.catalogImplementation=hive \
-    --conf spark.sql.hive.metastore.uris=thrift://hive-metastore:9083 \
-    --conf spark.cores.max=2 \
-    --conf spark.executor.memory=1g \
-    anything
+  # spark-defaults.conf에서 모든 설정을 가져오므로 간소화
+  /opt/spark/sbin/start-thriftserver.sh \
+    --master spark://spark-master:7077 &
+  
+  # 컨테이너가 죽지 않도록 유지
+  exec tail -f /dev/null
 
 else
   # 그 외의 인자가 들어오면, 받은 인자를 그대로 명령어로 실행

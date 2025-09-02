@@ -13,9 +13,6 @@ analytics_dbt:
       schema: default
       http_path: cliservice
       
-      # Gold 버킷을 직접 사용하도록 설정
-      custom_database_location: s3a://gold/
-
       # 연결 안정성을 위한 옵션
       connect_retries: 5
       connect_timeout: 60

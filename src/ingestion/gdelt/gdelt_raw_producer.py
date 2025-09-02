@@ -13,6 +13,7 @@ import time
 import logging
 from kafka import KafkaProducer
 from dotenv import load_dotenv
+from src.utils.kafka_producer import get_kafka_producer
 
 # 로깅 설정
 logging.basicConfig(
@@ -120,31 +121,25 @@ def send_raw_data_to_kafka(url: str, producer: KafkaProducer):
 def main():
     """메인 실행 함수"""
     logger.info("🚀 Starting GDELT Raw Data Producer...")
-    logger.info("📋 This producer sends PURE RAW data without column mapping")
+
+    producer = None  # finally에서 producer 변수를 인식하도록 미리 선언
 
     try:
-        producer = KafkaProducer(
-            bootstrap_servers=[KAFKA_BOOTSTRAP_SERVERS],
-            value_serializer=lambda v: json.dumps(v, default=str).encode("utf-8"),
-            batch_size=16384,
-            linger_ms=100,
-            compression_type="gzip",
-        )
-        logger.info("✅ Kafka producer created successfully")
+        # Kafka Producer 유틸을 사용해서 생성
+        producer = get_kafka_producer()
+
+        latest_url = get_latest_gdelt_data_url()
+        if latest_url:
+            send_raw_data_to_kafka(latest_url, producer)
+        else:
+            logger.error("❌ Could not get latest GDELT URL")
+
     except Exception as e:
         logger.error(f"❌ Failed to create Kafka producer: {e}")
-        return
-
-    # 한 번 실행 (테스트용)
-    latest_url = get_latest_gdelt_data_url()
-    if latest_url:
-        total_records = send_raw_data_to_kafka(latest_url, producer)
-        logger.info(f"📊 Total RAW records processed: {total_records}")
-    else:
-        logger.error("❌ Could not get latest GDELT URL")
-
-    producer.close()
-    logger.info("✅ Raw Producer closed successfully")
+    finally:
+        if producer:
+            producer.close()
+            logger.info("✅ Raw Producer closed successfully")
 
 
 if __name__ == "__main__":
