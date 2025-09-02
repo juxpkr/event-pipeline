@@ -49,8 +49,8 @@ def process_kafka_to_delta(spark: SparkSession, schema: StructType):
     # Kafka 스트림을 읽어서 Delta Lake(MinIO)에 Silver 테이블로 저장한다.
 
     kafka_topic = "gdelt_events"
-    minio_path = "s3a://silver/gdelt_events"
-    checkpoint_path = "s3a://checkpoints/gdelt_events_silver"
+    minio_path = "s3a://warehouse/silver/gdelt_events"
+    checkpoint_path = "s3a://warehouse/checkpoints/gdelt_events_silver"
     kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS")
 
     logger.info(f"Reading stream from Kafka topic: {kafka_topic}...")

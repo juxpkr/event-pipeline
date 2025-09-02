@@ -3,11 +3,15 @@ GDELT Silver Processor - Kafka Raw 데이터를 읽어서 정제 후 Silver Delt
 """
 
 import sys
+from pathlib import Path
 
-sys.path.append("/app")
+# sys.path.append("/app") 대신, 이 파일의 위치를 기준으로 프로젝트 루트를 찾아서 경로에 추가한다.
+# 이렇게 하면 어떤 환경에서 실행해도 항상 프로젝트의 src 폴더를 찾을 수 있다.
+project_root = Path(__file__).resolve().parents[3]
+sys.path.append(str(project_root))
 
 from src.utils.spark_builder import get_spark_session
-from pyspark.sql import functions as F
+from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
 import time
 import logging
@@ -224,85 +228,105 @@ def transform_raw_to_silver(raw_df):
     return silver_df
 
 
+def setup_silver_table(
+    spark: SparkSession, table_name: str, silver_path: str, schema: StructType
+):
+    # 경쟁 상태를 방지하기 위해 Silver 테이블 구조를 미리 생성
+    db_name = table_name.split(".")[0]
+    logger.info(
+        f"🚩 Preemptively creating database '{db_name}' and table '{table_name}'..."
+    )
+    spark.sql(f"CREATE DATABASE IF NOT EXISTS {db_name}")
+
+    empty_df = spark.createDataFrame([], schema)
+    (
+        empty_df.write.format("delta")
+        .mode("ignore")
+        .option("overwriteSchema", "true")
+        .saveAsTable(table_name, path=silver_path)
+    )
+    logger.info(f"🚩 Table '{table_name}' structure is ready at {silver_path}.")
+
+
+def read_from_kafka(spark: SparkSession) -> DataFrame:
+    # Kafka에서 Raw 데이터를 읽어 DataFrame으로 반환
+    logger.info("📥 Reading RAW data from Kafka...")
+    raw_df = (
+        spark.read.format("kafka")
+        .option("kafka.bootstrap.servers", "kafka:29092")
+        .option("subscribe", "gdelt_raw_events")
+        .option("startingOffsets", "earliest")
+        .option("endingOffsets", "latest")
+        .load()
+    )
+    # Kafka 메시지 파싱
+    parsed_df = raw_df.select(
+        F.from_json(
+            F.col("value").cast("string"),
+            StructType(
+                [
+                    StructField("raw_data", ArrayType(StringType()), True),
+                    StructField("row_number", IntegerType(), True),
+                    StructField("source_file", StringType(), True),
+                    StructField("extracted_time", StringType(), True),
+                    StructField("source_url", StringType(), True),
+                    StructField("total_columns", IntegerType(), True),
+                ]
+            ),
+        ).alias("data")
+    ).select("data.*")
+    return parsed_df
+
+
+def write_to_silver(df: DataFrame, silver_path: str):
+    # 변환된 DataFrame을 Silver Layer에 덮어쓴다 (단일 파일로)
+    logger.info("💾 Saving data to Silver Delta Table...")
+    record_count = df.count()
+    if record_count == 0:
+        logger.warning("⚠️ No records to save!")
+        return
+
+    (
+        df.coalesce(1)
+        .write.format("delta")
+        .mode("overwrite")
+        .option("overwriteSchema", "true")
+        .save(silver_path)
+    )
+    logger.info(f"🎉 Successfully saved {record_count} records to {silver_path}")
+
+
 def main():
-    """메인 실행 함수"""
+    # 메인 실행 함수
     logger.info("🚀 Starting GDELT Silver Processor...")
 
-    # Spark 세션 생성
-    spark = get_spark_session("GDELT_Silver_Processor", "spark://spark-master:7077")
+    # Kafka 지원을 위해 get_spark_session 사용
+    spark = get_spark_session("GDELT Silver Processor", "spark://spark-master:7077")
 
     try:
-        # Kafka에서 Raw 데이터 읽기
-        logger.info("📥 Reading RAW data from Kafka...")
-        raw_df = (
-            spark.read.format("kafka")
-            .option("kafka.bootstrap.servers", "kafka:29092")
-            .option("subscribe", "gdelt_raw_events")
-            .option("startingOffsets", "earliest")
-            .option("endingOffsets", "latest")
-            .load()
+        # 1. 빈 테이블을 선점 해야함.
+        silver_schema = get_gdelt_silver_schema()
+        setup_silver_table(
+            spark,
+            "default.gdelt_silver_events",
+            "s3a://warehouse/silver/gdelt_events",
+            silver_schema,
         )
 
-        if raw_df.count() == 0:
-            logger.warning("⚠️ No RAW data found in Kafka. Run the Raw Producer first!")
+        # 2. 데이터 처리 로직
+        parsed_df = read_from_kafka(spark)
+        if parsed_df.rdd.isEmpty():
+            logger.warning("⚠️ No RAW data found in Kafka. Exiting gracefully.")
             return
 
-        # Kafka 메시지 파싱
-        parsed_df = raw_df.select(
-            F.from_json(
-                F.col("value").cast("string"),
-                StructType(
-                    [
-                        StructField("raw_data", ArrayType(StringType()), True),
-                        StructField("row_number", IntegerType(), True),
-                        StructField("source_file", StringType(), True),
-                        StructField("extracted_time", StringType(), True),
-                        StructField("source_url", StringType(), True),
-                        StructField("total_columns", IntegerType(), True),
-                    ]
-                ),
-            ).alias("data")
-        ).select("data.*")
-
-        logger.info("✅ Raw data parsed successfully")
-
-        # Raw → Silver 변환
-        logger.info("🔄 Transforming RAW data to Silver schema...")
+        # 3. 데이터 변환
         silver_df = transform_raw_to_silver(parsed_df)
 
-        # 데이터 검증
-        total_records = silver_df.count()
-        logger.info(f"📊 Silver records: {total_records}")
+        # 4. 데이터 저장
+        write_to_silver(silver_df, "s3a://warehouse/silver/gdelt_events")
 
-        if total_records == 0:
-            logger.warning("⚠️ No records to save!")
-            return
-
-        # Silver Delta Table로 저장 (정제된 데이터를 Silver 버킷에 저장)
-        logger.info("💾 Saving to Silver Delta Table...")
-        silver_path = "s3a://silver/gdelt_events"
-        table_name = "default.gdelt_silver_events"
-
-        logger.info("✍️ 데이터 저장 및 테이블 등록 중...")
-        # 1단계: Delta Lake로 데이터 저장
-        (silver_df.write.format("delta").mode("overwrite").save(silver_path))
-
-        # 2단계: 메타스토어에 External Table 등록
-        spark.sql(
-            f"""
-            CREATE TABLE IF NOT EXISTS {table_name}
-            USING DELTA
-            LOCATION '{silver_path}'
-        """
-        )
-
-        logger.info(f"✅ 테이블 등록 성공: {table_name}")
-        logger.info(f"📍 Delta Location: {silver_path}")
-        logger.info(f"🎉 Successfully saved {total_records} records to Silver table!")
-        logger.info(f"📍 Location: {silver_path}")
-
-        # 샘플 데이터 확인
-        logger.info("🔍 Sample Silver data:")
+        # 5. 샘플 데이터 확인
+        logger.info("🔍 Sample final Silver data:")
         silver_df.select(
             "global_event_id",
             "day",

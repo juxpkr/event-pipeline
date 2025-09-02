@@ -18,69 +18,12 @@
     </property>
 
     <property>
-        <name>javax.jdo.option.ConnectionURL</name>
-        <value>jdbc:postgresql://postgres:5432/metastore_db</value>
-        <description>JDBC connect string for a JDBC metastore</description>
+        <name>hive.metastore.uris</name>
+        <value>thrift://hive-metastore:9083</value>
     </property>
-    <property>
-        <name>javax.jdo.option.ConnectionDriverName</name>
-        <value>org.postgresql.Driver</value>
-        <description>Driver class name for a JDBC metastore</description>
-    </property>
-    <property>
-        <name>javax.jdo.option.ConnectionUserName</name>
-        <value>airflow</value>
-        <description>Username to use against metastore database</description>
-    </property>
-    <property>
-        <name>javax.jdo.option.ConnectionPassword</name>
-        <value>airflow</value>
-        <description>Password to use against metastore database</description>
-    </property>
-    <property>
-        <name>datanucleus.autoCreateSchema</name>
-        <value>true</value>
-        <description>Automatically creates the schema required by the metastore in the backend DB.</description>
-    </property>
+
     <property>
         <name>hive.metastore.warehouse.dir</name>
         <value>s3a://warehouse/</value>
-        <description>Default location for managed tables. Should be in your S3-compatible storage.</description>
     </property>
-
-    <!-- Force Spark to use external Hive Metastore instead of embedded -->
-    <property>
-        <name>hive.metastore.uris</name>
-        <value>thrift://hive-metastore:9083</value>
-        <description>External Hive Metastore URI</description>
-    </property>
-
-    <!-- DataNucleus ClassLoader 및 Connection Pool 최적화 -->
-    <property>
-        <name>datanucleus.connectionPool.driverClassName</name>
-        <value>org.postgresql.Driver</value>
-        <description>JDBC driver class name</description>
-    </property>
-    <property>
-        <name>datanucleus.connectionPool.maxActive</name>
-        <value>10</value>
-        <description>Maximum number of active connections</description>
-    </property>
-    <property>
-        <name>datanucleus.connectionPool.maxIdle</name>
-        <value>5</value>
-        <description>Maximum number of idle connections</description>
-    </property>
-    <property>
-        <name>datanucleus.connectionPool.testOnBorrow</name>
-        <value>true</value>
-        <description>Test connection when borrowing from pool</description>
-    </property>
-
-    <property>
-        <name>datanucleus.connectionPoolingType</name>
-        <value>BoneCP</value>
-        <description>Switch the connection pool from the problematic BoneCP to the more standard DBCP2.</description>
-    </property>
-
 </configuration>

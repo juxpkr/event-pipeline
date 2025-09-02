@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<configuration>
+    <!-- Metastore Database Configuration -->
+    <property>
+        <name>javax.jdo.option.ConnectionURL</name>
+        <value>jdbc:postgresql://postgres:5432/metastore_db</value>
+        <description>JDBC connect string for a JDBC metastore</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionDriverName</name>
+        <value>org.postgresql.Driver</value>
+        <description>Driver class name for a JDBC metastore</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionUserName</name>
+        <value>airflow</value>
+        <description>Username to use against metastore database</description>
+    </property>
+    <property>
+        <name>javax.jdo.option.ConnectionPassword</name>
+        <value>airflow</value>
+        <description>Password to use against metastore database</description>
+    </property>
+
+    <!-- Temporary Local Warehouse Configuration -->
+    <property>
+        <name>hive.metastore.warehouse.dir</name>
+        <value>/tmp/hive-warehouse</value>
+        <description>Temporary local storage for testing</description>
+    </property>
+
+    <!-- Auto-create schema -->
+    <property>
+        <name>datanucleus.autoCreateSchema</name>
+        <value>true</value>
+        <description>Automatically creates the schema required by the metastore in the backend DB.</description>
+    </property>
+
+    
+
+</configuration>

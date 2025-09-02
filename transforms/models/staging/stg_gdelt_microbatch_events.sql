@@ -8,7 +8,7 @@ SELECT
     processed_time,
     1 as event_count
 FROM
-    gdelt_silver_events
+    {{ source('gdelt_silver_layer', 'gdelt_silver_events')}}
 WHERE 
     global_event_id IS NOT NULL
     AND day IS NOT NULL

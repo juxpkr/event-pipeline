@@ -38,3 +38,8 @@ models:
       +materialized: table
       +file_format: delta
       +schema: gold
+
+# dbt run 시작 시 가장 먼저 이 매크로를 실행하라는 명령
+on-run-start:
+  - "{{ create_schema(relation=none, schema_name='silver') }}"
+  - "{{ create_schema(relation=none, schema_name='gold') }}"

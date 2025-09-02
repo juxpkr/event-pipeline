@@ -1,38 +1,29 @@
-# Git attributes for consistent line endings across platforms
-# Ensures all files use LF line endings in repository and working directory
-
-# Default behavior: normalize line endings to LF
+# Line ending normalization
+# All text files should use LF line endings in the repository
 * text=auto eol=lf
 
-# Shell scripts must have LF line endings (for Docker/Linux execution)
-*.sh text eol=lf
-
-# Python files
+# Explicitly set line endings for specific file types
 *.py text eol=lf
-
-# Jupyter notebooks  
-*.ipynb text eol=lf
-
-# SQL files
-*.sql text eol=lf
-
-# YAML/JSON configuration files
 *.yml text eol=lf
 *.yaml text eol=lf
-*.json text eol=lf
-
-# Markdown and documentation
+*.sh text eol=lf
+*.sql text eol=lf
 *.md text eol=lf
-
-# Docker files
-Dockerfile* text eol=lf
+*.txt text eol=lf
+*.json text eol=lf
+*.js text eol=lf
+*.ts text eol=lf
+*.html text eol=lf
+*.css text eol=lf
 *.dockerfile text eol=lf
+Dockerfile* text eol=lf
 
-# Binary files (no line ending conversion)
+# Binary files
+*.jar binary
+*.zip binary
+*.png binary
 *.jpg binary
 *.jpeg binary
-*.png binary
 *.gif binary
+*.ico binary
 *.pdf binary
-*.zip binary
-*.tar.gz binary
