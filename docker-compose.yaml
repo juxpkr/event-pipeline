@@ -70,6 +70,18 @@ services:
   spark-master:
     build:
       context: ./spark-base
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
     container_name: spark-master
     command: master
     user: root # 나중에 배포할때 수정
@@ -99,6 +111,18 @@ services:
   spark-worker:
     build:
       context: ./spark-base
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
     container_name: spark-worker
     command: worker spark://spark-master:7077
     user: root # 나중에 배포할때 수정
@@ -124,6 +148,18 @@ services:
   spark-thrift-server:
     build:
       context: ./spark-base
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
     container_name: spark-thrift-server
     command: thrift-http
     user: root # 나중에 배포할때 수정
@@ -206,7 +242,20 @@ services:
 
   airflow-init:
     build:
-      context: ./airflow
+      context: .
+      dockerfile: ./airflow/Dockerfile
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
     container_name: airflow-init
     networks:
       - data-network
@@ -222,7 +271,20 @@ services:
 
   airflow-webserver:
     build:
-      context: ./airflow
+      context: .
+      dockerfile: ./airflow/Dockerfile
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
     container_name: airflow-webserver
     user: "${AIRFLOW_UID:-50000}"
     depends_on:
@@ -252,7 +314,20 @@ services:
 
   airflow-scheduler:
     build:
-      context: ./airflow
+      context: .
+      dockerfile: ./airflow/Dockerfile
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
     container_name: airflow-scheduler
     user: "${AIRFLOW_UID:-50000}"
     networks:
