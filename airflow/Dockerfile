@@ -63,6 +63,10 @@ RUN curl -o ${SPARK_HOME}/jars/delta-core_${SCALA_VERSION}-${DELTA_SPARK_VERSION
 COPY ./spark-base/spark-defaults.conf /opt/spark/conf/
 COPY ./spark-base/hive-site.xml /opt/spark/conf/
 
+# wait-fot-it 적용
+COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
+
 # 9. pip install을 실행하기 전에, 반드시 airflow 사용자로 돌아와야 함
 USER airflow
 

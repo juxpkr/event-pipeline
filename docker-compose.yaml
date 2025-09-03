@@ -9,13 +9,19 @@ services:
     env_file:
       - ./.env
       - ./config/zookeeper/zookeeper.env
+    healthcheck:
+      test: [ "CMD-SHELL", "echo 'ruok' | nc localhost 2181" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   kafka:
     image: ${KAFKA_IMAGE}
     container_name: kafka
     depends_on:
       zookeeper:
-        condition: service_started
+        condition: service_healthy
     ports:
       - "9092:9092"
     networks:
@@ -23,13 +29,19 @@ services:
     env_file:
       - ./.env
       - ./config/kafka/kafka.env
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
 
   kafka-setup:
     image: ${KAFKA_IMAGE}
     container_name: kafka-setup
     depends_on:
       kafka:
-        condition: service_started
+        condition: service_healthy
     networks:
       - data-network
     volumes:
@@ -69,7 +81,8 @@ services:
 
   spark-master:
     build:
-      context: ./spark-base
+      context: .
+      dockerfile: ./spark-base/Dockerfile
       args:
         - SPARK_VERSION=${SPARK_VERSION}
         - HADOOP_VERSION=${HADOOP_VERSION}
@@ -83,13 +96,18 @@ services:
         - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
         - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
     container_name: spark-master
-    command: master
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        wait-for-it.sh kafka:9092 -t 60 -- echo "✅ Kafka is ready for Master."
+        wait-for-it.sh minio:9000 -t 30 -- echo "✅ MinIO is ready for Master."
+        exec /usr/bin/tini -- /opt/entrypoint.sh master
     user: root # 나중에 배포할때 수정
     depends_on:
       minio:
         condition: service_started
       kafka:
-        condition: service_started
+        condition: service_healthy
       kafka-setup:
         condition: service_started
       tools-downloader:
@@ -107,10 +125,17 @@ services:
     env_file:
       - ./.env
       - ./config/spark/spark.env
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080 || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   spark-worker:
     build:
-      context: ./spark-base
+      context: .
+      dockerfile: ./spark-base/Dockerfile
       args:
         - SPARK_VERSION=${SPARK_VERSION}
         - HADOOP_VERSION=${HADOOP_VERSION}
@@ -124,13 +149,17 @@ services:
         - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
         - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
     container_name: spark-worker
-    command: worker spark://spark-master:7077
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        wait-for-it.sh spark-master:7077 -t 60 -- echo "✅ Spark Master is ready for Worker."
+        exec /usr/bin/tini -- /opt/entrypoint.sh worker spark://spark-master:7077
     user: root # 나중에 배포할때 수정
     networks:
       - data-network
     depends_on:
       spark-master:
-        condition: service_started
+        condition: service_healthy
       kafka-setup:
         condition: service_started
       tools-downloader:
@@ -147,7 +176,8 @@ services:
 
   spark-thrift-server:
     build:
-      context: ./spark-base
+      context: .
+      dockerfile: ./spark-base/Dockerfile
       args:
         - SPARK_VERSION=${SPARK_VERSION}
         - HADOOP_VERSION=${HADOOP_VERSION}
@@ -161,7 +191,12 @@ services:
         - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
         - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
     container_name: spark-thrift-server
-    command: thrift-http
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        wait-for-it.sh spark-master:7077 -t 60 -- echo "✅ Spark Master is ready."
+        wait-for-it.sh hive-metastore:9083 -t 60 -- echo "✅ Hive Metastore is ready."
+        exec /usr/bin/tini -- /opt/entrypoint.sh thrift-binary
     user: root # 나중에 배포할때 수정
     env_file:
       - ./.env
@@ -170,7 +205,7 @@ services:
       - data-network
     depends_on:
       spark-master:
-        condition: service_started
+        condition: service_healthy
       hive-metastore:
         condition: service_healthy
       tools-downloader:
@@ -185,11 +220,12 @@ services:
 
   hive-metastore:
     build:
-      context: ./hive
+      context: .
+      dockerfile: ./hive/Dockerfile
       args:
         POSTGRESQL_JDBC_VERSION: ${POSTGRESQL_JDBC_VERSION}
     container_name: hive-metastore
-    entrypoint: [ "bash", "/custom-entrypoint.sh" ]
+    entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "wait-for-it.sh", "minio:9000", "-t", "30", "--", "bash", "/custom-entrypoint.sh" ]
     networks:
       - data-network
     ports:
@@ -235,7 +271,7 @@ services:
     networks:
       - data-network
     healthcheck:
-      test: [ "CMD", "healthcheck.sh" ]
+      test: [ "CMD-SHELL", "healthcheck.sh" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -308,8 +344,6 @@ services:
       - ./.env:/opt/airflow/.env
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-      # Docker 소켓 연결 통로 추가
-      - /var/run/docker.sock:/var/run/docker.sock
       - .:/app
     command: webserver
 
@@ -349,8 +383,6 @@ services:
       - ./.env:/opt/airflow/.env
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-      # -Docker 소켓 연결 통로 추가
-      - /var/run/docker.sock:/var/run/docker.sock
       - .:/app
     command: scheduler
 

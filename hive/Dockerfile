@@ -18,13 +18,14 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/*
 
 # 4. Hive 설정 파일 복사
-COPY hive-site.xml /opt/hive/conf/
-
+COPY hive/hive-site.xml /opt/hive/conf/
 # Hadoop 핵심 설정 파일 복사
-COPY core-site.xml /opt/hadoop/etc/hadoop/
+COPY hive/core-site.xml /opt/hadoop/etc/hadoop/
+COPY hive/entrypoint.sh /custom-entrypoint.sh
 
-COPY entrypoint.sh /custom-entrypoint.sh
-RUN chmod +x /custom-entrypoint.sh
+# wait-fot-it 적용
+COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /custom-entrypoint.sh && chmod +x /usr/local/bin/wait-for-it.sh
 
 # 5. 보안을 위해, 다시 원래의 'hive' 유저로 돌아간다.
 USER hive

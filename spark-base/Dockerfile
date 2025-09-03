@@ -73,11 +73,12 @@ ENV PATH=$SPARK_HOME/bin:$PATH
 ENV PYSPARK_PYTHON=/usr/local/bin/python 
 ENV JAVA_HOME=/usr/lib/jvm/java-17-openjdk-amd64
 
-# 실행에 필요한 최소한의 시스템 패키지만 설치 (curl은 이제 필요 없음)
+# 실행에 필요한 최소한의 시스템 패키지 설치 (curl 추가 - healthcheck용)
 RUN apt-get update && apt-get install -y --no-install-recommends \
     openjdk-17-jdk-headless \
     tini \
     procps \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
 # 이미 다운로드/압축해제한 Spark 폴더(JAR 포함)를 복사 (1초만에 됨)
@@ -90,7 +91,7 @@ COPY --from=builder /usr/lib/jvm/java-17-openjdk-amd64/lib/postgresql-*.jar /usr
 
 # PySpark와 Delta Lake 라이브러리를 설치한다. (이것도 캐시 최적화 적용)
 # spark-base 폴더에 이 파일이 있어야 함
-COPY requirements-spark.txt . 
+COPY spark-base/requirements-spark.txt . 
 RUN pip install --no-cache-dir -r requirements-spark.txt
 
 # root 권한으로 최종 실행 유저 hive를 미리 생성한다.
@@ -101,10 +102,13 @@ RUN mkdir -p /opt/spark/logs && chown -R hive:hive /opt/spark/logs
 
 # Spark 실행을 위한 스크립트와 설정 파일들을 컨테이너 안으로 복사하고 실행 권한을 준다.
 # 이 파일들은 자주 바뀔 수 있으므로, 가장 마지막에 복사한다.
-COPY entrypoint.sh /opt/entrypoint.sh
-COPY hive-site.xml /opt/spark/conf/
-COPY spark-defaults.conf /opt/spark/conf/
-RUN chmod +x /opt/entrypoint.sh
+COPY spark-base/entrypoint.sh /opt/entrypoint.sh
+COPY spark-base/hive-site.xml /opt/spark/conf/
+COPY spark-base/spark-defaults.conf /opt/spark/conf/
+
+# wait-fot-it 적용
+COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /opt/entrypoint.sh && chmod +x /usr/local/bin/wait-for-it.sh
 
 # 앞으로 hive 유저가 사용할 Spark 전체 디렉토리의 소유권을 넘겨준다.
 # logs, work 등 모든 하위 폴더 생성 권한 문제를 한번에 해결한다.
