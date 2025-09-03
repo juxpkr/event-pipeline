@@ -34,7 +34,7 @@ with DAG(
             f"spark-submit "
             f"--master {SPARK_MASTER} "
             f"--deploy-mode client "
-            f"{PROJECT_ROOT}/src/ingestion/gdelt/kafka_raw_to_minio_consumer.py"
+            f"{PROJECT_ROOT}/src/ingestion/gdelt/kafka_15min_raw_to_minio_consumer.py"
         ),
         env=dict(os.environ),
     )
