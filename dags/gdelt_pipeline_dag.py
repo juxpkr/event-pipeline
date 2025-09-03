@@ -12,8 +12,8 @@ with DAG(
     max_active_runs=1,  # 동시 실행 방지
     doc_md="""
     ### GDELT 전체 파이프라인 DAG
-    - 목적: Raw Producer → Kafka → Spark Processor → MinIO Silver Table
-    - 순서: Raw Producer → Silver Processor
+    - 목적: Raw Producer → Kafka → MinIO Raw Bucket → Spark Processor → MinIO Silver Table
+    - 순서: Raw Producer → Kafka to MinIO → Silver Processor
     """,
 ) as dag:
     # 공통 상수 정의
@@ -24,6 +24,18 @@ with DAG(
     task_raw_producer = BashOperator(
         task_id="gdelt_raw_producer",
         bash_command=f"PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/ingestion/gdelt/gdelt_raw_producer.py",
+        env=dict(os.environ),
+    )
+
+    # Kafka to MinIO (Raw 데이터 저장)
+    task_kafka_to_minio = BashOperator(
+        task_id="kafka_raw_to_minio",
+        bash_command=(
+            f"spark-submit "
+            f"--master {SPARK_MASTER} "
+            f"--deploy-mode client "
+            f"{PROJECT_ROOT}/src/ingestion/gdelt/kafka_raw_to_minio_consumer.py"
+        ),
         env=dict(os.environ),
     )
 
@@ -39,5 +51,5 @@ with DAG(
         env=dict(os.environ),
     )
 
-    # Task 순서 정의 (Producer → Processor)
-    task_raw_producer >> task_silver_processor
+    # Task 순서 정의
+    task_raw_producer >> task_kafka_to_minio >> task_silver_processor
