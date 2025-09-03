@@ -31,7 +31,7 @@ with DAG(
     # 2. kafka_to_minio_consumer.py 실행
     run_consumer = BashOperator(
         task_id="run_kafka_to_minio_consumer",
-        bash_command=f"python {project_root_in_container}/src/ingestion/gdelt/kafka_to_minio_consumer.py",
+        bash_command=f"python {project_root_in_container}/src/ingestion/gdelt/kafka_bigq_to_minio_consumer.py",
     )
 
     # 작업 순서 설정: Producer 실행 후 Consumer 실행
