@@ -17,19 +17,29 @@ services:
       start_period: 30s
 
   kafka:
-    image: ${KAFKA_IMAGE}
+    build:
+      context: .
+      dockerfile: ./kafka/Dockerfile
+      args:
+        - KAFKA_IMAGE=${KAFKA_IMAGE}
+        - JMX_PROMETHEUS_JAVAAGENT_VERSION=${JMX_PROMETHEUS_JAVAAGENT_VERSION}
     container_name: kafka
     depends_on:
       zookeeper:
         condition: service_healthy
     ports:
       - "9092:9092"
-      - "9999:9999" # JMX port for Prometheus
+      - "9999:9999" # JMX RMI port
+      - "9404:9404" # Prometheus HTTP metrics port
     networks:
       - data-network
     env_file:
       - ./.env
       - ./config/kafka/kafka.env
+    command: >
+      bash -c " export KAFKA_OPTS='-javaagent:/opt/kafka/libs/jmx_prometheus_javaagent-1.4.0.jar=9404:/opt/kafka/config/kafka_jmx_config.yml' && /etc/confluent/docker/run "
+    volumes:
+      - ./monitoring/jmx/kafka_jmx_config.yml:/opt/kafka/config/kafka_jmx_config.yml
     healthcheck:
       test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
       interval: 15s
@@ -508,10 +518,29 @@ services:
       - data-network
     ports:
       - "9191:9191"
+    env_file:
+      - ./.env
     depends_on:
       - spark-master
+      - redis
     volumes:
       - ./spark-exporter:/app
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - data-network
+    volumes:
+      - redis-data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   minio-data:
@@ -519,6 +548,7 @@ volumes:
   prometheus-data:
   grafana-data:
   postgres-data:
+  redis-data:
 
 
 networks:
