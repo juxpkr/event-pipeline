@@ -1,0 +1,14 @@
+---
+# JMX Prometheus Exporter 설정 파일
+# Spark JVM 메트릭을 Prometheus 형식으로 변환
+
+# 모든 JMX 메트릭을 수집하는 기본 패턴
+rules:
+  - pattern: ".*"
+    name: "jmx_$1_$2_$3"
+    type: GAUGE
+    labels:
+      job: "spark"
+
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true

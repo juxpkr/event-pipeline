@@ -1,0 +1,52 @@
+---
+# Kafka JMX Prometheus Exporter 설정 파일
+# Kafka JVM 메트릭을 Prometheus 형식으로 변환
+
+# Kafka 브로커 메트릭
+rules:
+  # Kafka 브로커 기본 메트릭
+  - pattern: "kafka.server<type=(.+), name=(.+)><>(.+)"
+    name: "kafka_server_$1_$2"
+    type: GAUGE
+    labels:
+      job: "kafka"
+      
+  # Kafka 네트워크 메트릭
+  - pattern: "kafka.network<type=(.+), name=(.+)><>(.+)"
+    name: "kafka_network_$1_$2" 
+    type: GAUGE
+    labels:
+      job: "kafka"
+      
+  # Kafka 로그 메트릭
+  - pattern: "kafka.log<type=(.+), name=(.+)><>(.+)"
+    name: "kafka_log_$1_$2"
+    type: GAUGE
+    labels:
+      job: "kafka"
+      
+  # JVM GC 메트릭
+  - pattern: "java.lang<type=GarbageCollector, name=(.+)><>(.+)"
+    name: "kafka_jvm_gc_$2"
+    type: GAUGE
+    labels:
+      job: "kafka"
+      gc_type: "$1"
+      
+  # JVM 메모리 메트릭  
+  - pattern: "java.lang<type=Memory><(.+)>(.+)"
+    name: "kafka_jvm_memory_$2"
+    type: GAUGE
+    labels:
+      job: "kafka"
+      memory_type: "$1"
+      
+  # Kafka Controller 메트릭
+  - pattern: "kafka.controller<type=(.+), name=(.+)><>(.+)"
+    name: "kafka_server_$1_$2"
+    type: GAUGE
+    labels:
+      job: "kafka"
+
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
