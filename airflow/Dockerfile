@@ -44,6 +44,7 @@ ARG HADOOP_AWS_VERSION
 ARG AWS_SDK_VERSION
 ARG POSTGRESQL_JDBC_VERSION
 ARG KAFKA_CLIENTS_VERSION
+
 # Airflow에서 Spark 연동을 위한 공통 JAR 파일들을 Azure Blob에서 다운로드
 ARG COMMON_JARS_ZIP_URL
 RUN curl -L -o /tmp/common-jars.zip "${COMMON_JARS_ZIP_URL}" && \
@@ -51,9 +52,10 @@ RUN curl -L -o /tmp/common-jars.zip "${COMMON_JARS_ZIP_URL}" && \
     unzip -oqj /tmp/common-jars.zip "*.jar" -d ${SPARK_HOME}/jars/ && \
     rm /tmp/common-jars.zip
 
-# 8. Spark 설정 파일 복사
+# 9. Spark 설정 파일 복사
 COPY spark-base/spark-defaults.conf /opt/spark/conf/
 COPY spark-base/hive-site.xml /opt/spark/conf/
+COPY monitoring/jmx/spark_jmx_config.yml /opt/spark/conf/jmx-config.yml
 
 # wait-fot-it 적용
 COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
