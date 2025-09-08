@@ -27,18 +27,6 @@ with DAG(
         env=dict(os.environ),
     )
 
-    # Kafka to MinIO (Raw 데이터 저장)
-    task_kafka_to_minio = BashOperator(
-        task_id="kafka_raw_to_minio",
-        bash_command=(
-            f"spark-submit "
-            f"--master {SPARK_MASTER} "
-            f"--deploy-mode client "
-            f"{PROJECT_ROOT}/src/ingestion/gdelt/kafka_15min_raw_to_minio_consumer.py"
-        ),
-        env=dict(os.environ),
-    )
-
     # Spark Processor (Kafka → MinIO Silver Table)
     task_silver_processor = BashOperator(
         task_id="gdelt_silver_processor",
@@ -52,4 +40,4 @@ with DAG(
     )
 
     # Task 순서 정의
-    task_raw_producer >> task_kafka_to_minio >> task_silver_processor
+    task_raw_producer >> task_silver_processor

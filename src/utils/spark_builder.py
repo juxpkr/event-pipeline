@@ -8,10 +8,10 @@ def get_spark_session(app_name: str, master: str = None) -> SparkSession:
     - Docker 환경에 최적화 (환경 변수 사용)
     - S3 (MinIO), Hive Metastore, Delta Lake를 기본으로 지원한다.
     """
-    scala_version = os.getenv("SCALA_VERSION", "2.12")
-    delta_spark_version = os.getenv("DELTA_SPARK_VERSION", "2.4.0")
-    hadoop_aws_version = os.getenv("HADOOP_AWS_VERSION", "3.3.4")
-    aws_sdk_version = os.getenv("AWS_SDK_VERSION", "1.12.367")
+    scala_version = os.getenv("SCALA_VERSION")
+    delta_spark_version = os.getenv("DELTA_SPARK_VERSION")
+    hadoop_aws_version = os.getenv("HADOOP_AWS_VERSION")
+    aws_sdk_version = os.getenv("AWS_SDK_VERSION")
 
     packages = (
         f"io.delta:delta-core_{scala_version}:{delta_spark_version},"
