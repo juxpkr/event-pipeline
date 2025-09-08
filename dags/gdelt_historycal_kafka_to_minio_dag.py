@@ -25,7 +25,7 @@ with DAG(
     # 1. gdelt_producer.py 실행
     run_producer = BashOperator(
         task_id="run_gdelt_producer",
-        bash_command=f"python {project_root_in_container}/src/ingestion/gdelt/gdelt_producer.py",
+        bash_command=f"python {project_root_in_container}/src/ingestion/gdelt/gdelt_bigq_to_kafka.py",
     )
 
     # 2. kafka_to_minio_consumer.py 실행
