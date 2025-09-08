@@ -95,6 +95,8 @@ RUN groupadd -g 1000 hive && useradd -u 1000 -g 1000 -m hive && \
 COPY spark-base/entrypoint.sh /opt/entrypoint.sh
 COPY spark-base/hive-site.xml /opt/spark/conf/
 COPY spark-base/spark-defaults.conf /opt/spark/conf/
+COPY monitoring/jmx/spark_jmx_config.yml /opt/spark/conf/jmx-config.yml
+COPY spark-base/spark-env.sh /opt/spark/conf/
 COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
 RUN chmod +x /opt/entrypoint.sh && chmod +x /usr/local/bin/wait-for-it.sh
 
