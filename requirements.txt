@@ -24,6 +24,9 @@ dbt-spark[PyHive]==1.8.0
 # Environment variable management
 python-dotenv==1.0.1
 
+# Redis for driver registry
+redis==5.0.1
+
 # Code quality tools
 black==24.4.2
 flake8==7.0.0

@@ -11,6 +11,7 @@ project_root = Path(__file__).resolve().parents[3]
 sys.path.append(str(project_root))
 
 from src.utils.spark_builder import get_spark_session
+from src.utils.redis_client import redis_client
 from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
 import time
@@ -303,6 +304,9 @@ def main():
     # Kafka 지원을 위해 get_spark_session 사용
     spark = get_spark_session("GDELT Silver Processor", "spark://spark-master:7077")
 
+    # Redis에 드라이버 UI 정보 등록
+    redis_client.register_driver_ui(spark, "GDELT Silver Processor")
+
     try:
         # 1. 빈 테이블을 선점 해야함.
         silver_schema = get_gdelt_silver_schema()
@@ -339,6 +343,18 @@ def main():
         logger.error(f"❌ Error in Silver processing: {e}", exc_info=True)
 
     finally:
+        try:
+            logging.info(
+                "✅ Job finished. Press Enter in the container's terminal to stop Spark session..."
+            )
+            input()  # 사용자가 Enter를 누를 때까지 여기서 대기
+        except Exception:
+            # Airflow에서 실행하면 input()이 에러날 수 있으나, 그냥 넘어가도록 처리
+            logging.info(
+                "Running in non-interactive mode. Shutting down after job completion."
+            )
+        # Redis에서 드라이버 UI 정보 정리
+        redis_client.unregister_driver_ui(spark)
         spark.stop()
         logger.info("✅ Spark session closed")
 

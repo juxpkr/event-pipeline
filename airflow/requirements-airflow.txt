@@ -8,5 +8,6 @@ apache-airflow-providers-cncf-kubernetes
 pyspark==3.4.3
 kafka-python-ng  
 google-cloud-bigquery  
-python-dotenv 
+python-dotenv
+redis==5.0.1 
 

@@ -130,7 +130,8 @@ def main():
 
         latest_url = get_latest_gdelt_data_url()
         if latest_url:
-            send_raw_data_to_kafka(latest_url, producer)
+            total_count = send_raw_data_to_kafka(latest_url, producer)
+            logger.info(f"🎯 Total records processed: {total_count}")
         else:
             logger.error("❌ Could not get latest GDELT URL")
 
