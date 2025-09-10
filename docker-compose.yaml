@@ -51,13 +51,13 @@ services:
     image: ${KAFKA_IMAGE}
     container_name: kafka-setup
     depends_on:
-      kafka:
-        condition: service_healthy
+      - kafka
     networks:
       - data-network
     volumes:
       - ./config/kafka:/config
-    command: [ "sh", "/config/setup-topics.sh" ]
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
+    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "kafka:9092", "-t", "60", "--", "sh", "/config/setup-topics.sh" ]
 
   minio:
     image: ${MINIO_IMAGE}
@@ -78,8 +78,7 @@ services:
     image: minio/mc
     container_name: minio-setup
     depends_on:
-      minio:
-        condition: service_started
+      - minio
     networks:
       - data-network
     env_file:
@@ -87,8 +86,8 @@ services:
       - ./config/minio/minio.env
     volumes:
       - ./config/minio:/config
-    entrypoint: [ "/bin/sh" ]
-    command: [ "/config/setup-minio.sh" ]
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
+    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "minio:9000", "-t", "30", "--", "/bin/sh", "/config/setup-minio.sh" ]
 
   spark-master:
     build:
@@ -176,10 +175,7 @@ services:
     networks:
       - data-network
     depends_on:
-      spark-master:
-        condition: service_healthy
-      kafka-setup:
-        condition: service_started
+      - spark-master
     ports:
       - "8091:8091"
     volumes:
@@ -323,14 +319,13 @@ services:
     networks:
       - data-network
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
     volumes:
       - ./config/airflow/init-airflow.sh:/opt/airflow/init-airflow.sh:ro
-    entrypoint: [ "sh", "/opt/airflow/init-airflow.sh" ]
+    entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "sh", "/opt/airflow/init-airflow.sh" ]
 
   airflow-webserver:
     build:
@@ -355,10 +350,8 @@ services:
     container_name: airflow-webserver
     user: "${AIRFLOW_UID:-50000}"
     depends_on:
-      airflow-init:
-        condition: service_completed_successfully
-      kafka-setup:
-        condition: service_started
+      - airflow-init
+      - kafka-setup
     ports:
       - "8082:8080" # <--- Spark와 충돌하지 않도록 8082 포트 사용
     networks:
@@ -402,10 +395,8 @@ services:
     networks:
       - data-network
     depends_on:
-      airflow-init:
-        condition: service_completed_successfully
-      kafka-setup:
-        condition: service_started
+      - airflow-init
+      - kafka-setup
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
@@ -455,8 +446,7 @@ services:
     image: ${SUPERSET_IMAGE}
     container_name: superset
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     ports:
       - "8088:8088"
     networks:
@@ -467,18 +457,16 @@ services:
     volumes:
       - ./superset:/app/superset_home
       - ./config/superset:/config
-    command: sh /config/init-superset.sh
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
+    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "postgres:5432", "-t", "60", "--", "sh", "/config/init-superset.sh" ]
 
   prometheus:
     image: ${PROMETHEUS_IMAGE}
     container_name: prometheus
     depends_on:
-      spark-master:
-        condition: service_healthy
-      spark-worker:
-        condition: service_started
-      kafka:
-        condition: service_healthy
+      - spark-master
+      - spark-worker
+      - kafka
     ports:
       - "${PROMETHEUS_PORT}:9090"
     networks:
@@ -486,6 +474,8 @@ services:
     volumes:
       - ./monitoring/prometheus:/etc/prometheus
       - prometheus-data:/prometheus
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
+    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "kafka:9092", "-t", "60", "--", "/usr/local/bin/wait-for-it.sh", "spark-master:8080", "-t", "60", "--", "/bin/prometheus" ]
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
@@ -507,9 +497,10 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana:/etc/grafana/provisioning
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
     depends_on:
-      prometheus:
-        condition: service_started
+      - prometheus
+    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "prometheus:9090", "-t", "60", "--", "/run.sh" ]
 
   spark-custom-exporter:
     build: ./spark-exporter
