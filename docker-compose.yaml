@@ -104,10 +104,10 @@ services:
     networks:
       - data-network
     volumes:
-      - .:/app
+      #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
-      - ./config/spark/metrics.properties:/opt/spark/conf/metrics.properties
+      - ./config/spark:/opt/spark/conf
     env_file:
       - ./.env
       - ./config/spark/spark.env
@@ -134,10 +134,10 @@ services:
     ports:
       - "8091:8091"
     volumes:
-      - .:/app
+      #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
-      - ./config/spark/metrics.properties:/opt/spark/conf/metrics.properties
+      - ./config/spark:/opt/spark/conf
     env_file:
       - ./.env
       - ./config/spark/spark.env
@@ -165,10 +165,10 @@ services:
       - "4040:4040" # Spark Application UI
       - "4041:4041"
     volumes:
-      - .:/app
+      #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
-      - ./config/spark/metrics.properties:/opt/spark/conf/metrics.properties
+      - ./config/spark:/opt/spark/conf
 
   hive-metastore:
     image: juxpkr/geoevent-hive:0.1
