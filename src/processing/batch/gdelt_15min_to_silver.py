@@ -11,6 +11,7 @@ project_root = Path(__file__).resolve().parents[3]
 sys.path.append(str(project_root))
 
 from src.utils.spark_builder import get_spark_session
+from src.utils.minio_utils import ensure_bucket_exists
 from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
 import time
@@ -284,6 +285,13 @@ def write_to_silver(df: DataFrame, silver_path: str):
 def main():
     # 메인 실행 함수
     logger.info("🚀 Starting GDELT Silver Processor...")
+
+    # Spark 작업을 시작하기 전에 MinIO 버킷('warehouse')이 존재하는지 확인하고 없으면 생성합니다.
+    try:
+        ensure_bucket_exists("warehouse")
+    except Exception as e:
+        logger.error(f"❌ MinIO 버킷을 확인/생성하는 데 실패했습니다. 작업을 중단합니다. 오류: {e}")
+        return
 
     # Kafka 지원을 위해 get_spark_session 사용
     spark = get_spark_session("GDELT Silver Processor", "spark://spark-master:7077")

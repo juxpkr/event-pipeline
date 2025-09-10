@@ -11,19 +11,19 @@ SPARK_JOB_PATH = "/opt/airflow/src/processing/batch/process_wiki_country_edit_co
 SPARK_MASTER_URL = os.getenv("SPARK_MASTER_URL", "spark://spark-master:7077")
 
 with DAG(
-    dag_id="process_15min_wiki_country_edit_counts",
+    dag_id="process_1min_wiki_country_edit_counts",
     start_date=pendulum.datetime(2024, 5, 24, tz="UTC"),
-    schedule_interval="*/15 * * * *",  # Run every 15 minutes
+    schedule_interval="* * * * *",  # Run every 1 minute
     catchup=False,
     doc_md="""
-    ### Wikipedia Country Edit Counts DAG
+    ### Wikipedia Country Edit Counts DAG (1-Minute)
 
-    This DAG runs a Spark batch job every 15 minutes to:
+    This DAG runs a Spark batch job every minute to:
     1. Read filtered Wikipedia edit events from the 'wiki_edits' Kafka topic.
     2. Aggregate the number of edits for each 3-letter country code.
-    3. Append the results to the 'wiki_country_edit_counts' Delta table in MinIO.
+    3. Append the results to the 'wiki_country_edit_counts_1min' Delta table in MinIO.
     """,
-    tags=["wikipedia", "processing", "kafka", "spark", "aggregation"],
+    tags=["wikipedia", "processing", "kafka", "spark", "aggregation", "1min"],
 ) as dag:
     process_and_aggregate_task = SparkSubmitOperator(
         task_id="run_spark_job_aggregate_wiki_counts",

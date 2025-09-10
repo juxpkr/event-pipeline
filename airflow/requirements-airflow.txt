@@ -2,7 +2,8 @@
 apache-airflow==2.9.2
 apache-airflow-providers-docker
 apache-airflow-providers-apache-kafka
-apache-airflow-providers-cncf-kubernetes 
+apache-airflow-providers-cncf-kubernetes
+apache-airflow-providers-spark
 
 # Python packages for task execution
 pyspark==3.4.3
@@ -10,4 +11,4 @@ kafka-python-ng
 google-cloud-bigquery  
 python-dotenv
 redis==5.0.1 
-
+minio
