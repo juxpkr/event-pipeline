@@ -33,6 +33,7 @@ def get_spark_session(app_name: str, master: str = None) -> SparkSession:
             "spark.sql.catalog.spark_catalog",
             "org.apache.spark.sql.delta.catalog.DeltaCatalog",
         )
+        .config("spark.jars", f"/opt/spark/jars/delta-core_2.12-{os.getenv('DELTA_VERSION', '2.4.0')}.jar,/opt/spark/jars/delta-storage-{os.getenv('DELTA_VERSION', '2.4.0')}.jar,/opt/spark/jars/hadoop-aws-{os.getenv('HADOOP_AWS_VERSION', '3.3.4')}.jar,/opt/spark/jars/aws-java-sdk-bundle-{os.getenv('AWS_SDK_VERSION', '1.12.262')}.jar")
         # --- Hive Metastore 연동 설정 ---
         .config("spark.sql.catalogImplementation", "hive")
         .config(
