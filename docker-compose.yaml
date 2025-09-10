@@ -25,8 +25,7 @@ services:
         - JMX_PROMETHEUS_JAVAAGENT_VERSION=${JMX_PROMETHEUS_JAVAAGENT_VERSION}
     container_name: kafka
     depends_on:
-      zookeeper:
-        condition: service_healthy
+      - zookeeper
     ports:
       - "9092:9092"
       - "9999:9999" # JMX RMI port
@@ -118,12 +117,9 @@ services:
         exec /usr/bin/tini -- /opt/entrypoint.sh master
     user: root # 나중에 배포할때 수정
     depends_on:
-      minio:
-        condition: service_started
-      kafka:
-        condition: service_healthy
-      kafka-setup:
-        condition: service_started
+      - minio
+      - kafka
+      - kafka-setup
     ports:
       - "8081:8080"
       - "7077:7077"
@@ -221,10 +217,8 @@ services:
     networks:
       - data-network
     depends_on:
-      spark-master:
-        condition: service_healthy
-      hive-metastore:
-        condition: service_healthy
+      - spark-master
+      - hive-metastore
     ports:
       - "10001:10001" # dbt 연결용
       - "4040:4040" # Spark Application UI
@@ -249,10 +243,8 @@ services:
     ports:
       - "9083:9083"
     depends_on:
-      postgres:
-        condition: service_healthy
-      minio-setup:
-        condition: service_completed_successfully
+      - postgres
+      - minio-setup
     env_file:
       - ./.env
       - ./config/hive-metastore/hive-metastore.env
@@ -415,8 +407,7 @@ services:
     build: .
     container_name: jupyter-lab
     depends_on:
-      spark-master:
-        condition: service_started
+      - spark-master
     ports:
       - "8888:8888"
     env_file:
@@ -474,8 +465,6 @@ services:
     volumes:
       - ./monitoring/prometheus:/etc/prometheus
       - prometheus-data:/prometheus
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
-    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "kafka:9092", "-t", "60", "--", "/usr/local/bin/wait-for-it.sh", "spark-master:8080", "-t", "60", "--", "/bin/prometheus" ]
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
       - '--storage.tsdb.path=/prometheus'
