@@ -10,7 +10,6 @@ project_root = os.getenv("PROJECT_ROOT", str(Path(__file__).resolve().parents[3]
 sys.path.insert(0, project_root)
 
 from src.utils.spark_builder import get_spark_session
-from src.utils.minio_utils import ensure_bucket_exists
 
 # 로깅 설정
 logging.basicConfig(
@@ -25,14 +24,8 @@ def main():
     """
     Kafka 'gdelt_raw_events' 토픽에서 15분 GDELT 데이터를 읽어 MinIO 'bronze/gdelt_events_15' 테이블에 저장하는 Spark 배치 작업.
     """
-    logger.info("🚀 Starting Kafka Bronze to MinIO Consumer (Spark Batch Job)...")
+    logger.info("🚀 Starting Kafka RAW to MinIO Consumer (Spark Batch Job)...")
 
-    # Spark 작업을 시작하기 전에 MinIO 버킷('bronze')이 존재하는지 확인하고 없으면 생성합니다.
-    try:
-        ensure_bucket_exists("bronze")
-    except Exception as e:
-        logger.error(f"❌ MinIO 버킷을 확인/생성하는 데 실패했습니다. 작업을 중단합니다. 오류: {e}")
-        return
 
     # Spark 세션 생성 (MinIO 접속 정보는 여기서 자동으로 설정됨)
     spark = get_spark_session("KafkaBronzeToMinIO_Consumer")
@@ -64,7 +57,7 @@ def main():
 
         # MinIO에 저장할 경로 설정
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        minio_path = f"s3a://bronze/gdelt_events_15/{current_time}"
+        minio_path = f"s3a://warehouse/bronze/gdelt_events_15/{current_time}"
 
         logger.info(f"💾 Saving data as Delta to MinIO path: {minio_path}")
 
