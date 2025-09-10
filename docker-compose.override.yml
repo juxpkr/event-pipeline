@@ -17,7 +17,12 @@ services:
       start_period: 30s
 
   kafka:
-    image: juxpkr/geoevent-kafka:0.1
+    build:
+      context: .
+      dockerfile: ./kafka/Dockerfile
+      args:
+        - KAFKA_IMAGE=${KAFKA_IMAGE}
+        - JMX_PROMETHEUS_JAVAAGENT_VERSION=${JMX_PROMETHEUS_JAVAAGENT_VERSION}
     container_name: kafka
     depends_on:
       - zookeeper
@@ -84,7 +89,25 @@ services:
     entrypoint: [ "/usr/local/bin/wait-for-it.sh", "minio:9000", "-t", "30", "--", "/bin/sh", "/config/setup-minio.sh" ]
 
   spark-master:
-    image: juxpkr/geoevent-spark-base:0.1
+    build:
+      context: .
+      dockerfile: ./spark-base/Dockerfile
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - SPARK_TGZ_URL=${SPARK_TGZ_URL}
+        - COMMON_JARS_ZIP_URL=${COMMON_JARS_ZIP_URL}
+        - SPARK_JARS_ZIP_URL=${SPARK_JARS_ZIP_URL}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+        - PROMETHEUS_SIMPLECLIENT_VERSION=${PROMETHEUS_SIMPLECLIENT_VERSION}
     container_name: spark-master
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -119,7 +142,25 @@ services:
       start_period: 30s
 
   spark-worker:
-    image: juxpkr/geoevent-spark-base:0.1
+    build:
+      context: .
+      dockerfile: ./spark-base/Dockerfile
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - SPARK_TGZ_URL=${SPARK_TGZ_URL}
+        - COMMON_JARS_ZIP_URL=${COMMON_JARS_ZIP_URL}
+        - SPARK_JARS_ZIP_URL=${SPARK_JARS_ZIP_URL}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+        - PROMETHEUS_SIMPLECLIENT_VERSION=${PROMETHEUS_SIMPLECLIENT_VERSION}
     container_name: spark-worker
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -143,7 +184,25 @@ services:
       - ./config/spark/spark.env
 
   spark-thrift-server:
-    image: juxpkr/geoevent-spark-base:0.1
+    build:
+      context: .
+      dockerfile: ./spark-base/Dockerfile
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - SPARK_TGZ_URL=${SPARK_TGZ_URL}
+        - COMMON_JARS_ZIP_URL=${COMMON_JARS_ZIP_URL}
+        - SPARK_JARS_ZIP_URL=${SPARK_JARS_ZIP_URL}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+        - PROMETHEUS_SIMPLECLIENT_VERSION=${PROMETHEUS_SIMPLECLIENT_VERSION}
     container_name: spark-thrift-server
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -171,7 +230,12 @@ services:
       - ./config/spark/metrics.properties:/opt/spark/conf/metrics.properties
 
   hive-metastore:
-    image: juxpkr/geoevent-hive:0.1
+    build:
+      context: .
+      dockerfile: ./hive/Dockerfile
+      args:
+        POSTGRESQL_JDBC_VERSION: ${POSTGRESQL_JDBC_VERSION}
+        HIVE_JARS_ZIP_URL: ${HIVE_JARS_ZIP_URL}
     container_name: hive-metastore
     entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "wait-for-it.sh", "minio:9000", "-t", "30", "--", "bash", "/custom-entrypoint.sh" ]
     networks:
@@ -224,7 +288,25 @@ services:
       start_period: 45s
 
   airflow-init:
-    image: juxpkr/geoevent-airflow:0.1
+    build:
+      context: .
+      dockerfile: ./airflow/Dockerfile
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - SPARK_TGZ_URL=${SPARK_TGZ_URL}
+        - COMMON_JARS_ZIP_URL=${COMMON_JARS_ZIP_URL}
+        - SPARK_JARS_ZIP_URL=${SPARK_JARS_ZIP_URL}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+        - PROMETHEUS_SIMPLECLIENT_VERSION=${PROMETHEUS_SIMPLECLIENT_VERSION}
     container_name: airflow-init
     networks:
       - data-network
@@ -238,7 +320,25 @@ services:
     entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "sh", "/opt/airflow/init-airflow.sh" ]
 
   airflow-webserver:
-    image: juxpkr/geoevent-airflow:0.1
+    build:
+      context: .
+      dockerfile: ./airflow/Dockerfile
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - SPARK_TGZ_URL=${SPARK_TGZ_URL}
+        - COMMON_JARS_ZIP_URL=${COMMON_JARS_ZIP_URL}
+        - SPARK_JARS_ZIP_URL=${SPARK_JARS_ZIP_URL}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+        - PROMETHEUS_SIMPLECLIENT_VERSION=${PROMETHEUS_SIMPLECLIENT_VERSION}
     container_name: airflow-webserver
     user: "${AIRFLOW_UID:-50000}"
     depends_on:
@@ -263,7 +363,25 @@ services:
     command: webserver
 
   airflow-scheduler:
-    image: juxpkr/geoevent-airflow:0.1
+    build:
+      context: .
+      dockerfile: ./airflow/Dockerfile
+      args:
+        - SPARK_VERSION=${SPARK_VERSION}
+        - HADOOP_VERSION=${HADOOP_VERSION}
+        - SPARK_TGZ_URL=${SPARK_TGZ_URL}
+        - COMMON_JARS_ZIP_URL=${COMMON_JARS_ZIP_URL}
+        - SPARK_JARS_ZIP_URL=${SPARK_JARS_ZIP_URL}
+        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
+        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
+        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
+        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
+        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
+        - SCALA_VERSION=${SCALA_VERSION}
+        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
+        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
+        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+        - PROMETHEUS_SIMPLECLIENT_VERSION=${PROMETHEUS_SIMPLECLIENT_VERSION}
     container_name: airflow-scheduler
     user: "${AIRFLOW_UID:-50000}"
     networks:
@@ -286,7 +404,7 @@ services:
     command: scheduler
 
   jupyter-lab:
-    image: juxpkr/geoevent-jupyter-lab:0.1
+    build: .
     container_name: jupyter-lab
     depends_on:
       - spark-master
@@ -302,7 +420,8 @@ services:
       - data-network
 
   dbt:
-    image: juxpkr/geoevent-dbt:0.1
+    build:
+      context: ./transforms
     container_name: dbt
     env_file:
       - ./.env
@@ -373,7 +492,7 @@ services:
     entrypoint: [ "/usr/local/bin/wait-for-it.sh", "prometheus:9090", "-t", "60", "--", "/run.sh" ]
 
   spark-custom-exporter:
-    image: juxpkr/geoevent-spark-custom-exporter:0.1
+    build: ./spark-exporter
     container_name: spark-custom-exporter
     networks:
       - data-network
