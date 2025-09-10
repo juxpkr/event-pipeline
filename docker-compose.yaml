@@ -414,4 +414,4 @@ volumes:
 
 networks:
   data-network:
-    driver: bridge
+    driver: overlay
