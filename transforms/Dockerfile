@@ -25,7 +25,7 @@ USER dbt_user
 WORKDIR /app
 
 # 7. dbt 실행에 필요한 라이브러리 목록 파일을 컨테이너 안으로 복사한다
-COPY requirements-dbt.txt .
+COPY transforms/requirements-dbt.txt .
 
 # 8. 복사한 목록을 바탕으로 라이브러리를 설치한다
 RUN pip install --no-cache-dir -r requirements-dbt.txt
