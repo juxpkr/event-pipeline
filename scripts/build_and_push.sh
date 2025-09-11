@@ -22,6 +22,7 @@ SERVICES_TO_BUILD=(
     "jupyter-lab:." 
     "dbt:."
     "spark-custom-exporter:."
+    "kafka-setup:./kafka-setup"
 )
 
 # --- 자동 빌드 및 푸시 루프 ---
@@ -55,6 +56,8 @@ do
         DOCKERFILE_PATH="./transforms/Dockerfile"
     elif [[ "$SERVICE_NAME" == "spark-custom-exporter" ]]; then
         DOCKERFILE_PATH="./spark-exporter/Dockerfile"
+    elif [[ "$SERVICE_NAME" == "kafka-setup" ]]; then
+        DOCKERFILE_PATH="./kafka-setup/Dockerfile"
     fi
 
     docker build \

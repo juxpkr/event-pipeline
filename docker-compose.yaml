@@ -42,13 +42,12 @@ services:
       start_period: 60s
 
   kafka-setup:
-    image: ${KAFKA_IMAGE}
+    image: juxpkr/geoevent-kafka-setup:0.1
     container_name: kafka-setup
     depends_on:
       - kafka
     networks:
       - data-network
-    entrypoint: [ "sh", "/config/setup-topics.sh" ]
     deploy:
       restart_policy:
         condition: on-failure # <-- 실패 시에만 재시작
@@ -80,7 +79,7 @@ services:
       - ./config/minio/minio.env
     volumes:
       - ./config/minio:/config
-    entrypoint: ["/bin/sh", "/config/setup-minio.sh" ]
+    entrypoint: [ "/bin/sh", "/config/setup-minio.sh" ]
     deploy:
       restart_policy:
         condition: on-failure # <-- 실패 시에만 재시작
@@ -368,7 +367,7 @@ services:
       - ./monitoring/grafana/run-grafana.sh:/run-grafana.sh
     depends_on:
       - prometheus
-    command: ["sh", "/run-grafana.sh"]
+    command: [ "sh", "/run-grafana.sh" ]
     deploy:
       restart_policy:
         condition: on-failure
