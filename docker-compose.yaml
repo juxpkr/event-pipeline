@@ -48,6 +48,8 @@ services:
       - kafka
     networks:
       - data-network
+    environment:
+      - KAFKA_BOOTSTRAP_SERVER=${KAFKA_INTERNAL_BOOTSTRAP_SERVERS}
     deploy:
       restart_policy:
         condition: on-failure # <-- 실패 시에만 재시작
