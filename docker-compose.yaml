@@ -48,10 +48,10 @@ services:
       - kafka
     networks:
       - data-network
-    volumes:
-      - ./config/kafka:/config
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
-    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "kafka:9092", "-t", "60", "--", "sh", "/config/setup-topics.sh" ]
+    entrypoint: [ "sh", "/config/setup-topics.sh" ]
+    deploy:
+      restart_policy:
+        condition: on-failure # <-- 실패 시에만 재시작
 
   minio:
     image: ${MINIO_IMAGE}
@@ -80,8 +80,10 @@ services:
       - ./config/minio/minio.env
     volumes:
       - ./config/minio:/config
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
-    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "minio:9000", "-t", "30", "--", "/bin/sh", "/config/setup-minio.sh" ]
+    entrypoint: ["/bin/sh", "/config/setup-minio.sh" ]
+    deploy:
+      restart_policy:
+        condition: on-failure # <-- 실패 시에만 재시작
 
   spark-master:
     image: juxpkr/geoevent-spark-base:0.1
@@ -107,10 +109,8 @@ services:
       #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
-      - ./config/spark:/opt/spark/conf
     env_file:
       - ./.env
-      - ./config/spark/spark.env
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8080 || exit 1" ]
       interval: 15s
@@ -137,10 +137,8 @@ services:
       #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
-      - ./config/spark:/opt/spark/conf
     env_file:
       - ./.env
-      - ./config/spark/spark.env
 
   spark-thrift-server:
     image: juxpkr/geoevent-spark-base:0.1
@@ -154,7 +152,6 @@ services:
     user: root # 나중에 배포할때 수정
     env_file:
       - ./.env
-      - ./config/spark/spark.env
     networks:
       - data-network
     depends_on:
@@ -168,7 +165,6 @@ services:
       #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
-      - ./config/spark:/opt/spark/conf
 
   hive-metastore:
     image: juxpkr/geoevent-hive:0.1
@@ -329,8 +325,10 @@ services:
     volumes:
       - ./superset:/app/superset_home
       - ./config/superset:/config
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
-    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "postgres:5432", "-t", "60", "--", "sh", "/config/init-superset.sh" ]
+    entrypoint: [ "sh", "/config/init-superset.sh" ]
+    deploy:
+      restart_policy:
+        condition: on-failure
 
   prometheus:
     image: ${PROMETHEUS_IMAGE}
@@ -367,10 +365,13 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana:/etc/grafana/provisioning
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
+      - ./monitoring/grafana/run-grafana.sh:/run-grafana.sh
     depends_on:
       - prometheus
-    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "prometheus:9090", "-t", "60", "--", "/run.sh" ]
+    command: ["sh", "/run-grafana.sh"]
+    deploy:
+      restart_policy:
+        condition: on-failure
 
   spark-custom-exporter:
     image: juxpkr/geoevent-spark-custom-exporter:0.1

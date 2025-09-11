@@ -130,7 +130,6 @@ services:
       - .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
-      - ./config/spark/metrics.properties:/opt/spark/conf/metrics.properties
     env_file:
       - ./.env
       - ./config/spark/spark.env
@@ -178,10 +177,8 @@ services:
       - .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
-      - ./config/spark/metrics.properties:/opt/spark/conf/metrics.properties
     env_file:
       - ./.env
-      - ./config/spark/spark.env
 
   spark-thrift-server:
     build:
@@ -213,7 +210,6 @@ services:
     user: root # 나중에 배포할때 수정
     env_file:
       - ./.env
-      - ./config/spark/spark.env
     networks:
       - data-network
     depends_on:
@@ -227,7 +223,6 @@ services:
       - .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
-      - ./config/spark/metrics.properties:/opt/spark/conf/metrics.properties
 
   hive-metastore:
     build:

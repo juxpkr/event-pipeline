@@ -10,13 +10,13 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # 3. 필요한 부품(라이브러리) 목록을 먼저 복사한다.
-COPY spark-exporter/requirements.txt .
+COPY requirements.txt .
 
 # 4. 부품들을 설치한다.
 RUN pip install --no-cache-dir -r requirements.txt
 
 # 5. 나머지 코드 전체를 복사한다.
-COPY spark-exporter/ .
+COPY . .
 
 # 6. 컨테이너가 시작될 때, main.py를 실행
 CMD ["python", "main.py"]
