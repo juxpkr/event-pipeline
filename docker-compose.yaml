@@ -212,7 +212,7 @@ services:
     networks:
       - data-network
     healthcheck:
-      test: [ "CMD-SHELL", "healthcheck.sh" ]
+      test: [ "CMD-SHELL", "pg_isready -U airflow -d airflow -q" ]
       interval: 10s
       timeout: 10s
       retries: 5
