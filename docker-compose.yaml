@@ -521,6 +521,11 @@ services:
     restart: always
     depends_on:
       - kafka # Optional: if you plan to send data to Kafka
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+    command: ["python", "-u", "src/ingestion/wiki/wiki_country_stream_producer.py"]
       
   spark-custom-exporter:
     build: ./spark-exporter
