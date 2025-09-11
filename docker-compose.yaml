@@ -48,6 +48,8 @@ services:
       - kafka
     networks:
       - data-network
+    env_file:
+      - ./config/kafka/kafka.env
     environment:
       - KAFKA_BOOTSTRAP_SERVER=${KAFKA_INTERNAL_BOOTSTRAP_SERVERS}
     deploy:
