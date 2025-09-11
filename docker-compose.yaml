@@ -213,10 +213,10 @@ services:
       - data-network
     healthcheck:
       test: [ "CMD-SHELL", "healthcheck.sh" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 45s
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   airflow-init:
     image: juxpkr/geoevent-airflow:0.1
