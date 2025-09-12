@@ -6,9 +6,9 @@ MANAGER_HOST="geoevent-manager-01" # <--- IP 대신 별명
 WORKER_HOSTS=("geoevent-worker-01" "geoevent-worker-02") # <--- IP 대신 별명
 REMOTE_PROJECT_PATH="/app/event-pipeline"
 BRANCH="develop-vm"
-# ---------------------------------
-
-# 0. 커밋 메시지 입력받기
+## ---------------------------------
+#
+## 0. 커밋 메시지 입력받기
 echo "Enter commit message (or press Enter to use a default): "
 read COMMIT_MESSAGE
 if [ -z "$COMMIT_MESSAGE" ]; then
@@ -22,19 +22,24 @@ git add .
 git commit -m "$COMMIT_MESSAGE"
 git push origin $BRANCH
 
+# GitHub 전파 지연을 위한 5초 대기
+echo ">>>>> Waiting 5 seconds for GitHub propagation..."
+sleep 5
+
 # 2. 모든 VM에 SSH로 접속해서 코드 동기화 및 권한 설정
-ALL_IPS=("$MANAGER_IP" "${WORKER_IPS[@]}")
-for IP in "${ALL_IPS[@]}"; do
+ALL_HOSTS=("$MANAGER_HOST" "${WORKER_HOSTS[@]}")
+for HOST in "${ALL_HOSTS[@]}"; do
   echo ""
-  echo ">>>>> 2. Syncing code and permissions on ${IP}..."
-  # git reset으로 코드 받고, 바로 이어서 chown.sh 실행
-  ssh ${VM_USER}@${IP} "cd ${REMOTE_PROJECT_PATH} && git reset --hard origin/${BRANCH} && sudo ./chown.sh"
+  echo ">>>>> DEBUG: Current HOST variable is [${HOST}] <<<<<"
+  # --------------------
+  echo ">>>>> 2. Syncing code and permissions on ${HOST}..."
+  ssh ${HOST} "cd ${REMOTE_PROJECT_PATH} && sudo git reset --hard origin/${BRANCH} && sudo git pull origin ${BRANCH} && sudo chmod +x chown.sh && sudo ./chown.sh"
 done
 
 # 3. 매니저 노드에서만 최종 배포 실행
 echo ""
 echo ">>>>> 3. Deploying stack from manager node..."
-ssh ${VM_USER}@${MANAGER_IP} "cd ${REMOTE_PROJECT_PATH} && sudo ./deploy.sh"
+ssh ${MANAGER_HOST} "cd ${REMOTE_PROJECT_PATH} && sudo chmod +x deploy.sh && sudo ./deploy.sh"
 
 echo ""
 echo "🎉 All Done!"

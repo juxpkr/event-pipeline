@@ -46,6 +46,13 @@ services:
       timeout: 10s
       retries: 5
       start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.50'
+          memory: 1G
+        limits:
+          memory: 2G
 
   kafka-setup:
     image: juxpkr/geoevent-kafka-setup:0.1
@@ -336,6 +343,9 @@ services:
       - ./config/superset:/config
     entrypoint: [ "sh", "/config/init-superset.sh" ]
     deploy:
+      resources:
+        limits:
+          memory: 2G
       restart_policy:
         condition: on-failure
 
