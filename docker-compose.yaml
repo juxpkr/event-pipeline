@@ -21,6 +21,8 @@ services:
 
   kafka:
     image: juxpkr/geoevent-kafka:0.1
+    extra_hosts:
+      - "kafka:127.0.0.1"
     container_name: kafka
     depends_on:
       - zookeeper
