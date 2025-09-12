@@ -30,11 +30,11 @@ ordered_actors AS (
     ORDER BY
         actor_code,
         CASE 
-            WHEN type = '국가' THEN 1
-            WHEN type = '민족' THEN 2
-            WHEN type = '종교' THEN 3
-            WHEN type = '역할' THEN 4
-            WHEN type = '소속' THEN 5
+            WHEN type = 'Country' THEN 1
+            WHEN type = 'Ethnic' THEN 2
+            WHEN type = 'Religion' THEN 3
+            WHEN type = 'Role' THEN 4
+            WHEN type = 'Organization' THEN 5
             ELSE 99
         END,
         part_order -- 같은 우선 순위일 경우, 원래 코드 순서를 따릅니다.
