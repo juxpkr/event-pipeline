@@ -25,7 +25,7 @@ CAMEO_URL = "https://www.gdeltproject.org/data/lookups/CAMEO.country.txt"
 WIKIDATA_API_ENDPOINT = "https://www.wikidata.org/w/api.php"
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC_WIKI_EDITS", "wiki_edits")
 # Path is relative to the project root (/app in Docker)
-MAP_FILE_PATH = "src/ingestion/wiki/country_master_map.json"
+MAP_FILE_PATH = "wiki-stream-producer/country_master_map.json"
 REQUESTS_HEADERS = {"User-Agent": "Event-Pipeline-Wiki-Global-Collector/1.0"}
 
 def build_master_map() -> dict:
