@@ -35,7 +35,7 @@ services:
       - ./config/kafka/kafka.env
     environment:
       - KAFKA_LISTENERS=INTERNAL://0.0.0.0:9092
-      - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL://{{.Node.Hostname}}:9092
     volumes:
       - ./monitoring/jmx/kafka_jmx_config.yml:/opt/kafka/config/kafka_jmx_config.yml
     command: >
