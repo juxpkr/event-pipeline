@@ -24,7 +24,7 @@ services:
     ports:
       - "9092:9092"
       - "9999:9999" # JMX RMI port
-      - "9404:9404" # Prometheus HTTP metrics port
+      # - "9404:9404" # Prometheus HTTP metrics port - Temporarily disabled
     networks:
       - data-network
     env_file:

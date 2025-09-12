@@ -11,6 +11,6 @@ export $(grep -v '^#' .env | xargs)
 echo "🚀 Deploying the 'geoevent' stack to Swarm..."
 
 # 스택 배포 실행
-docker stack deploy --resolve-image always -c docker-compose.yaml geoevent
+docker stack deploy -c docker-compose.yaml geoevent
 echo "🎉 Deployment command issued successfully!"
 echo "🔎 Run 'watch docker stack services geoevent' to check the status."
