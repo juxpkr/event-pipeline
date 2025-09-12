@@ -66,11 +66,8 @@ services:
       - kafka
     networks:
       - data-network
-    env_file:
-      - ./config/kafka/kafka.env
     environment:
-      - KAFKA_BOOTSTRAP_SERVER=${KAFKA_INTERNAL_BOOTSTRAP_SERVERS}
-      - KAFKA_OPTS=""
+      - KAFKA_BOOTSTRAP_SERVER=kafka:9092
     command: ["/bin/sh", "-c", "wait-for-it.sh kafka:9092 -t 60 -- /etc/kafka-setup/setup-topics.sh"] 
     deploy:
       restart_policy:
