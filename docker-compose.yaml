@@ -60,7 +60,7 @@ services:
           memory: 2G
 
   kafka-setup:
-    image: juxpkr/geoevent-kafka-setup:0.1
+    image: juxpkr/geoevent-kafka:0.1
     container_name: kafka-setup
     depends_on:
       - kafka
