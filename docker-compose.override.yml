@@ -27,7 +27,7 @@ services:
     depends_on:
       - zookeeper
     ports:
-      - "9092:9092"
+      - "29092:29092"
       - "9999:9999" # JMX RMI port
       - "9404:9404" # Prometheus HTTP metrics port
     networks:
@@ -35,6 +35,11 @@ services:
     env_file:
       - ./.env
       - ./config/kafka/kafka.env
+    environment:
+      # 기존 리스너에 EXTERNAL 리스너 추가
+      - KAFKA_LISTENERS=INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+      # 외부에서 접속할 때는 localhost:29092 주소를 사용
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://localhost:29092
     command: >
       bash -c " export KAFKA_OPTS='-javaagent:/opt/kafka/libs/jmx_prometheus_javaagent-1.4.0.jar=9404:/opt/kafka/config/kafka_jmx_config.yml' && /etc/confluent/docker/run "
     volumes:
