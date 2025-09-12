@@ -133,6 +133,13 @@ services:
       timeout: 5s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.50'
+          memory: 1G
+        limits:
+          memory: 3G
 
   spark-worker:
     image: juxpkr/geoevent-spark-base:0.1
@@ -213,6 +220,13 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+        limits:
+          memory: 2G
 
   postgres:
     image: ${POSTGRES_IMAGE}
@@ -272,7 +286,20 @@ services:
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - .:/app
-    command: webserver
+    command: >
+      bash -c "
+        wait-for-it.sh postgres:5432 -t 60 -- echo '✅ Postgres ready for webserver.' &&
+        wait-for-it.sh kafka:9092 -t 60 -- echo '✅ Kafka ready for webserver.' &&
+        wait-for-it.sh spark-master:7077 -t 60 -- echo '✅ Spark Master ready for webserver.' &&
+        airflow webserver
+      "
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+        limits:
+          memory: 2G
 
   airflow-scheduler:
     image: juxpkr/geoevent-airflow:0.1
@@ -295,7 +322,20 @@ services:
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - .:/app
-    command: scheduler
+    command: >
+      bash -c "
+        wait-for-it.sh postgres:5432 -t 60 -- echo '✅ Postgres ready for scheduler.' &&
+        wait-for-it.sh kafka:9092 -t 60 -- echo '✅ Kafka ready for scheduler.' &&
+        wait-for-it.sh spark-master:7077 -t 60 -- echo '✅ Spark Master ready for scheduler.' &&
+        airflow scheduler
+      "
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+        limits:
+          memory: 2G
 
   jupyter-lab:
     image: juxpkr/geoevent-jupyter-lab:0.1
