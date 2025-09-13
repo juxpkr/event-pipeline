@@ -18,6 +18,10 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
   kafka:
     image: juxpkr/geoevent-kafka:0.1
@@ -52,6 +56,9 @@ services:
           memory: 1G
         limits:
           memory: 2G
+      placement:
+        constraints:
+          - node.role == manager
 
   kafka-setup:
     image: juxpkr/geoevent-kafka-setup:0.1
