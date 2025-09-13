@@ -303,12 +303,16 @@ services:
         airflow webserver
       "
     deploy:
+      placement:
+        constraints:
+          - node.role == manager
       resources:
         reservations:
           cpus: '0.25'
           memory: 512M
         limits:
           memory: 2G
+
     security_opt:
       - apparmor:unconfined
 
@@ -341,12 +345,16 @@ services:
         airflow scheduler
       "
     deploy:
+      placement:
+        constraints:
+          - node.role == manager
       resources:
         reservations:
           cpus: '0.25'
           memory: 512M
         limits:
           memory: 2G
+
     security_opt:
       - apparmor:unconfined
 
@@ -394,29 +402,11 @@ services:
     volumes:
       - ./superset:/app/superset_home
       - ./config/superset:/config
-    entrypoint:
-      - /bin/sh
-      - -c
-      - |
-        echo "Waiting for Postgres with Python..."
-        python -c "
-        import socket
-        import time
-        while True:
-            try:
-                with socket.create_connection(('postgres', 5432), timeout=5):
-                    break
-            except OSError:
-                print('Postgres is unavailable - sleeping')
-                time.sleep(5)
-        "
-        echo "Postgres is up. Executing original entrypoint..."
-        exec /config/init-superset.sh
-    #entrypoint: [ "sh", "-c", "sleep 5 && /config/wait-for-it.sh postgres:5432 -t 60 -- /config/init-superset.sh" ]
+    entrypoint: [ "sh", "-c", "sleep 5 && /config/wait-for-it.sh postgres:5432 -t 60 -- /config/init-superset.sh" ]
     deploy:
       resources:
         limits:
-          memory: 2G
+          memory: 4G
       restart_policy:
         condition: on-failure
 

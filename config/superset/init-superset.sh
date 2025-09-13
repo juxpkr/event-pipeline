@@ -4,13 +4,12 @@ set -e
 # 초기화 완료 플래그 파일 경로
 INIT_FLAG_FILE="/app/superset_home/.initialized"
 
-# 1. Postgres가 준비될 때까지 기다리기 
-echo "Waiting for Postgres..."
-until sh -c 'cat < /dev/null > /dev/tcp/postgres/5432'; do
-    >&2 echo "Postgres is unavailable - sleeping"
-    sleep 5
-done
-echo "Postgres is up."
+# 1. Postgres 연결 체크 (wait-for-it.sh로 이미 처리됨)
+echo "Postgres connection already verified by wait-for-it.sh"
+# until sh -c 'cat < /dev/null > /dev/tcp/postgres/5432'; do
+#     >&2 echo "Postgres is unavailable - sleeping"
+#     sleep 5
+# done
 
 # 2. 최초 실행인지 확인하고, 초기화 작업 수행
 if [ ! -f "$INIT_FLAG_FILE" ]; then
