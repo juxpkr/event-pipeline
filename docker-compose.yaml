@@ -70,7 +70,7 @@ services:
       - data-network
     environment:
       - KAFKA_BOOTSTRAP_SERVER=kafka:9092
-    command: [ "/bin/sh", "-c", "wait-for-it.sh kafka:9092 -t 60 -- /etc/kafka-setup/setup-topics.sh" ]
+    command: [ "/bin/sh", "-c", "wait-for-it.sh kafka:9092 -t 60 -- sleep 5 && /etc/kafka-setup/setup-topics.sh" ]
     deploy:
       restart_policy:
         condition: on-failure # <-- 실패 시에만 재시작
@@ -268,6 +268,9 @@ services:
     volumes:
       - ./config/airflow/init-airflow.sh:/opt/airflow/init-airflow.sh:ro
     entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "sh", "/opt/airflow/init-airflow.sh" ]
+    deploy:
+      restart_policy:
+        condition: none
 
   airflow-webserver:
     image: juxpkr/geoevent-airflow:0.1
