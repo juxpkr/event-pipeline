@@ -26,4 +26,8 @@ sudo chown -R 472:472 /app/event-pipeline/monitoring/grafana
 # Spark 서비스들은 현재 user: root 로 실행 중이므로 권한 변경이 필요 없음.
 echo "Spark services are running as root, skipping chown."
 
+# --- Superset Permissions ---
+# Spark 서비스들은 현재 user: root 로 실행 중이므로 권한 변경이 필요 없음.
+sudo chmod +x ./config/superset
+
 echo "✅ All permissions have been set successfully!"

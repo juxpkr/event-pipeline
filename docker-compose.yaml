@@ -489,4 +489,5 @@ volumes:
 
 networks:
   data-network:
-    driver: overlay
+    external: true
+    name: geoevent_data-network
