@@ -25,23 +25,13 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
-      - "9999:9999" # JMX RMI port
-      - "19404:19404" # Prometheus HTTP metrics port 
+      - "9999:9999"
+      - "19404:19404"
     networks:
       - data-network
     env_file:
       - ./.env
       - ./config/kafka/kafka.env
-    environment:
-      # KAFKA_LISTENERS를 2개 정의: INTERNAL과 EXTERNAL
-      # 내부용 포트는 충돌을 피하기 위해 19092로 변경
-      - KAFKA_LISTENERS=INTERNAL://0.0.0.0:29092,EXTERNAL://0.0.0.0:9092
-      # KAFKA_ADVERTISED_LISTENERS도 2개 정의
-      - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:29092,EXTERNAL://{{.Node.Hostname}}:9092
-      # 브로커끼리 통신할 때 어떤 리스너를 쓸지 알려준다 (가장 중요!)
-      - KAFKA_INTER_BROKER_LISTENER_NAME=INTERNAL
-      # Zookeeper에게도 알려줄 리스너 프로토콜을 명시
-      - KAFKA_LISTENER_SECURITY_PROTOCOL_MAP=INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
     volumes:
       - ./monitoring/jmx/kafka_jmx_config.yml:/opt/kafka/config/kafka_jmx_config.yml
     command: >
