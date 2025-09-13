@@ -27,6 +27,6 @@ sudo chown -R 472:472 /app/event-pipeline/monitoring/grafana
 echo "Spark services are running as root, skipping chown."
 
 # --- Superset Permissions ---
-sudo chmod +x ./config/superset
+sudo chmod +x ./config/superset/*.sh
 
 echo "✅ All permissions have been set successfully!"
