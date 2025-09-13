@@ -25,6 +25,7 @@ services:
 
   kafka:
     image: juxpkr/geoevent-kafka:0.1
+    hostname: kafka
     depends_on:
       - zookeeper
     ports:
@@ -43,12 +44,12 @@ services:
         wait-for-it.sh zookeeper:2181 -t 60 -- echo '✅ Zookeeper is ready for Kafka.' &&
         /etc/confluent/docker/run
       "
-    healthcheck:
-      test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
-      interval: 15s
-      timeout: 10s
-      retries: 5
-      start_period: 60s
+    #healthcheck:
+    #  test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
+    #  interval: 15s
+    #  timeout: 10s
+    #  retries: 5
+    #  start_period: 60s
     deploy:
       resources:
         reservations:
