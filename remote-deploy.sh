@@ -36,10 +36,5 @@ for HOST in "${ALL_HOSTS[@]}"; do
   ssh ${HOST} "cd ${REMOTE_PROJECT_PATH} && sudo git reset --hard origin/${BRANCH} && sudo git pull origin ${BRANCH} && sudo chmod +x chown.sh && sudo ./chown.sh"
 done
 
-# 3. 매니저 노드에서만 최종 배포 실행
-echo ""
-echo ">>>>> 3. Deploying stack from manager node..."
-ssh ${MANAGER_HOST} "cd ${REMOTE_PROJECT_PATH} && sudo chmod +x deploy.sh && sudo ./deploy.sh"
-
 echo ""
 echo "🎉 All Done!"
