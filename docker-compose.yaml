@@ -39,11 +39,12 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=INTERNAL://{{.Node.Hostname}}:9092
     volumes:
       - ./monitoring/jmx/kafka_jmx_config.yml:/opt/kafka/config/kafka_jmx_config.yml
-    command: >
-      bash -c "
-        wait-for-it.sh zookeeper:2181 -t 60 -- echo '✅ Zookeeper is ready for Kafka.' &&
-        /etc/confluent/docker/run
-      "
+    #command: >
+    #  bash -c "
+    #    wait-for-it.sh zookeeper:2181 -t 60 -- echo '✅ Zookeeper is ready for Kafka.' &&
+    #    /etc/confluent/docker/run
+    #  "
+    command: [ "tail", "-f", "/dev/null" ] # <-- 임시로 무한 대기 모드로 변경
     healthcheck:
       test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
       interval: 15s
