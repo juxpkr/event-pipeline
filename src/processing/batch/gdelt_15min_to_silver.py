@@ -285,6 +285,7 @@ def main():
     # 메인 실행 함수
     logger.info("🚀 Starting GDELT Silver Processor...")
 
+
     # Kafka 지원을 위해 get_spark_session 사용
     spark = get_spark_session("GDELT Silver Processor", "spark://spark-master:7077")
 

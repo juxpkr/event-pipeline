@@ -453,6 +453,25 @@ services:
       restart_policy:
         condition: on-failure
 
+  wiki-realtime-collector:
+    build:
+      context: .
+      dockerfile: ./wiki-stream-producer/Dockerfile
+    container_name: wiki-realtime-collector
+    networks:
+      - data-network
+    restart: always
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+    command: ["python", "-u", "wiki-stream-producer/wiki_country_stream_producer.py"]
+      
   spark-custom-exporter:
     image: juxpkr/geoevent-spark-custom-exporter:0.1
     container_name: spark-custom-exporter

@@ -12,8 +12,8 @@ with DAG(
     max_active_runs=1,  # 동시 실행 방지
     doc_md="""
     ### GDELT 전체 파이프라인 DAG
-    - 목적: Raw Producer → Kafka → MinIO Raw Bucket → Spark Processor → MinIO Silver Table
-    - 순서: Raw Producer → Kafka to MinIO → Silver Processor
+    - 목적: Raw Producer → Kafka → MinIO Bronze Table → Spark Processor → MinIO Silver Table
+    - 순서: Raw Producer → Kafka to Bronze → Silver Processor
     """,
 ) as dag:
     # 공통 상수 정의
@@ -27,9 +27,9 @@ with DAG(
         env=dict(os.environ),
     )
 
-    # Kafka to MinIO (Raw 데이터 저장)
-    task_kafka_to_minio = BashOperator(
-        task_id="kafka_raw_to_minio",
+    # Kafka to MinIO (Bronze 데이터 저장)
+    task_kafka_to_bronze = BashOperator(
+        task_id="kafka_bronze_to_minio",
         bash_command=(
             f"spark-submit "
             f"--master {SPARK_MASTER} "
@@ -52,4 +52,4 @@ with DAG(
     )
 
     # Task 순서 정의
-    gdelt_15min_to_kafka >> task_kafka_to_minio >> gdelt_15min_to_silver
+    gdelt_15min_to_kafka >> task_kafka_to_bronze >> gdelt_15min_to_silver

@@ -10,4 +10,3 @@ kafka-python-ng
 google-cloud-bigquery  
 python-dotenv
 redis==5.0.1 
-
