@@ -45,7 +45,15 @@ services:
       - ./monitoring/jmx/kafka_jmx_config.yml:/opt/kafka/config/kafka_jmx_config.yml
     command: >
       bash -c "
-        wait-for-it.sh zookeeper:2181 -t 60 -- echo '✅ Zookeeper is ready for Kafka.' &&
+        echo 'Step 1: Waiting for ZooKeeper to be fully operational...' &&
+        cub zk-ready zookeeper:2181 60 &&
+        echo '✅ Step 1 Success: ZooKeeper is ready.' &&
+        
+        echo 'Step 2: Attempting to remove stale broker node before starting...' &&
+        zookeeper-shell.sh zookeeper:2181 rmr /brokers/ids/$$KAFKA_BROKER_ID || echo 'No stale node to remove, or another error occurred (ignored for dev).' &&
+        echo '✅ Step 2 Complete: Stale node check/removal finished.' &&
+
+        echo 'Step 3: Starting Kafka broker...' &&
         /etc/confluent/docker/run
       "
     healthcheck:
