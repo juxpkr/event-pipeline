@@ -30,9 +30,7 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
-      #- "9999:9999"
       - "29092:29092"
-      - "19404:19404"
     networks:
       - data-network
     env_file:
@@ -42,7 +40,6 @@ services:
       # 서버에서는 .env 파일의 KAFKA_EXTERNAL_HOST 변수값을 사용
       - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:29092
     volumes:
-      - ./monitoring/jmx/kafka_jmx_config.yml:/opt/kafka/config/kafka_jmx_config.yml
       - ./config/kafka/entrypoint.sh:/entrypoint.sh:ro
     entrypoint: [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
     healthcheck:
@@ -61,6 +58,22 @@ services:
       #placement:
       #  constraints:
       #    - node.role == manager
+
+  kafka-jmx-exporter:
+    image: sscaling/jmx-prometheus-exporter:latest
+    hostname: kafka-jmx-exporter
+    ports:
+      - "19404:5556" # 프로메테우스는 19404로 접속, 컨테이너 내부는 5556 포트
+    networks:
+      - data-network
+    environment:
+      - JMX_HOST=kafka
+      - JMX_PORT=9999
+      - JMX_EXPORTER_CONFIG_FILE=/config.yml
+    volumes:
+      - ./monitoring/jmx/kafka_jmx_config.yml:/config.yml:ro
+    depends_on:
+      - kafka
 
   kafka-setup:
     image: juxpkr/geoevent-kafka-setup:0.1
