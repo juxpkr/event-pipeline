@@ -2,6 +2,7 @@
 GDELT Silver Processor - Kafka Raw 데이터를 읽어서 정제 후 Silver Delta Table로 저장
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -254,7 +255,7 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
     logger.info("📥 Reading RAW data from Kafka...")
     raw_df = (
         spark.read.format("kafka")
-        .option("kafka.bootstrap.servers", "kafka:29092")
+        .option("kafka.bootstrap.servers", os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
         .option("subscribe", "gdelt_raw_events")
         .option("startingOffsets", "earliest")
         .option("endingOffsets", "latest")
@@ -343,16 +344,17 @@ def main():
         logger.error(f"❌ Error in Silver processing: {e}", exc_info=True)
 
     finally:
-        try:
-            logging.info(
-                "✅ Job finished. Press Enter in the container's terminal to stop Spark session..."
-            )
-            input()  # 사용자가 Enter를 누를 때까지 여기서 대기
-        except Exception:
-            # Airflow에서 실행하면 input()이 에러날 수 있으나, 그냥 넘어가도록 처리
-            logging.info(
-                "Running in non-interactive mode. Shutting down after job completion."
-            )
+        # 개발/디버깅 모드에서만 사용자 입력 대기
+        if os.getenv("SPARK_DEBUG_MODE", "false").lower() == "true":
+            try:
+                logging.info(
+                    "🔍 Debug mode: Press Enter in the container's terminal to stop Spark session..."
+                )
+                input()  # 디버깅 시에만 대기
+            except Exception:
+                logging.info("Non-interactive mode detected. Continuing...")
+        else:
+            logging.info("✅ Job finished. Shutting down Spark session.")
         # Redis에서 드라이버 UI 정보 정리
         redis_client.unregister_driver_ui(spark)
         spark.stop()
