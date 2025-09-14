@@ -43,8 +43,8 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:29092
     volumes:
       - ./monitoring/jmx/kafka_jmx_config.yml:/opt/kafka/config/kafka_jmx_config.yml
-    #  - ./config/kafka/entrypoint.sh:/entrypoint.sh:ro
-    #entrypoint: [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
+      - ./config/kafka/entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
     healthcheck:
       test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
       interval: 15s
