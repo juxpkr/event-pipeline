@@ -29,4 +29,7 @@ echo "Spark services are running as root, skipping chown."
 # --- Superset Permissions ---
 sudo chmod +x ./config/superset/*.sh
 
+# --- Kafka Permissions ---
+sudo chmod +x ./config/kafka/*.sh
+
 echo "✅ All permissions have been set successfully!"
