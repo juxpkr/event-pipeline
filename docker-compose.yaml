@@ -31,12 +31,16 @@ services:
     ports:
       - "9092:9092"
       - "9999:9999"
+      - "29092:29092"
       - "19404:19404"
     networks:
       - data-network
     env_file:
       - ./.env
       - ./config/kafka/kafka.env
+    environment:
+      # 서버에서는 .env 파일의 KAFKA_EXTERNAL_HOST 변수값을 사용
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:29092
     volumes:
       - ./monitoring/jmx/kafka_jmx_config.yml:/opt/kafka/config/kafka_jmx_config.yml
     command: >
@@ -44,12 +48,12 @@ services:
         wait-for-it.sh zookeeper:2181 -t 60 -- echo '✅ Zookeeper is ready for Kafka.' &&
         /etc/confluent/docker/run
       "
-    #healthcheck:
-    #  test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
-    #  interval: 15s
-    #  timeout: 10s
-    #  retries: 5
-    #  start_period: 60s
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
     deploy:
       resources:
         reservations:
@@ -453,25 +457,6 @@ services:
       restart_policy:
         condition: on-failure
 
-  wiki-realtime-collector:
-    build:
-      context: .
-      dockerfile: ./wiki-stream-producer/Dockerfile
-    container_name: wiki-realtime-collector
-    networks:
-      - data-network
-    restart: always
-    depends_on:
-      kafka:
-        condition: service_healthy
-    env_file:
-      - ./.env
-    volumes:
-      - .:/app
-    environment:
-      - PYTHONPATH=/app
-    command: ["python", "-u", "wiki-stream-producer/wiki_country_stream_producer.py"]
-      
   spark-custom-exporter:
     image: juxpkr/geoevent-spark-custom-exporter:0.1
     container_name: spark-custom-exporter

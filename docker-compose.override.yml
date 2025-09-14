@@ -36,9 +36,7 @@ services:
       - ./.env
       - ./config/kafka/kafka.env
     environment:
-      # 기존 리스너에 EXTERNAL 리스너 추가
-      - KAFKA_LISTENERS=INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
-      # 외부에서 접속할 때는 localhost:29092 주소를 사용
+      # 로컬에서는 외부 주소를 localhost로 덮어쓴다
       - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://localhost:29092
     command: >
       bash -c " export KAFKA_OPTS='-javaagent:/opt/kafka/libs/jmx_prometheus_javaagent-1.4.0.jar=9404:/opt/kafka/config/kafka_jmx_config.yml' && /etc/confluent/docker/run "
@@ -360,7 +358,13 @@ services:
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - .:/app
-    command: webserver
+    command: >
+      bash -c "
+        wait-for-it.sh postgres:5432 -t 60 -- echo '✅ Postgres ready.' &&
+        wait-for-it.sh kafka:9092 -t 60 -- echo '✅ Kafka ready.' &&
+        wait-for-it.sh spark-master:7077 -t 60 -- echo '✅ Spark Master ready.' &&
+        airflow webserver
+      "
 
   airflow-scheduler:
     build:
@@ -401,7 +405,13 @@ services:
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
       - .:/app
-    command: scheduler
+    command: >
+      bash -c "
+        wait-for-it.sh postgres:5432 -t 60 -- echo '✅ Postgres ready.' &&
+        wait-for-it.sh kafka:9092 -t 60 -- echo '✅ Kafka ready.' &&
+        wait-for-it.sh spark-master:7077 -t 60 -- echo '✅ Spark Master ready.' &&
+        airflow scheduler
+      "
 
   jupyter-lab:
     build: .
@@ -448,8 +458,7 @@ services:
     volumes:
       - ./superset:/app/superset_home
       - ./config/superset:/config
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
-    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "postgres:5432", "-t", "60", "--", "sh", "/config/init-superset.sh" ]
+    entrypoint: [ "sh", "-c", "sleep 5 && /config/wait-for-it.sh postgres:5432 -t 60 -- /config/init-superset.sh" ]
 
   prometheus:
     image: ${PROMETHEUS_IMAGE}
@@ -522,6 +531,24 @@ services:
       timeout: 5s
       retries: 5
 
+  wiki-realtime-collector:
+    build:
+      context: .
+      dockerfile: ./wiki-stream-producer/Dockerfile
+    container_name: wiki-realtime-collector
+    networks:
+      - data-network
+    restart: always
+    depends_on:
+      - kafka
+    env_file:
+      - ./.env
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONPATH=/app
+    command: [ "python", "-u", "wiki-stream-producer/wiki_country_stream_producer.py" ]
+
 volumes:
   minio-data:
   spark-jars:
@@ -534,3 +561,4 @@ volumes:
 networks:
   data-network:
     driver: bridge
+    external: false
