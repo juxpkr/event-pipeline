@@ -6,9 +6,9 @@ MANAGER_HOST="geoevent-manager-01" # <--- IP 대신 별명
 WORKER_HOSTS=("geoevent-worker-01" "geoevent-worker-02") # <--- IP 대신 별명
 REMOTE_PROJECT_PATH="/app/event-pipeline"
 BRANCH="develop-vm"
-## ---------------------------------
-#
-## 0. 커밋 메시지 입력받기
+# ---------------------------------
+
+# 0. 커밋 메시지 입력받기
 echo "Enter commit message (or press Enter to use a default): "
 read COMMIT_MESSAGE
 if [ -z "$COMMIT_MESSAGE" ]; then
