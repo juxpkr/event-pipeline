@@ -11,33 +11,25 @@ echo "Postgres connection already verified by wait-for-it.sh"
 #     sleep 5
 # done
 
-# 2. 최초 실행인지 확인하고, 초기화 작업 수행
-if [ ! -f "$INIT_FLAG_FILE" ]; then
-    echo "This is the first run. Initializing Superset..."
+# 2. 매번 초기화 실행 (권한 문제 방지)
+echo "Initializing Superset (every startup for stability)..."
 
-    # Upgrade Superset database
-    echo "Upgrading Superset database..."
-    superset db upgrade
+# Upgrade Superset database
+echo "Upgrading Superset database..."
+superset db upgrade
 
-    # Create admin user
-    echo "Creating admin user..."
-    superset fab create-admin \
-        --username admin \
-        --firstname Admin \
-        --lastname User \
-        --email admin@superset.com \
-        --password admin
+# Create admin user (실패해도 무시 - 이미 존재할 수 있음)
+echo "Creating admin user..."
+superset fab create-admin \
+    --username admin \
+    --firstname Admin \
+    --lastname User \
+    --email admin@superset.com \
+    --password admin || echo "Admin user already exists, continuing..."
 
-    # Initialize Superset
-    echo "Initializing Superset..."
-    superset init
-
-    # 초기화 완료 플래그 생성
-    echo "Initialization completed. Creating flag file."
-    touch "$INIT_FLAG_FILE"
-else
-    echo "Initialization already completed. Skipping..."
-fi
+# Initialize Superset (권한 동기화)
+echo "Initializing Superset permissions..."
+superset init
 
 # 3. Superset 웹서버 실행 (매번 실행) 
 echo "Starting Superset webserver..."
