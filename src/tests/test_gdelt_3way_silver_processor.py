@@ -70,7 +70,7 @@ def transform_events_to_silver(bronze_df: DataFrame) -> DataFrame:
 
     silver_df = valid_df.select(
         # 기본 식별자 (0-4)
-        F.col("bronze_data")[0].cast(LongType()).alias("global_event_id"),
+        F.col("bronze_data")[0].alias("global_event_id"),
         F.col("bronze_data")[1].alias("event_date_str"),
         # Actor1 (5-14)
         F.col("bronze_data")[5].alias("actor1_code"),
@@ -588,20 +588,13 @@ def main():
         logger.error(f"❌ Error in 3-Way Silver processing: {e}", exc_info=True)
 
     finally:
+        logging.info("🔄 Cleaning up Spark session...")
         try:
-            logging.info(
-                "✅ Job finished. Press Enter in the container's terminal to stop Spark session..."
-            )
-            input()
-        except Exception:
-            logging.info(
-                "Running in non-interactive mode. Shutting down after job completion."
-            )
-
-        redis_client.unregister_driver_ui(spark)
+            redis_client.unregister_driver_ui(spark)
+        except:
+            pass
         spark.stop()
         logger.info("✅ Spark session closed")
-
 
 if __name__ == "__main__":
     main()
