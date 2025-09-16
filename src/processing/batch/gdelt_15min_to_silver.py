@@ -2,6 +2,7 @@
 GDELT Silver Processor - Kafka Raw 데이터를 읽어서 정제 후 Silver Delta Table로 저장
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -239,7 +240,7 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
     logger.info("📥 Reading RAW data from Kafka...")
     raw_df = (
         spark.read.format("kafka")
-        .option("kafka.bootstrap.servers", "kafka:29092")
+        .option("kafka.bootstrap.servers", os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
         .option("subscribe", "gdelt_raw_events")
         .option("startingOffsets", "earliest")
         .option("endingOffsets", "latest")

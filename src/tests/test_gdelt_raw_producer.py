@@ -25,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 # .env 파일에서 설정값 로드
 load_dotenv()
-KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
+KAFKA_BOOTSTRAP_SERVERS = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 KAFKA_TOPIC = os.getenv("KAFKA_TOPIC_GDELT", "gdelt_raw_events_test")  # Test 토픽
 
 

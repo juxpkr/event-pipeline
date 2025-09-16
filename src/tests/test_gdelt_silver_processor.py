@@ -11,6 +11,7 @@ sys.path.append("/opt/airflow")
 
 from src.utils.spark_builder import get_spark_session
 from src.utils.redis_client import redis_client
+from test_gdelt_schemas import GDELTSchemas
 from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
 import time
@@ -21,81 +22,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-def get_gdelt_silver_schema():
-    """GDELT Silver Table 스키마 정의 (GDELT 2.0 코드북 기준)"""
-    return StructType(
-        [
-            # 기본 식별자
-            StructField("global_event_id", LongType(), False),
-            StructField("event_date", DateType(), True),
-            # 주체(Actor1) 정보
-            StructField("actor1_code", StringType(), True),
-            StructField("actor1_name", StringType(), True),
-            StructField("actor1_country_code", StringType(), True),
-            StructField("actor1_known_group_code", StringType(), True),
-            StructField("actor1_ethnic_code", StringType(), True),
-            StructField("actor1_religion1_code", StringType(), True),
-            StructField("actor1_religion2_code", StringType(), True),
-            StructField("actor1_type1_code", StringType(), True),
-            StructField("actor1_type2_code", StringType(), True),
-            StructField("actor1_type3_code", StringType(), True),
-            # 대상(Actor2) 정보
-            StructField("actor2_code", StringType(), True),
-            StructField("actor2_name", StringType(), True),
-            StructField("actor2_country_code", StringType(), True),
-            StructField("actor2_known_group_code", StringType(), True),
-            StructField("actor2_ethnic_code", StringType(), True),
-            StructField("actor2_religion1_code", StringType(), True),
-            StructField("actor2_religion2_code", StringType(), True),
-            StructField("actor2_type1_code", StringType(), True),
-            StructField("actor2_type2_code", StringType(), True),
-            StructField("actor2_type3_code", StringType(), True),
-            # 이벤트 정보
-            StructField("is_root_event", IntegerType(), True),
-            StructField("event_code", StringType(), True),
-            StructField("event_base_code", StringType(), True),
-            StructField("event_root_code", StringType(), True),
-            StructField("quad_class", IntegerType(), True),
-            StructField("goldstein_scale", DoubleType(), True),
-            StructField("num_mentions", IntegerType(), False),
-            StructField("num_sources", IntegerType(), False),
-            StructField("num_articles", IntegerType(), False),
-            StructField("avg_tone", DoubleType(), True),
-            # 주체1 지리정보
-            StructField("actor1_geo_type", IntegerType(), True),  # 코드북 기준: Integer
-            StructField("actor1_geo_fullname", StringType(), True),
-            StructField("actor1_geo_country_code", StringType(), True),
-            StructField("actor1_geo_adm1_code", StringType(), True),
-            StructField("actor1_geo_adm2_code", StringType(), True),
-            StructField("actor1_geo_lat", DoubleType(), True),
-            StructField("actor1_geo_long", DoubleType(), True),
-            StructField("actor1_geo_feature_id", StringType(), True),
-            # 대상2 지리정보
-            StructField("actor2_geo_type", IntegerType(), True),  # 코드북 기준: Integer
-            StructField("actor2_geo_fullname", StringType(), True),
-            StructField("actor2_geo_country_code", StringType(), True),
-            StructField("actor2_geo_adm1_code", StringType(), True),
-            StructField("actor2_geo_adm2_code", StringType(), True),
-            StructField("actor2_geo_lat", DoubleType(), True),
-            StructField("actor2_geo_long", DoubleType(), True),
-            StructField("actor2_geo_feature_id", StringType(), True),
-            # 사건 지리정보
-            StructField("action_geo_type", IntegerType(), True),  # 코드북 기준: Integer
-            StructField("action_geo_fullname", StringType(), True),
-            StructField("action_geo_country_code", StringType(), True),
-            StructField("action_geo_adm1_code", StringType(), True),
-            StructField("action_geo_adm2_code", StringType(), True),
-            StructField("action_geo_lat", DoubleType(), True),
-            StructField("action_geo_long", DoubleType(), True),
-            StructField("action_geo_feature_id", StringType(), True),
-            # 추가 정보
-            StructField("date_added", TimestampType(), True),
-            StructField("source_url", StringType(), True),
-            # 메타데이터
-            StructField("processed_time", TimestampType(), False),
-            StructField("source_file", StringType(), True),
-        ]
-    )
+# 중복 스키마 함수 제거 - test_gdelt_schemas.py의 GDELTSchemas 클래스 사용
 
 
 def transform_raw_to_silver(raw_df: DataFrame) -> DataFrame:
@@ -213,7 +140,7 @@ def transform_raw_to_silver(raw_df: DataFrame) -> DataFrame:
     )
 
     # 6. 최종 스키마에 맞게 컬럼 순서 정리 및 선택
-    final_columns = [f.name for f in get_gdelt_silver_schema().fields]
+    final_columns = [f.name for f in GDELTSchemas.get_silver_events_schema().fields]
     silver_df = silver_df.select(final_columns)
 
     return silver_df
@@ -245,7 +172,7 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
     raw_df = (
         spark.read.format("kafka")
         .option("kafka.bootstrap.servers", os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
-        .option("subscribe", "gdelt_raw_events_test")
+        .option("subscribe", "gdelt_events_raw,gdelt_mentions_raw,gdelt_gkg_raw")
         .option("startingOffsets", "earliest")
         .option("endingOffsets", "latest")
         .load()
@@ -256,16 +183,23 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
             F.col("value").cast("string"),
             StructType(
                 [
+                    StructField("data_type", StringType(), True),
                     StructField("raw_data", ArrayType(StringType()), True),
                     StructField("row_number", IntegerType(), True),
                     StructField("source_file", StringType(), True),
                     StructField("extracted_time", StringType(), True),
                     StructField("source_url", StringType(), True),
                     StructField("total_columns", IntegerType(), True),
+                    StructField("join_keys", StructType([
+                        StructField("GLOBALEVENTID", StringType(), True),
+                        StructField("DATE", StringType(), True),
+                        StructField("DocumentIdentifier", StringType(), True)
+                    ]), True),
                 ]
             ),
-        ).alias("data")
-    ).select("data.*")
+        ).alias("data"),
+        F.col("topic")
+    ).select("data.*", "topic")
     return parsed_df
 
 
@@ -299,27 +233,33 @@ def main():
 
     try:
         # 1. 빈 테이블을 선점 해야함.
-        silver_schema = get_gdelt_silver_schema()
+        silver_schema = GDELTSchemas.get_silver_events_schema()
         setup_silver_table(
             spark,
-            "test.gdelt_historical_silver",
-            "s3a://warehouse/silver/test_gdelt_historical",
+            "test.gdelt_3way_silver",
+            "s3a://warehouse/silver/test_gdelt_3way",
             silver_schema,
         )
 
-        # 2. 데이터 처리 로직
+        # 2. 데이터 처리 로직 - 3개 토픽에서 읽기
         parsed_df = read_from_kafka(spark)
         if parsed_df.rdd.isEmpty():
             logger.warning("⚠️ No RAW data found in Kafka. Exiting gracefully.")
             return
 
-        # 3. 데이터 변환
-        silver_df = transform_raw_to_silver(parsed_df)
+        # 3. Events 데이터만 처리 (3-way join은 별도로)
+        events_df = parsed_df.filter(F.col("data_type") == "events")
+        if events_df.rdd.isEmpty():
+            logger.warning("⚠️ No Events data found. Exiting gracefully.")
+            return
 
-        # 4. 데이터 저장
-        write_to_silver(silver_df, "s3a://warehouse/silver/test_gdelt_historical")
+        # 4. 데이터 변환
+        silver_df = transform_raw_to_silver(events_df)
 
-        # 5. 샘플 데이터 확인
+        # 5. 데이터 저장
+        write_to_silver(silver_df, "s3a://warehouse/silver/test_gdelt_3way")
+
+        # 6. 샘플 데이터 확인
         logger.info("🔍 Sample final Silver data:")
         silver_df.select(
             "global_event_id",

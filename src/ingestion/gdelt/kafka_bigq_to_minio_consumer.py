@@ -32,7 +32,7 @@ def main():
 
     try:
         # Kafka 접속 정보
-        kafka_bootstrap_servers = "kafka:29092"
+        kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
         kafka_topic_name = "gdelt_events"
 
         logger.info(f"📥 Reading data from Kafka topic: {kafka_topic_name}")
