@@ -64,6 +64,9 @@ RUN chmod +x /usr/local/bin/wait-for-it.sh
 # 9. pip install을 실행하기 전에, 반드시 airflow 사용자로 돌아와야 함
 USER airflow
 
+# Spark Kafka SQL 패키지 미리 다운로드하여 캐싱
+RUN spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1 --version
+
 # 9. Airflow에 필요한 Python 라이브러리 설치
 COPY ./airflow/requirements-airflow.txt /requirements-airflow.txt
 RUN pip install --no-cache-dir -r /requirements-airflow.txt

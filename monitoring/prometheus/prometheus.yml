@@ -14,7 +14,7 @@ scrape_configs:
   # Kafka
   - job_name: 'kafka'
     static_configs:
-      - targets: ['kafka:9404']
+      - targets: ['kafka-jmx-exporter:19404']
     scrape_interval: 30s
   
   - job_name: 'spark-custom-exporter'

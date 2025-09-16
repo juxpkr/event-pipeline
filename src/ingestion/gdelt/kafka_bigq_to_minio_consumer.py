@@ -32,7 +32,7 @@ def main():
 
     try:
         # Kafka 접속 정보
-        kafka_bootstrap_servers = "kafka:29092"
+        kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
         kafka_topic_name = "gdelt_events"
 
         logger.info(f"📥 Reading data from Kafka topic: {kafka_topic_name}")
@@ -62,7 +62,7 @@ def main():
         # MinIO에 저장할 경로 설정
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
         # "historical"을 경로에 추가하고 Parquet 형식으로 저장
-        minio_path = f"s3a://raw/gdelt_events_historical/{current_time}"
+        minio_path = f"s3a://warehouse/raw/gdelt_events_historical/{current_time}"
 
         logger.info(f"💾 Saving data as Parquet to MinIO path: {minio_path}")
 

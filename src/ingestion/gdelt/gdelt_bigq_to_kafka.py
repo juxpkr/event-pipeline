@@ -62,7 +62,7 @@ def main():
     # 3. Kafka 프로듀서 생성
     try:
         producer = KafkaProducer(
-            bootstrap_servers=["kafka:29092"],
+            bootstrap_servers=[os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")],
             value_serializer=lambda v: json.dumps(v).encode("utf-8"),
         )
         print("Kafka 프로듀서 생성 성공.")

@@ -22,16 +22,17 @@ logger = logging.getLogger(__name__)
 
 def main():
     """
-    Kafka 'gdelt_raw_events' 토픽에서 15분 GDELT 데이터를 읽어 MinIO 'raw/gdelt_events_15' 버킷에 저장하는 Spark 배치 작업.
+    Kafka 'gdelt_raw_events' 토픽에서 15분 GDELT 데이터를 읽어 MinIO 'bronze/gdelt_events_15' 테이블에 저장하는 Spark 배치 작업.
     """
     logger.info("🚀 Starting Kafka RAW to MinIO Consumer (Spark Batch Job)...")
 
+
     # Spark 세션 생성 (MinIO 접속 정보는 여기서 자동으로 설정됨)
-    spark = get_spark_session("KafkaRawToMinIO_Consumer")
+    spark = get_spark_session("KafkaBronzeToMinIO_Consumer")
 
     try:
         # Kafka 접속 정보
-        kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:29092")
+        kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
         kafka_topic_name = os.getenv("KAFKA_TOPIC_GDELT", "gdelt_raw_events")
 
         logger.info(f"📥 Reading data from Kafka topic: {kafka_topic_name}")
@@ -56,12 +57,12 @@ def main():
 
         # MinIO에 저장할 경로 설정
         current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        minio_path = f"s3a://raw/gdelt_events_15/{current_time}"
+        minio_path = f"s3a://warehouse/bronze/gdelt_events_15/{current_time}"
 
-        logger.info(f"💾 Saving data as Parquet to MinIO path: {minio_path}")
+        logger.info(f"💾 Saving data as Delta to MinIO path: {minio_path}")
 
-        # 데이터를 Parquet 형식으로 MinIO에 저장
-        (raw_json_df.write.format("parquet").mode("overwrite").save(minio_path))
+        # 데이터를 Delta 형식으로 MinIO에 저장
+        (raw_json_df.write.format("delta").mode("overwrite").save(minio_path))
 
         record_count = raw_json_df.count()
         logger.info(f"🎉 Successfully saved {record_count} records to {minio_path}")

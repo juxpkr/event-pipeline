@@ -1,0 +1,120 @@
+code,type,description
+ACC,IGO,Arab Cooperation Council
+ADB,IGO,Asian Development Bank
+AEU,IGO,Arab Economic Unity Council
+AFB,IGO,African Development Bank
+ALC,Party,All Liberia Coalition Party
+AMF,IGO,Arab Monetary Fund
+AMN,NGO,Amnesty International
+AMU,IGO,Arab Maghreb Union
+ANO,Rebel,Abu Nidal Organization
+ANP,Party,"Motherland Party (ANAP)"
+AAM,Rebel,Al Aqsa Martyrs Brigade
+AKP,Party,"Justice and Development Party (AKP)"
+ALQ,IMG,Al Qaeda
+ARL,IGO,Arab League
+ASN,IGO,"Association of Southeast Asian Nations (ASEAN)"
+BTH,Party,Baath Party
+BHF,Government,"Bosniak/Croat Federation of Bosnia and Herzegovina"
+BIS,IGO,Bank for International Settlements
+BTH,PTY,Baath Party
+CFD,NGO,Campaign for Democracy
+CHP,Party,"Republican People’s Party (CHP)"
+CIS,IGO,Commonwealth of Independent States
+CMN,Party,Communist Party
+COE,IGO,Council of Europe
+CRC,NGO,International Fed. of Red Cross and Red Crescent (ICRC)
+CWN,IGO,Commonwealth of Nations
+DFL,Rebel,"Democratic Front for the Liberation of Palestine (DFLP)"
+DSP,Party,"Democratic Left Party (DSP)"
+DTP,Party,Democratic Society Party (DTP)
+DYP,Party,"True Path Party (DYP)"
+EBR,IGO,European Bank for Reconstruction and Development
+ECA,IGO,Economic Community of Central African States
+EEC,IGO,European Union
+EFT,IGO,European Free Trade Association
+FAZ,Party,Virtue Party (Fazilet)
+FID,NGO,International Federation of Human Rights (FIDH)
+FIS,Party,Islamic Salvation Front
+FLN,Party,National Liberation Front
+FTA,Government,"Fatah (d.r.)"
+GCC,IGO,Gulf Cooperation Council
+GIA,Rebel,"Armed Islamic Group (GIA)"
+GOE,IGO,"Group of Eight (G-8)"
+GOS,IGO,"Group of Seven (G-7)"
+GSS,IGO,"Group of Seventy-Seven (G-77)"
+HAM,Government,"Hamas (d.r.)"
+HDP,Party,"Democratic People’s Party (DEHAP/HADEP)"
+HEZ,Rebel,Hezbullah
+HIP,IGO,Highly Indebted Poor Countries
+HRW,NGO,Human Rights Watch
+IAE,IGO,"International Atomic Energy Agency (IAEA)"
+ICG,NGO,International Crisis Group
+ICJ,IGO,"International Court of Justice (ICJ)"
+ICO,IGO,"International Cocoa Organization (ICCO)"
+ICRC,NGO,International Fed. of Red Cross and Red Crescent
+IDB,IGO,Islamic Development Bank
+IHF,NGO,International Helsinki Federation for Human Rights
+ILO,IGO,International Labor Organization
+IMF,IGO,"International Monetary Fund (IMF)"
+IOM,NGO,International Organization for Migration
+IPU,IGO,Inter-Parliamentary Union
+IRA,Rebel,Irish Republican Army
+IRC,NGO,Red Cross
+ISJ,Rebel,Palestinian Islamic Jihad
+ITP,IGO,Interpol
+JUR,NGO,International Commission of Jurists
+KDP,Party,"Kurdish Democratic Party (KDP)"
+KMR,Rebel,Khmer Rouge
+LAP,Party,"Liberia Action Party (d.r.)"
+LBA,Party,"Israeli Labor Party (d.r.)"
+LKD,Party,"Likud Party (d.r.)"
+LPC,Rebel,Liberia Peace Council
+LUR,Rebel,"Liberians United for Reconciliation and Democracy (LURD)"
+MAD,Rebel,"Movement for the Advancement of Democracy (MAD)"
+MDF,Rebel,Movement of Democratic Forces of Casamance
+MHP,Party,"National Action Party (MHP)"
+MRZ,Party,"Meretz Party (d.r.)"
+MSF,NGO,Medecins Sans Frontieres (Doctors Without Borders)
+MSP,Party,"Movement of the Society for Peace"
+N_D_M,Party,New Deal Movement
+NADECO,NGO,"National Democratic Coalition of Nigeria (NADECO)"
+NAT,IGO,"North Atlantic Treaty Organization (NATO)"
+NDP,Party,"National Democratic Party of Liberia (d.r.)"
+NON,IGO,Organization of Non-Aligned Countries
+NPF,Party,"National Patriotic Front of Liberia (NPFL) (d.r.)"
+OAS,IGO,Organization of American States
+OAU,IGO,"Organization of African Unity (OAU)"
+OIC,IGO,"Organization of Islamic Conferences (OIC)"
+OPC,IGO,"Organization of Petroleum Exporting Countries (OPEC)"
+OSCE,IGO,"Council of Security and Cooperation in Europe (OSCE)"
+PFL,Rebel,"People’s Front for the Liberation of Palestine (PFLP)"
+PKK,Rebel,"Kurdistan Workers’ Party (PKK)"
+PLF,Rebel,Palestine Liberation Front
+PLO,Organization,Palestine Liberation Organization
+PMD,Rebel,People's Mujahedeen
+PRC,IGO,Paris Club
+RCR,NGO,Red Crescent
+REP,Party,"Welfare Party (Refah) (d.r.)"
+RND,Party,Democratic National Rally
+RPF,Government,"Rwandan Patriotic Front (d.r.)"
+RUF,Rebel,Revolutionary United Front
+SAA,IGO,South Asian Association
+SAD,IGO,Southern African Development Community
+SEATO,IGO,Southeast Asia Collective Defense Treaty (SEATO)
+SHA,Party,"Shas Party (d.r.)"
+SLA,Rebel,South Lebanon Army
+SPL,Rebel,Sudan People’s Liberation Army
+SRP,Government,Bosnian Serb Republika Srpska
+TAL,Rebel,"Taliban (d.r.)"
+UEM,IGO,Economic and Monetary Union of West Africa (UEMOA)
+ULM,Rebel,United Liberation Front for Democracy
+UNI,Rebel,"National Union for the Total Independence of Angola (UNITA)"
+UNO,IGO,United Nations
+UPP,Party,"United People’s Party (d.r.)"
+WAS,IGO,"Economic Community of West African States (ECOWAS)"
+WBK,IGO,World Bank
+WEF,NGO,World Economic Forum
+WHO,IGO,World Health Organization
+WTO,IGO,World Trade Organization
+XFM,NGO,Oxfam
