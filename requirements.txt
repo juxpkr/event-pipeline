@@ -30,3 +30,5 @@ redis==5.0.1
 # Code quality tools
 black==24.4.2
 flake8==7.0.0
+
+requests-sse
