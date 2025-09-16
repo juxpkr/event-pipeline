@@ -11,7 +11,7 @@ import pendulum
 with DAG(
     dag_id="gdelt_3way_test_pipeline",
     start_date=pendulum.datetime(2025, 9, 15, tz="Asia/Seoul"),
-    schedule="*/15 * * * *",  
+    schedule="0,15,30,45 * * * *",  # 정각 기준 15분 단위 실행  
     catchup=False,
     max_active_runs=1,
     doc_md="""
