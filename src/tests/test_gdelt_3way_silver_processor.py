@@ -299,18 +299,24 @@ def transform_gkg_to_silver(df: DataFrame) -> DataFrame:
 
 
 def write_to_silver(df: DataFrame, silver_path: str, table_name: str):
-    """변환된 DataFrame을 Silver Layer에 저장"""
+    """변환된 DataFrame을 Silver Layer에 저장 (월/일 파티셔닝 적용)"""
     logger.info(f"💾 Saving {table_name} data to Silver Delta Table...")
     record_count = df.count()
     if record_count == 0:
         logger.warning(f"⚠️ No {table_name} records to save!")
         return
 
+    # 월/일 파티션 컬럼 추가
+    df_with_partitions = df.withColumn("year", F.year(F.col("event_date"))) \
+                           .withColumn("month", F.month(F.col("event_date"))) \
+                           .withColumn("day", F.dayofmonth(F.col("event_date")))
+
     (
-        df.coalesce(1)
+        df_with_partitions.coalesce(1)
         .write.format("delta")
-        .mode("overwrite")
-        .option("overwriteSchema", "true")
+        .mode("append")  
+        .option("mergeSchema", "true")  
+        .partitionBy("year", "month", "day")  
         .save(silver_path)
     )
     logger.info(
