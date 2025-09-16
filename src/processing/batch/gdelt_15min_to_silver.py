@@ -12,6 +12,7 @@ project_root = Path(__file__).resolve().parents[3]
 sys.path.append(str(project_root))
 
 from src.utils.spark_builder import get_spark_session
+from src.utils.notifications import notify_gdelt_anomalies
 from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
 import time
@@ -308,11 +309,14 @@ def main():
 
         # 3. 데이터 변환
         silver_df = transform_raw_to_silver(parsed_df)
+        
+        # 4. 이상치 탐지 및 알림
+        notify_gdelt_anomalies(silver_df)
 
-        # 4. 데이터 저장
+        # 5. 데이터 저장
         write_to_silver(silver_df, "s3a://warehouse/silver/gdelt_events")
 
-        # 5. 샘플 데이터 확인
+        # 6. 샘플 데이터 확인
         logger.info("🔍 Sample final Silver data:")
         silver_df.select(
             "global_event_id",
