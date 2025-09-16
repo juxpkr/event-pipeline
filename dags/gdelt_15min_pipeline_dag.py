@@ -14,6 +14,7 @@ with DAG(
     ### GDELT 전체 파이프라인 DAG
     - 목적: Raw Producer → Kafka → MinIO Bronze Table → Spark Processor → MinIO Silver Table
     - 순서: Raw Producer → Kafka to Bronze → Silver Processor
+    - Silver Processor 작업에 이상치 탐지 및 알림 기능이 포함되어 있습니다.
     """,
 ) as dag:
     # 공통 상수 정의
@@ -40,6 +41,7 @@ with DAG(
     )
 
     # Spark Processor (Kafka → MinIO Silver Table)
+    # 이 작업에는 이상치 탐지 및 알림 기능이 포함되어 있습니다.
     gdelt_15min_to_silver = BashOperator(
         task_id="gdelt_15min_to_silver",
         bash_command=(
