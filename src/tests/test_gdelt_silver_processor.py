@@ -171,7 +171,10 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
     logger.info("📥 Reading RAW data from Kafka...")
     raw_df = (
         spark.read.format("kafka")
-        .option("kafka.bootstrap.servers", os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
+        .option(
+            "kafka.bootstrap.servers",
+            os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"),
+        )
         .option("subscribe", "gdelt_events_raw,gdelt_mentions_raw,gdelt_gkg_raw")
         .option("startingOffsets", "earliest")
         .option("endingOffsets", "latest")
@@ -190,15 +193,21 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
                     StructField("extracted_time", StringType(), True),
                     StructField("source_url", StringType(), True),
                     StructField("total_columns", IntegerType(), True),
-                    StructField("join_keys", StructType([
-                        StructField("GLOBALEVENTID", StringType(), True),
-                        StructField("DATE", StringType(), True),
-                        StructField("DocumentIdentifier", StringType(), True)
-                    ]), True),
+                    StructField(
+                        "join_keys",
+                        StructType(
+                            [
+                                StructField("GLOBALEVENTID", StringType(), True),
+                                StructField("DATE", StringType(), True),
+                                StructField("DocumentIdentifier", StringType(), True),
+                            ]
+                        ),
+                        True,
+                    ),
                 ]
             ),
         ).alias("data"),
-        F.col("topic")
+        F.col("topic"),
     ).select("data.*", "topic")
     return parsed_df
 

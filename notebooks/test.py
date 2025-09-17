@@ -128,7 +128,7 @@ def create_simple_story(row):
 
 
 def create_rich_story(row):
-    """향상된 버전 """
+    """향상된 버전"""
 
     # 기본 정보
     actor1 = row.get("actor1_name") or row.get("actor1_code") or "Unknown entity"
@@ -147,12 +147,12 @@ def create_rich_story(row):
             f"{persons[0]} from {actor1}" if len(persons[0]) > len(actor1) else actor1
         )
 
-    # 액션 
+    # 액션
     action = cameo_actions.get(
         event_code, f"{event_code} 액션을 취했다 (took action {event_code})"
     )
 
-    # 톤 분석 
+    # 톤 분석
     tone = row.get("avg_tone", 0)
     if tone > 5:
         tone_desc = "매우 긍정적인 방식으로 (in a highly positive manner)"

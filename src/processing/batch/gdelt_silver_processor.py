@@ -255,7 +255,10 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
     logger.info("📥 Reading RAW data from Kafka...")
     raw_df = (
         spark.read.format("kafka")
-        .option("kafka.bootstrap.servers", os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
+        .option(
+            "kafka.bootstrap.servers",
+            os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"),
+        )
         .option("subscribe", "gdelt_raw_events")
         .option("startingOffsets", "earliest")
         .option("endingOffsets", "latest")

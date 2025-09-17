@@ -13,7 +13,7 @@ SPARK_MASTER_URL = "spark://spark-master:7077"
 with DAG(
     dag_id="process_5min_wiki_country_edit_counts",
     start_date=pendulum.datetime(2024, 5, 24, tz="UTC"),
-    #schedule_interval="* * * * *",  # Run every 1 minute
+    # schedule_interval="* * * * *",  # Run every 1 minute
     schedule_interval="*/5 * * * *",  # test 5 minutes
     catchup=False,
     doc_md="""

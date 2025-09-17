@@ -38,7 +38,6 @@ theme_mapping = {
     "WB_": "세계은행 주제 (World Bank theme)",
     "UN_": "유엔 관련 (United Nations)",
     "EU_": "유럽연합 관련 (European Union)",
-
     # 경제/재정
     "ECON_": "경제 (economic)",
     "EPU_": "경제정책 불확실성 (economic policy uncertainty)",
@@ -48,13 +47,11 @@ theme_mapping = {
     "TRADE": "무역 (trade)",
     "INVEST": "투자 (investment)",
     "SANCTIONS": "제재 (sanctions)",
-
     # 사회/정치 불안
     "UNREST_": "사회 불안/저항 (unrest)",
     "PROTEST": "시위/항의 (protest)",
     "STRIKE": "파업/노동쟁의 (strike)",
     "COUP": "쿠데타 (coup d'état)",
-
     # 갈등/안보
     "CONFLICT": "분쟁/갈등 (conflict)",
     "MILITARY": "군사 관련 (military)",
@@ -62,14 +59,12 @@ theme_mapping = {
     "TERROR": "테러 관련 (terrorism)",
     "VIOLENCE": "폭력 사건 (violence)",
     "WAR": "전쟁 (war)",
-
     # 인권/법치
     "HUMAN_RIGHTS": "인권 (human rights)",
     "GENOCIDE": "집단학살 (genocide)",
     "JUSTICE": "사법/정의 (justice)",
     "LAW": "법률/규제 (law)",
     "SOVEREIGNTY": "주권 문제 (sovereignty)",
-
     # 재난/위기
     "CRISISLEX_": "위기 (crisis)",
     "NATURAL_DISASTER_": "자연재해 (natural disaster)",
@@ -78,26 +73,22 @@ theme_mapping = {
     "EARTHQUAKE": "지진 (earthquake)",
     "FIRE": "화재 (fire)",
     "EPIDEMIC": "전염병/질병 확산 (epidemic)",
-
     # 원조/구호
     "AID_": "원조/인도주의 지원 (aid/humanitarian)",
     "FOOD_SECURITY": "식량 안보 (food security)",
     "REFUGEE": "난민/이주민 (refugees/migration)",
     "HUMANITARIAN": "인도주의 (humanitarian aid)",
-
     # 환경/자원
     "CLIMATE": "기후/환경 (climate/environment)",
     "ENERGY": "에너지 (energy)",
     "OIL": "석유/가스 (oil/gas)",
     "WATER": "물 자원 (water resources)",
     "FOREST": "산림/자연자원 (forests/natural resources)",
-
     # 미디어/정보
     "MEDIA": "미디어/언론 (media)",
     "INTERNET": "인터넷/디지털 (internet/digital)",
     "ICT": "정보통신기술 (ICT)",
     "SOCIAL_MEDIA": "소셜 미디어 (social media)",
-
     # 기타
     "ELECTION": "선거/정치 과정 (elections)",
     "CORRUPTION": "부패 (corruption)",
@@ -106,6 +97,8 @@ theme_mapping = {
     "DRUG": "마약/불법거래 (drugs/illicit trade)",
     "ORGANIZED_CRIME": "조직범죄 (organized crime)",
 }
+
+
 # -------------------------------------------------------------------
 # 3. 필터링 유틸 함수
 # -------------------------------------------------------------------
@@ -142,11 +135,14 @@ def extract_rich_themes(themes_str):
         if is_valid_text(theme_name):  # 숫자 배열 필터링 적용
             for prefix, replacement in theme_mapping.items():
                 if prefix in theme_name:
-                    clean_name = theme_name.replace(prefix, replacement).replace("_", " ").strip()
+                    clean_name = (
+                        theme_name.replace(prefix, replacement)
+                        .replace("_", " ")
+                        .strip()
+                    )
                     if clean_name and clean_name not in themes:
                         themes.append(clean_name)
     return themes[:3]
-
 
 
 def extract_key_persons(persons_str):
@@ -166,6 +162,7 @@ def extract_amounts(amounts_str):
         return []
     return [a.strip() for a in amounts_str.split(";") if re.search(r"\d", a)][:2]
 
+
 # -------------------------------------------------------------------
 # 5. 스토리 생성 함수
 # -------------------------------------------------------------------
@@ -173,12 +170,21 @@ def create_simple_story(row):
     actor1 = row.get("actor1_name") or row.get("actor1_code") or "Unknown entity"
     actor2 = row.get("actor2_name") or row.get("actor2_code")
     event_code = str(row.get("event_code", "")).zfill(3)
-    location = (row.get("action_geo_fullname", "").split(",")[0]
-                if row.get("action_geo_fullname") else "unknown location")
+    location = (
+        row.get("action_geo_fullname", "").split(",")[0]
+        if row.get("action_geo_fullname")
+        else "unknown location"
+    )
     tone = row.get("avg_tone", 0)
 
-    action = cameo_actions.get(event_code, f"{event_code} 액션을 수행했다 (performed action {event_code})")
-    tone_desc = "긍정적으로 (positively)" if tone > 2 else "부정적으로 (negatively)" if tone < -2 else "중립적으로 (neutrally)"
+    action = cameo_actions.get(
+        event_code, f"{event_code} 액션을 수행했다 (performed action {event_code})"
+    )
+    tone_desc = (
+        "긍정적으로 (positively)"
+        if tone > 2
+        else "부정적으로 (negatively)" if tone < -2 else "중립적으로 (neutrally)"
+    )
 
     if actor2 and actor2.strip():
         return f"{actor1}이(가) {location}에서 {actor2}에게 {action} ({tone_desc})"
@@ -189,14 +195,21 @@ def create_rich_story(row):
     actor1 = row.get("actor1_name") or row.get("actor1_code") or "Unknown entity"
     actor2 = row.get("actor2_name") or row.get("actor2_code")
     event_code = str(row.get("event_code", "")).zfill(3)
-    location = (row.get("action_geo_fullname", "").split(",")[0]
-                if row.get("action_geo_fullname") else "unknown location")
+    location = (
+        row.get("action_geo_fullname", "").split(",")[0]
+        if row.get("action_geo_fullname")
+        else "unknown location"
+    )
 
     persons = extract_key_persons(row.get("v2_persons", ""))
     if persons and persons[0].lower() not in actor1.lower():
-        actor1 = f"{persons[0]} from {actor1}" if len(persons[0]) > len(actor1) else actor1
+        actor1 = (
+            f"{persons[0]} from {actor1}" if len(persons[0]) > len(actor1) else actor1
+        )
 
-    action = cameo_actions.get(event_code, f"{event_code} 액션을 취했다 (took action {event_code})")
+    action = cameo_actions.get(
+        event_code, f"{event_code} 액션을 취했다 (took action {event_code})"
+    )
 
     tone = row.get("avg_tone", 0)
     if tone > 5:
@@ -211,24 +224,42 @@ def create_rich_story(row):
         tone_desc = "중립적인 톤으로 (in a neutral tone)"
 
     themes = extract_rich_themes(row.get("v2_enhanced_themes", ""))
-    context = f" {', '.join(themes)}에 관해 (concerning {', '.join(themes)})" if themes else ""
+    context = (
+        f" {', '.join(themes)}에 관해 (concerning {', '.join(themes)})"
+        if themes
+        else ""
+    )
 
     orgs = extract_key_organizations(row.get("v2_organizations", ""))
-    org_context = f" {', '.join(orgs)}와 관련하여 (involving {', '.join(orgs)})" if orgs else ""
+    org_context = (
+        f" {', '.join(orgs)}와 관련하여 (involving {', '.join(orgs)})" if orgs else ""
+    )
 
     amounts = extract_amounts(row.get("amounts", ""))
-    amount_context = f" {', '.join(amounts)} 규모로 (worth {', '.join(amounts)})" if amounts else ""
+    amount_context = (
+        f" {', '.join(amounts)} 규모로 (worth {', '.join(amounts)})" if amounts else ""
+    )
 
     num_articles = row.get("num_articles", 0)
     source = row.get("mention_source_name", "")
-    source_context = f" ({num_articles}개 기사에서 보도됨" + (f", {source} 포함" if source else "") \
-                     + f" / reported across {num_articles} articles" \
-                     + (f" including {source}" if source else "") + ")"
+    source_context = (
+        f" ({num_articles}개 기사에서 보도됨"
+        + (f", {source} 포함" if source else "")
+        + f" / reported across {num_articles} articles"
+        + (f" including {source}" if source else "")
+        + ")"
+    )
 
     goldstein = row.get("goldstein_scale", 0)
-    importance = "주요 사건 (MAJOR EVENT): " if abs(goldstein) > 8 \
-        else "중요 사건 (SIGNIFICANT): " if abs(goldstein) > 5 \
-        else "주목할 만한 사건 (NOTABLE): " if abs(goldstein) > 3 else ""
+    importance = (
+        "주요 사건 (MAJOR EVENT): "
+        if abs(goldstein) > 8
+        else (
+            "중요 사건 (SIGNIFICANT): "
+            if abs(goldstein) > 5
+            else "주목할 만한 사건 (NOTABLE): " if abs(goldstein) > 3 else ""
+        )
+    )
 
     if actor2 and actor2.strip():
         return f"{importance}{actor1}이(가) {location}에서 {actor2}에게 {tone_desc} {action}{context}{org_context}{amount_context}{source_context}"
@@ -249,7 +280,7 @@ def create_headline_story(row):
         "130": "issued threats",
         "180": "launched assault",
         "190": "armed conflict",
-        "200": "mass violence"
+        "200": "mass violence",
     }
     event_desc = event_mapping.get(event, "took action")
 
@@ -270,7 +301,7 @@ def create_event_summary(row):
         "14": "Protest",
         "18": "Assault",
         "19": "Conflict",
-        "20": "Violence"
+        "20": "Violence",
     }
     return summary_map.get(root, "Other")
 
@@ -288,11 +319,13 @@ def create_tone_story(row):
 
     return f"{base_story} ({tone_desc})"
 
+
 # -------------------------------------------------------------------
 # 6. 유틸 함수 (검색/테스트)
 # -------------------------------------------------------------------
 def search_event_by_id(event_id):
     import sys
+
     sys.path.append("/app")
     from src.utils.spark_builder import get_spark_session
 
@@ -302,7 +335,9 @@ def search_event_by_id(event_id):
     joined_path = "s3a://warehouse/silver/test_gdelt_joined/"
     final_silver_df = spark.read.format("delta").load(joined_path)
 
-    target_event = final_silver_df.filter(final_silver_df.global_event_id == event_id).collect()
+    target_event = final_silver_df.filter(
+        final_silver_df.global_event_id == event_id
+    ).collect()
     if not target_event:
         print(f"이벤트 ID {event_id}를 찾을 수 없습니다.")
         spark.stop()
@@ -331,6 +366,7 @@ def search_event_by_id(event_id):
 
 def test_story_generation():
     import sys
+
     sys.path.append("/app")
     from src.utils.spark_builder import get_spark_session
 
