@@ -186,7 +186,7 @@ class GDELTSchemas:
         """
         Silver Layer Events 스키마 (GDELT 2.0 코드북 완전 준수)
 
-        [팀원명]이 설계한 완전체 스키마를 기준으로 구현
+        DE2님이 설계한 완전체 스키마를 기준으로 구현
         DA팀이 이미 이 스키마 기준으로 dbt 모델링 작업을 수행함
         """
         return StructType(
@@ -258,7 +258,7 @@ class GDELTSchemas:
                 StructField("date_added", TimestampType(), True),
                 StructField("source_url", StringType(), True),
                 # 메타데이터
-                StructField("processed_time", TimestampType(), False),
+                StructField("processed_at", TimestampType(), False),
                 StructField("source_file", StringType(), True),
             ]
         )
@@ -301,7 +301,7 @@ class GDELTSchemas:
                 StructField("v2_enhanced_themes", StringType(), True),  # 테마
                 StructField("amounts", StringType(), True),  # 금액/수량
                 # 메타데이터
-                StructField("processed_time", TimestampType(), False),
+                StructField("processed_at", TimestampType(), False),
             ]
         )
 
