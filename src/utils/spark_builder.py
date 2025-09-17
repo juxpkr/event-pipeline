@@ -15,15 +15,15 @@ def get_spark_session(app_name: str, master: str = None) -> SparkSession:
         # --- S3 (MinIO) 접속 설정 ---
         .config(
             "spark.hadoop.fs.s3a.endpoint",
-            os.getenv("MINIO_ENDPOINT", "http://minio:9000"),
+            os.getenv("MINIO_ENDPOINT"),
         )
         .config(
             "spark.hadoop.fs.s3a.access.key",
-            os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
+            os.getenv("MINIO_ROOT_USER"),
         )
         .config(
             "spark.hadoop.fs.s3a.secret.key",
-            os.getenv("MINIO_SECRET_KEY", "minioadmin"),
+            os.getenv("MINIO_ROOT_PASSWORD"),
         )
         .config("spark.hadoop.fs.s3a.path.style.access", "true")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
@@ -33,7 +33,10 @@ def get_spark_session(app_name: str, master: str = None) -> SparkSession:
             "spark.sql.catalog.spark_catalog",
             "org.apache.spark.sql.delta.catalog.DeltaCatalog",
         )
-        .config("spark.jars", f"/opt/spark/jars/delta-core_2.12-{os.getenv('DELTA_VERSION', '2.4.0')}.jar,/opt/spark/jars/delta-storage-{os.getenv('DELTA_VERSION', '2.4.0')}.jar,/opt/spark/jars/hadoop-aws-{os.getenv('HADOOP_AWS_VERSION', '3.3.4')}.jar,/opt/spark/jars/aws-java-sdk-bundle-{os.getenv('AWS_SDK_VERSION', '1.12.262')}.jar")
+        .config(
+            "spark.jars",
+            f"/opt/spark/jars/delta-core_2.12-{os.getenv('DELTA_VERSION', '2.4.0')}.jar,/opt/spark/jars/delta-storage-{os.getenv('DELTA_VERSION', '2.4.0')}.jar,/opt/spark/jars/hadoop-aws-{os.getenv('HADOOP_AWS_VERSION', '3.3.4')}.jar,/opt/spark/jars/aws-java-sdk-bundle-{os.getenv('AWS_SDK_VERSION', '1.12.262')}.jar",
+        )
         # --- Hive Metastore 연동 설정 ---
         .config("spark.sql.catalogImplementation", "hive")
         .config(
