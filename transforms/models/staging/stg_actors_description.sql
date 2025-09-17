@@ -1,4 +1,4 @@
--- models/marts/mart_actor_info_test.sql
+-- models/staging/mart_actor_info_test.sql
 
 WITH staging_events AS (
     -- 모든 코드가 1차 매핑된 staging 모델
