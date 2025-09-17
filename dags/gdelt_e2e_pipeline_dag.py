@@ -1,0 +1,69 @@
+"""
+GDELT End-to-End Pipeline DAG
+GDELT 3개 데이터타입 수집 → Kafka → Bronze Layer → Silver Layer
+"""
+
+from __future__ import annotations
+from airflow.models.dag import DAG
+from airflow.operators.bash import BashOperator
+from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+import os
+import pendulum
+
+with DAG(
+    dag_id="gdelt_end_to_end_pipeline",
+    start_date=pendulum.datetime(2025, 9, 17, tz="Asia/Seoul"),
+    # schedule="0,15,30,45 * * * *",  # 정각 기준 15분 단위 실행
+    schedule_interval=None,
+    catchup=False,
+    max_active_runs=1,
+    doc_md="""
+    GDELT End-to-End Pipeline
+    - 목적: GDELT 데이터 수집 → Bronze Layer → Silver Layer 완전 파이프라인
+    - 데이터: 최신 15분 배치 데이터 (Events, Mentions, GKG)
+    - 결과: MinIO Silver Layer에 정제된 분석용 데이터 저장
+
+    실행 순서:
+    1. GDELT Producer → Kafka (3개 토픽: events, mentions, gkg)
+    2. Bronze Consumer → MinIO Bronze Layer (Delta 형식)
+    3. Silver Processor → MinIO Silver Layer (Events, Events Detailed)
+    """,
+) as dag:
+    # 공통 상수
+    PROJECT_ROOT = "/opt/airflow"
+    SPARK_MASTER = "spark://spark-master:7077"
+
+    SPARK_CONN_ID = "spark_conn"
+
+    # Task 1: GDELT 3-Way Producer → Kafka
+    gdelt_producer = BashOperator(
+        task_id="gdelt_producer",
+        bash_command=f"PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/ingestion/gdelt_producer.py",
+        env=dict(os.environ),
+        doc_md="""
+        GDELT 3-Way Producer
+        - Events, Mentions, GKG 데이터를 각각 수집
+        - 3개 Kafka 토픽에 분리 저장 (gdelt_events_bronze, gdelt_mentions_bronze, gdelt_gkg_bronze)
+        - 최신 15분 배치 데이터 처리
+        """,
+    )
+
+    # Task 2: Bronze Consumer → MinIO Bronze Layer
+    bronze_consumer = SparkSubmitOperator(
+        task_id="bronze_consumer",
+        # Airflow UI에서 만들어야 할 Spark Master 접속 정보
+        conn_id=SPARK_CONN_ID,
+        application="/opt/airflow/src/ingestion/gdelt_bronze_consumer.py",
+    )
+
+    # Task 3: Silver Layer Processing
+    silver_processor = SparkSubmitOperator(
+        task_id="silver_processor",
+        conn_id=SPARK_CONN_ID,
+        application="/opt/airflow/src/processing/gdelt_silver_processor.py",
+        # Airflow의 작업 시간 구간을 Spark 코드의 인자로 전달
+        application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
+    )
+
+    # Task 의존성 정의
+    gdelt_producer >> bronze_consumer >> silver_processor
