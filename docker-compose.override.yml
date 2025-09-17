@@ -58,7 +58,7 @@ services:
       - data-network
     volumes:
       - ./config/kafka:/config
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh
     entrypoint: [ "/usr/local/bin/wait-for-it.sh", "kafka:9092", "-t", "60", "--", "sh", "/config/setup-topics.sh" ]
 
   minio:
@@ -88,8 +88,8 @@ services:
       - ./config/minio/minio.env
     volumes:
       - ./config/minio:/config
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
-    entrypoint: [ "/usr/local/bin/wait-for-it.sh", "minio:9000", "-t", "30", "--", "/bin/sh", "/config/setup-minio.sh" ]
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh
+    entrypoint: [ "sh", "-c", "chmod +x /usr/local/bin/wait-for-it.sh && /usr/local/bin/wait-for-it.sh minio:9000 -t 30 -- /bin/sh /config/setup-minio.sh" ]
 
   spark-master:
     build:
@@ -495,7 +495,7 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana:/etc/grafana/provisioning
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh:ro
+      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh
     depends_on:
       - prometheus
     entrypoint: [ "/usr/local/bin/wait-for-it.sh", "prometheus:9090", "-t", "60", "--", "/run.sh" ]
