@@ -2,6 +2,7 @@
 GDELT Raw Data Producer - ZIP 파일에서 순수 RAW 데이터를 Kafka로 전송
 최근 이틀치의 데이터 수집 - EDA용도
 """
+
 import os
 import requests
 import zipfile
@@ -50,7 +51,9 @@ def get_historical_gdelt_urls(hours_to_fetch=6):
         # GDELT URL 형식에 맞는 타임스탬프 문자열 생성 (YYYYMMDDHHMMSS)
         # 15분 단위 깔끔하게 맞추기
         minute_rounded = (target_time.minute // 15) * 15
-        target_time_rounded = target_time.replace(minute=minute_rounded, second=0, microsecond=0)
+        target_time_rounded = target_time.replace(
+            minute=minute_rounded, second=0, microsecond=0
+        )
 
         timestamp_str = target_time_rounded.strftime("%Y%m%d%H%M%S")
 
@@ -138,33 +141,37 @@ def main():
 
     producer = None
     total_processed = 0
-    
+
     try:
         # Kafka Producer 생성
         producer = get_kafka_producer()
         logger.info("✅ Kafka producer created successfully")
-        
+
         # 최근 24시간 URL 목록 생성
         gdelt_urls = get_historical_gdelt_urls(hours_to_fetch=6)
-        
+
         # 각 URL별로 데이터 처리
         for i, url in enumerate(gdelt_urls, 1):
             logger.info(f"🔄 Processing file {i}/{len(gdelt_urls)}: {url}")
-            
+
             try:
                 record_count = send_raw_data_to_kafka(url, producer)
                 total_processed += record_count
                 logger.info(f"✅ File {i} completed: {record_count} records")
-                
+
             except Exception as e:
                 logger.warning(f"⚠️ Failed to process {url}: {e}")
                 continue
-                
+
             # 진행상황 로그 (10개 파일마다)
             if i % 10 == 0:
-                logger.info(f"📈 Progress: {i}/{len(gdelt_urls)} files processed, {total_processed:,} total records")
-        
-        logger.info(f"🎯 All processing completed: {total_processed:,} total records from {len(gdelt_urls)} files")
+                logger.info(
+                    f"📈 Progress: {i}/{len(gdelt_urls)} files processed, {total_processed:,} total records"
+                )
+
+        logger.info(
+            f"🎯 All processing completed: {total_processed:,} total records from {len(gdelt_urls)} files"
+        )
 
     except Exception as e:
         logger.error(f"❌ Failed to create Kafka producer: {e}")
