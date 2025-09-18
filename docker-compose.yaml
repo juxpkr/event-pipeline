@@ -199,9 +199,54 @@ services:
       - "4040:4040" # Spark Application UI
       - "4041:4041"
     volumes:
-      #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
+    deploy:
+      # 운영용 리소스 할당
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
+
+  spark-thrift-server-dev:
+    image: juxpkr/geoevent-spark-base:0.1
+    container_name: spark-thrift-server-dev
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        wait-for-it.sh spark-master:7077 -t 60 -- echo "✅ Spark Master is ready."
+        wait-for-it.sh hive-metastore:9083 -t 60 -- echo "✅ Hive Metastore is ready."
+        exec /usr/bin/tini -- /opt/entrypoint.sh thrift-binary
+    user: root # 나중에 배포할때 수정
+    env_file:
+      - ./.env
+    networks:
+      - data-network
+    ports:
+      - "10002:10001" # dbt 연결용
+      - "4041:4040" # Spark Application UI
+      - "4041:4041"
+    volumes:
+      - ./spark-ivy-cache:/home/spark/.ivy2
+      - spark-jars:/opt/spark/jars
+    deploy:
+      # 개발용 리소스 할당
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: '3.0'
+          memory: 6G
+        reservations:
+          cpus: '1.0'
+          memory: 2G
 
   hive-metastore:
     image: juxpkr/geoevent-hive:0.1
