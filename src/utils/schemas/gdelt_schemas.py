@@ -260,6 +260,11 @@ class GDELTSchemas:
                 # 메타데이터
                 StructField("processed_at", TimestampType(), False),
                 StructField("source_file", StringType(), True),
+                # 파티션 컬럼들
+                StructField("year", IntegerType(), True),
+                StructField("month", IntegerType(), True),
+                StructField("day", IntegerType(), True),
+                StructField("hour", IntegerType(), True),
             ]
         )
 
@@ -302,6 +307,11 @@ class GDELTSchemas:
                 StructField("amounts", StringType(), True),  # 금액/수량
                 # 메타데이터
                 StructField("processed_at", TimestampType(), False),
+                # 파티션 컬럼들
+                StructField("year", IntegerType(), True),
+                StructField("month", IntegerType(), True),
+                StructField("day", IntegerType(), True),
+                StructField("hour", IntegerType(), True),
             ]
         )
 
