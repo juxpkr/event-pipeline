@@ -123,7 +123,7 @@ def read_from_bronze_minio(
                 spark.read.format("delta")
                 .load(base_path)
                 .filter(
-                    F.col("processed_at") == F.to_timestamp(F.lit(start_time_str))
+                    F.col("processed_at") == F.lit(start_time_str).cast("timestamp")
                 )
             )
 
