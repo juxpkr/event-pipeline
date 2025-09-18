@@ -9,6 +9,8 @@ import sys
 import logging
 from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
+from datetime import datetime
+
 
 # 모듈 임포트
 sys.path.append("/opt/airflow")
@@ -39,21 +41,62 @@ logger = logging.getLogger(__name__)
 
 
 def setup_silver_table(
-    spark: SparkSession, table_name: str, silver_path: str, schema: StructType
+    spark: SparkSession, table_name: str, silver_path: str, schema: StructType, partition_keys: list
 ):
+    """(최초 1회만) 더미 데이터를 이용해 파티션 구조를 가진 Hive 테이블을 생성"""
+    if spark.catalog.tableExists(table_name):
+        logger.info(f"Table '{table_name}' already exists. Skipping setup.")
+        return
+    
+    logger.info(f"Table '{table_name}' not found. Creating with dummy data...")
+
     """Silver 테이블 구조를 미리 생성"""
     db_name = table_name.split(".")[0]
     logger.info(f"Creating database '{db_name}' and table '{table_name}'...")
     spark.sql(f"CREATE DATABASE IF NOT EXISTS {db_name}")
 
-    empty_df = spark.createDataFrame([], schema)
+    # 스키마에 맞는 더미 데이터를 동적으로 생성
+    def get_dummy_value(field):
+        """필드 타입과 제약조건에 따른 더미 값 생성"""
+        col_name, col_type, nullable = field.name, field.dataType, field.nullable
+
+        # 파티션 컬럼은 고정 더미 값 (명백한 더미 값 사용)
+        partition_values = {"year": 9999, "month": 99, "day": 99, "hour": 99}
+        if col_name in partition_values:
+            return partition_values[col_name]
+
+        # nullable 컬럼은 None
+        if nullable:
+            return None
+
+        # NOT NULL 컬럼은 타입별 기본값
+        type_defaults = {
+            (IntegerType, LongType, DoubleType, FloatType): 0,
+            StringType: "",
+            (TimestampType, DateType): datetime(1900, 1, 1),
+            BooleanType: False
+        }
+
+        for type_group, default_val in type_defaults.items():
+            if isinstance(col_type, type_group):
+                return default_val
+        return None  # 알 수 없는 타입
+
+    dummy_row_dict = {field.name: get_dummy_value(field) for field in schema.fields}
+    
+    dummy_row = [tuple(dummy_row_dict.get(field.name) for field in schema.fields)]
+    dummy_df = spark.createDataFrame(dummy_row, schema)
+
     (
-        empty_df.write.format("delta")
-        .mode("ignore")
+        dummy_df.write.format("delta")
+        .mode("overwrite") # ignore 대신 overwrite로 해서 확실하게 생성
         .option("overwriteSchema", "true")
+        .partitionBy(*partition_keys)
         .saveAsTable(table_name, path=silver_path)
     )
-    logger.info(f"Table '{table_name}' structure is ready at {silver_path}.")
+    # 더미 데이터 삭제 (SQL 방식)
+    spark.sql(f"DELETE FROM delta.`{silver_path}` WHERE year = 9999")
+    logger.info(f"Table '{table_name}' structure created successfully.")
 
 
 def read_from_bronze_minio(
@@ -80,8 +123,7 @@ def read_from_bronze_minio(
                 spark.read.format("delta")
                 .load(base_path)
                 .filter(
-                    (F.col("processed_at") >= F.to_timestamp(F.lit(start_time_str)))
-                    & (F.col("processed_at") < F.to_timestamp(F.lit(end_time_str)))
+                    F.col("processed_at") == F.to_timestamp(F.lit(start_time_str))
                 )
             )
 
@@ -134,20 +176,22 @@ def main():
     end_time_str = sys.argv[2]
 
     try:
-        ## 1. Silver 테이블 설정
-        # logger.info("Setting up Silver tables...")
-        # setup_silver_table(
-        #    spark,
-        #    "default.gdelt_events",
-        #    "s3a://warehouse/silver/gdelt_events",
-        #    GDELTSchemas.get_silver_events_schema(),
-        # )
-        # setup_silver_table(
-        #    spark,
-        #    "default.gdelt_events_detailed",
-        #    "s3a://warehouse/silver/gdelt_events_detailed",
-        #    GDELTSchemas.get_silver_events_detailed_schema(),
-        # )
+        # 1. Silver 테이블 설정
+        logger.info("Setting up Silver tables...")
+        setup_silver_table(
+           spark,
+           "default.gdelt_events",
+           "s3a://warehouse/silver/gdelt_events",
+           GDELTSchemas.get_silver_events_schema(),
+           partition_keys=["year", "month", "day", "hour"]
+        )
+        setup_silver_table(
+           spark,
+           "default.gdelt_events_detailed",
+           "s3a://warehouse/silver/gdelt_events_detailed",
+           GDELTSchemas.get_silver_events_detailed_schema(),
+           partition_keys=["year", "month", "day", "hour"]
+        )
 
         # 2. MinIO Bronze Layer에서 데이터 읽기 (Airflow가 준 시간 인자 전달)
         parsed_df = read_from_bronze_minio(spark, start_time_str, end_time_str)
