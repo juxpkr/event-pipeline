@@ -34,7 +34,7 @@ with DAG(
         environment={
             "DBT_PROFILES_DIR": "/app",
         },
-        conf={"spark.cores.max": "3"},
+        cpus=3,  # CPU 코어 3개 사용
         auto_remove="success",  # 실행 후 컨테이너 자동 삭제
         doc_md="""
         dbt Gold Layer Transformation (DockerOperator)
