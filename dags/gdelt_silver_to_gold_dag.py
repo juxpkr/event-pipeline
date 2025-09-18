@@ -18,12 +18,13 @@ with DAG(
     # Task 1: dbt Transformation (Silver → Gold)
     dbt_transformation = DockerOperator(
         task_id="dbt_transformation",
-        #image="juxpkr/geoevent-dbt:0.1",
+        # image="juxpkr/geoevent-dbt:0.1",
         image=os.getenv("DBT_IMAGE", "juxpkr/geoevent-dbt:0.1"),
         command="dbt build --select +stg_seed_mapping +stg_seed_actors_parsed +stg_actors_description",
         network_mode="geoevent_data-network",  # docker-compose 네트워크
         mounts=[
-            f"{os.getenv('PWD', '/opt/airflow')}/transforms:/app",  # dbt 프로젝트 마운트 (Swarm 호환)
+            # PWD 대신, 환경변수를 사용
+            f"{os.getenv('PROJECT_ROOT')}/transforms:/app",  # dbt 프로젝트 마운트 (Swarm 호환)
         ],
         environment={
             "DBT_PROFILES_DIR": "/app",
@@ -41,7 +42,7 @@ with DAG(
     # 2단계: Gold -> Postgres 마이그레이션
     # 이것도 BashOperator나 DockerOperator로 실행
     migrate_to_postgres_task = BashOperator(
-        task_id='migrate_gold_to_postgres',
+        task_id="migrate_gold_to_postgres",
         bash_command="""
         spark-submit \
         --master spark://spark-master:7077 \
@@ -55,9 +56,6 @@ with DAG(
         - 마이그레이션 검증 및 상태 리포팅 포함
         """,
     )
-
-    
-    
 
     # 작업 순서 정의
     dbt_transformation >> migrate_to_postgres_task
