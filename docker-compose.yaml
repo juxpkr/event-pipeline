@@ -230,8 +230,8 @@ services:
       - data-network
     ports:
       - "10002:10001" # dbt 연결용
-      - "4041:4040" # Spark Application UI
-      - "4041:4041"
+      - "4042:4040" # Spark Application UI
+      - "4043:4041"
     volumes:
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
