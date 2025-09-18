@@ -28,11 +28,6 @@ with DAG(
         network_mode="geoevent_data-network",  # docker-compose 네트워크
         mounts=[
             Mount(source=dbt_project_host_path, target="/app", type="bind"),
-            Mount(
-                source=f"{dbt_project_host_path}/.dbt/profiles.yml",
-                target="/home/dbt_user/.dbt/profiles.yml",
-                type="bind",
-            ),
         ],
         # dbt가 /app 폴더에서 프로젝트를 찾도록 작업 디렉토리 설정
         working_dir="/app",
