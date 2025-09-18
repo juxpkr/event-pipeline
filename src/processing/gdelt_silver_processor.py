@@ -9,7 +9,7 @@ import sys
 import logging
 from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
-from datetime import datetime
+from datetime import datetime, timezone
 
 
 # 모듈 임포트
@@ -41,13 +41,17 @@ logger = logging.getLogger(__name__)
 
 
 def setup_silver_table(
-    spark: SparkSession, table_name: str, silver_path: str, schema: StructType, partition_keys: list
+    spark: SparkSession,
+    table_name: str,
+    silver_path: str,
+    schema: StructType,
+    partition_keys: list,
 ):
     """(최초 1회만) 더미 데이터를 이용해 파티션 구조를 가진 Hive 테이블을 생성"""
     if spark.catalog.tableExists(table_name):
         logger.info(f"Table '{table_name}' already exists. Skipping setup.")
         return
-    
+
     logger.info(f"Table '{table_name}' not found. Creating with dummy data...")
 
     """Silver 테이블 구조를 미리 생성"""
@@ -69,27 +73,31 @@ def setup_silver_table(
         if nullable:
             return None
 
-        # NOT NULL 컬럼은 타입별 기본값
-        type_defaults = {
-            (IntegerType, LongType, DoubleType, FloatType): 0,
-            StringType: "",
-            (TimestampType, DateType): datetime(1900, 1, 1),
-            BooleanType: False
-        }
-
-        for type_group, default_val in type_defaults.items():
-            if isinstance(col_type, type_group):
-                return default_val
-        return None  # 알 수 없는 타입
+        # if/else로 타입별 기본값 지정
+        if isinstance(col_type, (IntegerType, LongType, DoubleType, FloatType)):
+            return 0
+        elif isinstance(col_type, StringType):
+            return ""
+        elif isinstance(col_type, (TimestampType, DateType)):
+            # UTC 시간대로 명시
+            return datetime(1900, 1, 1, tzinfo=timezone.utc)
+        elif isinstance(col_type, BooleanType):
+            return False
+        else:
+            # 알 수 없는 타입에 대한 처리
+            logger.warning(
+                f"Unknown data type for column '{col_name}': {col_type}. Defaulting to None."
+            )
+            return None
 
     dummy_row_dict = {field.name: get_dummy_value(field) for field in schema.fields}
-    
+
     dummy_row = [tuple(dummy_row_dict.get(field.name) for field in schema.fields)]
     dummy_df = spark.createDataFrame(dummy_row, schema)
 
     (
         dummy_df.write.format("delta")
-        .mode("overwrite") # ignore 대신 overwrite로 해서 확실하게 생성
+        .mode("overwrite")  # ignore 대신 overwrite로 해서 확실하게 생성
         .option("overwriteSchema", "true")
         .partitionBy(*partition_keys)
         .saveAsTable(table_name, path=silver_path)
@@ -102,8 +110,13 @@ def setup_silver_table(
 def read_from_bronze_minio(
     spark: SparkSession, start_time_str: str, end_time_str: str
 ) -> DataFrame:
-    """MinIO Bronze Layer에서 새로 추가된 데이터만!! 읽어 DataFrame으로 반환"""
-    logger.info("Reading Bronze data from MinIO...")
+    """
+    MinIO Bronze Layer에서 각 데이터 타입별로 데이터를 읽고,
+    DataFrame의 딕셔너리 형태로 반환
+    """
+    logger.info(
+        f"Reading Bronze data from MinIO for period: {start_time_str} to {end_time_str}"
+    )
 
     # Bronze Layer 경로 설정
     bronze_paths = {
@@ -112,7 +125,8 @@ def read_from_bronze_minio(
         "gkg": "s3a://warehouse/bronze/gdelt_gkg",
     }
 
-    all_dataframes = []
+    # 반환 타입을 딕셔너리로 변경 (기존: 통합 dataframe)
+    dataframes = {}
 
     for data_type, base_path in bronze_paths.items():
         try:
@@ -123,39 +137,25 @@ def read_from_bronze_minio(
                 spark.read.format("delta")
                 .load(base_path)
                 .filter(
-                    F.col("processed_at") == F.lit(start_time_str).cast("timestamp")
+                    (F.col("processed_at") >= F.lit(start_time_str).cast("timestamp"))
+                    & (F.col("processed_at") < F.lit(end_time_str).cast("timestamp"))
                 )
             )
 
-            if not bronze_df.rdd.isEmpty():
-                # data_type 컬럼 추가
-                bronze_with_type = bronze_df.withColumn("data_type", F.lit(data_type))
-                all_dataframes.append(bronze_with_type)
-
-                record_count = bronze_df.count()
-                logger.info(
-                    f"Loaded {record_count:,} {data_type.upper()} records from Bronze"
-                )
+            # count() 대신 first()로 존재 여부만 빠르게 확인하기
+            if bronze_df.first():
+                logger.info(f"Successfully loaded data for {data_type.upper()}.")
+                dataframes[data_type] = bronze_df
             else:
-                logger.warning(f"No data found for {data_type}")
+                logger.warning(
+                    f"No new data found for {data_type.upper()} in the given time range."
+                )
 
         except Exception as e:
             logger.error(f"Failed to read {data_type} from Bronze: {e}")
-            continue
+            continue  # 하나의 타입이 실패해도 다른 타입은 계속 시도
 
-    if not all_dataframes:
-        logger.error("No Bronze data found in any data type")
-        return spark.createDataFrame([], StructType([]))
-
-    # 모든 데이터 타입을 하나의 DataFrame으로 합치기
-    combined_df = all_dataframes[0]
-    for df in all_dataframes[1:]:
-        combined_df = combined_df.union(df)
-
-    total_records = combined_df.count()
-    logger.info(f"Total Bronze records loaded: {total_records:,}")
-
-    return combined_df
+    return dataframes
 
 
 def main():
@@ -179,46 +179,38 @@ def main():
         # 1. Silver 테이블 설정
         logger.info("Setting up Silver tables...")
         setup_silver_table(
-           spark,
-           "default.gdelt_events",
-           "s3a://warehouse/silver/gdelt_events",
-           GDELTSchemas.get_silver_events_schema(),
-           partition_keys=["year", "month", "day", "hour"]
+            spark,
+            "default.gdelt_events",
+            "s3a://warehouse/silver/gdelt_events",
+            GDELTSchemas.get_silver_events_schema(),
+            partition_keys=["year", "month", "day", "hour"],
         )
         setup_silver_table(
-           spark,
-           "default.gdelt_events_detailed",
-           "s3a://warehouse/silver/gdelt_events_detailed",
-           GDELTSchemas.get_silver_events_detailed_schema(),
-           partition_keys=["year", "month", "day", "hour"]
+            spark,
+            "default.gdelt_events_detailed",
+            "s3a://warehouse/silver/gdelt_events_detailed",
+            GDELTSchemas.get_silver_events_detailed_schema(),
+            partition_keys=["year", "month", "day", "hour"],
         )
 
         # 2. MinIO Bronze Layer에서 데이터 읽기 (Airflow가 준 시간 인자 전달)
-        parsed_df = read_from_bronze_minio(spark, start_time_str, end_time_str)
+        bronze_dataframes = read_from_bronze_minio(spark, start_time_str, end_time_str)
 
-        if parsed_df.rdd.isEmpty():
+        if not bronze_dataframes:
             logger.warning("No Bronze data found in MinIO. Exiting gracefully.")
             return
 
-        # 3. 데이터 타입별 분리 및 변환
-        events_df = parsed_df.filter(F.col("data_type") == "events")
-        mentions_df = parsed_df.filter(F.col("data_type") == "mentions")
-        gkg_df = parsed_df.filter(F.col("data_type") == "gkg")
+        # 3. 데이터 타입별 분리 및 변환 (이제 filter가 필요 없음!)
+        events_df = bronze_dataframes.get("events")
+        mentions_df = bronze_dataframes.get("mentions")
+        gkg_df = bronze_dataframes.get("gkg")
 
-        # 4. 각 데이터 타입 변환
-        events_silver = (
-            transform_events_to_silver(events_df)
-            if not events_df.rdd.isEmpty()
-            else None
-        )
+        # 4. 각 데이터 타입 변환 (if df 로 None과 Enpty를 동시에 체크할 수 있음)
+        events_silver = transform_events_to_silver(events_df) if events_df else None
         mentions_silver = (
-            transform_mentions_to_silver(mentions_df)
-            if not mentions_df.rdd.isEmpty()
-            else None
+            transform_mentions_to_silver(mentions_df) if mentions_df else None
         )
-        gkg_silver = (
-            transform_gkg_to_silver(gkg_df) if not gkg_df.rdd.isEmpty() else None
-        )
+        gkg_silver = transform_gkg_to_silver(gkg_df) if gkg_df else None
 
         # 5. Events 단독 Silver 저장
         if events_silver:
@@ -239,7 +231,7 @@ def main():
         joined_df = perform_three_way_join(events_silver, mentions_silver, gkg_silver)
 
         # 조인 결과가 있을 때만 후속 처리 진행
-        if not joined_df.rdd.isEmpty():
+        if joined_df and not joined_df.rdd.isEmpty():  # 조인 후에는 isEmpty() 체크 필요
             # 7. 우선순위 날짜 생성
             joined_with_priority = create_priority_date(joined_df)
 
