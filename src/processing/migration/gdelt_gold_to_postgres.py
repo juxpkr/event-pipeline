@@ -38,12 +38,12 @@ class GDELTGoldMigrator:
                 "description": "전세계 레벨 - 국가별 & 일일 요약",
             },
             "gold.gold_2nd_country_events": {
-                "postgres_table": "gold_country_events",
+                "postgres_table": "gold_2nd_country_events",
                 "postgres_schema": "gold",
                 "description": "국가간 이벤트 분석",
             },
             "gold.gold_4th_daily_detail_summary": {
-                "postgres_table": "gold_daily_detail_summary",
+                "postgres_table": "gold_4th_daily_detail_summary",
                 "postgres_schema": "gold",
                 "description": "이벤트 상세 - 일일 요약",
             },
@@ -108,6 +108,7 @@ class GDELTGoldMigrator:
             df: 저장할 DataFrame
             postgres_table: PostgreSQL 테이블명
             description: 테이블 설명
+            postgres_schema: PostgreSQL 스키마명
 
         Returns:
             성공 여부 (bool)
@@ -157,9 +158,15 @@ class GDELTGoldMigrator:
 
         # 1. Gold 테이블 읽기
         gold_df = self.read_gold_table(gold_table)
-        if gold_df is None or gold_df.count() == 0:
-            logger.warning(f"No data found in '{gold_table}'. Skipping...")
+        if gold_df is None:
+            logger.error(f"Failed to read table '{gold_table}'. Skipping...")
             return False
+
+        record_count = gold_df.count()
+        if record_count == 0:
+            logger.warning(f"Table '{gold_table}' is empty ({record_count} records), but proceeding with schema migration...")
+        else:
+            logger.info(f"Found {record_count:,} records in '{gold_table}'")
 
         # 2. PostgreSQL에 저장
         success = self.write_to_postgres(
@@ -219,10 +226,12 @@ class GDELTGoldMigrator:
             # PostgreSQL 연결 테스트용 간단한 쿼리
             for config in self.migration_tables.values():
                 postgres_table = config["postgres_table"]
+                postgres_schema = config["postgres_schema"]
+                full_table_name = f"{postgres_schema}.{postgres_table}"
 
                 # 테이블 존재 및 레코드 수 확인
                 count_query = (
-                    f"(SELECT COUNT(*) as count FROM {postgres_table}) as count_table"
+                    f"(SELECT COUNT(*) as count FROM {full_table_name}) as count_table"
                 )
 
                 count_df = (
@@ -237,7 +246,7 @@ class GDELTGoldMigrator:
 
                 record_count = count_df.collect()[0]["count"]
                 logger.info(
-                    f"PostgreSQL table '{postgres_table}': {record_count:,} records"
+                    f"PostgreSQL table '{full_table_name}': {record_count:,} records"
                 )
 
             logger.info("Migration verification completed successfully")
