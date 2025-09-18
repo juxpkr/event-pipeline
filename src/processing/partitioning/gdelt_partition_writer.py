@@ -25,8 +25,9 @@ def write_to_delta_lake(
         return
 
     spark = df.sparkSession
+    _schema_cache = {}
 
-    # 1. 파티션 컬럼 추가
+    # 1. 파티션 컬럼 추가 (결측치 방어 로직 강화)
     df_with_partitions = (
         df.withColumn("year", F.year(F.col(partition_col)))
         .withColumn("month", F.month(F.col(partition_col)))
@@ -62,8 +63,17 @@ def write_to_delta_lake(
         # MERGE를 위해 임시 뷰 생성
         df_clean.createOrReplaceTempView("source_updates")
 
-        # Target 테이블의 컬럼 목록을 가져옴
-        target_columns = spark.read.format("delta").load(delta_path).columns
+        # 캐시 확인 로직 추가
+        if delta_path in _schema_cache:
+            target_columns = _schema_cache[delta_path]
+            logger.info(f"Using cached schema for {delta_path}")
+        else:
+            logger.info(f"Reading schema for {delta_path} and caching it.")
+            # 최초 1회만 실제 I/O 발생
+            target_df = spark.read.format("delta").load(delta_path)
+            target_columns = target_df.columns
+            # 읽어온 스키마를 캐시에 저장
+            _schema_cache[delta_path] = target_columns
 
         # Source 테이블의 컬럼도 가져와서 교집합만 사용
         source_columns = df_clean.columns
