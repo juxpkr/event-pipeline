@@ -1,7 +1,7 @@
 -- models/staging/stg_seed_mapping.sql
 
 -- 1. 필요한 테이블들을 CTE(WITH 절)로 미리 정의합니다.
-WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_silver_events') }}),
+WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events') }}),
     event_root_codes AS (SELECT * FROM {{ ref('event_root_codes') }}),
     event_detail_codes AS (SELECT * FROM {{ ref('event_detail_codes') }}),
     quad_class_codes AS (SELECT * FROM {{ ref('event_quad_class_codes') }}),
@@ -141,7 +141,7 @@ SELECT
     -- src.actor1_geo_centroid,
     -- src.actor2_geo_centroid,
     -- src.action_geo_centroid,
-    src.processed_time,
+    src.processed_at,
     src.source_file
 
 FROM
