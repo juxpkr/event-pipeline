@@ -34,22 +34,22 @@ class GDELTGoldMigrator:
         self.migration_tables = {
             "gold.gold_1st_global_overview": {
                 "postgres_table": "gold_1st_global_overview",
-                "postgres_schema": "gold_datamart",
+                "postgres_schema": "gold",
                 "description": "전세계 레벨 - 국가별 & 일일 요약",
             },
             "gold.gold_2nd_country_events": {
                 "postgres_table": "gold_country_events",
-                "postgres_schema": "gold_datamart",
+                "postgres_schema": "gold",
                 "description": "국가간 이벤트 분석",
             },
             "gold.gold_4th_daily_detail_summary": {
                 "postgres_table": "gold_daily_detail_summary",
-                "postgres_schema": "gold_datamart",
+                "postgres_schema": "gold",
                 "description": "이벤트 상세 - 일일 요약",
             },
             "gold.gdelt_microbatch_country_analysis": {
                 "postgres_table": "gold_microbatch_country_analysis",
-                "postgres_schema": "gold_datamart",
+                "postgres_schema": "gold",
                 "description": "GDELT 마이크로배치 데이터의 국가별/이벤트 타입별 분석",
             },
         }

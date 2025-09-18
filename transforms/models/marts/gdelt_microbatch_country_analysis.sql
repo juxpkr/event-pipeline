@@ -11,7 +11,7 @@ SELECT
     MIN(avg_tone) as min_tone,
     MAX(avg_tone) as max_tone,
     COUNT(DISTINCT actor1_name) as unique_actors,
-    MAX(processed_time) as last_processed_time
+    MAX(processed_at) as last_processed_time
 FROM source_data
 WHERE
     global_event_id IS NOT NULL

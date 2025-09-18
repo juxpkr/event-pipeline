@@ -5,7 +5,7 @@ SELECT
     actor1_name,
     event_root_code,
     CAST(avg_tone AS DOUBLE) as avg_tone,
-    processed_time,
+    processed_at,
     1 as event_count
 FROM
     {{ source('gdelt_silver_layer', 'gdelt_events')}}
