@@ -26,6 +26,6 @@ analytics_dbt:
       password: "{{ env_var('POSTGRES_PASSWORD', 'airflow') }}"
       port: "{{ env_var('POSTGRES_PORT', '5432') | int }}"
       dbname: "{{ env_var('POSTGRES_DB', 'airflow') }}"
-      schema: default
+      schema: gold_datamart # dbt가 모델을 생성할 기본 스키마
       threads: 4
       keepalives_idle: 0
