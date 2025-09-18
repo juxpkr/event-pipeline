@@ -7,11 +7,12 @@ from __future__ import annotations
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 import os
 import pendulum
 
 with DAG(
-    dag_id="gdelt_end_to_end_pipeline",
+    dag_id="gdelt_bronze_to_silver",
     start_date=pendulum.datetime(2025, 9, 17, tz="Asia/Seoul"),
     schedule="0,15,30,45 * * * *",  # 정각 기준 15분 단위 실행
     catchup=False,
@@ -62,7 +63,20 @@ with DAG(
         application="/opt/airflow/src/processing/gdelt_silver_processor.py",
         # Airflow의 작업 시간 구간을 Spark 코드의 인자로 전달
         application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
+        doc_md="""
+        Silver Layer Processing
+        - Bronze Layer → Silver Layer 데이터 변환
+        - 3-Way 조인 (Events + Mentions + GKG)
+        - Delta Lake 파티션 저장 (default.gdelt_events, default.gdelt_events_detailed)
+        """,
     )
 
-    # Task 의존성 정의
-    gdelt_producer >> bronze_consumer >> silver_processor
+    # Silver 작업이 성공하면, dbt DAG을 호출
+    trigger_dbt_gold_pipeline = TriggerDagRunOperator(
+        task_id="trigger_dbt_gold_pipeline",
+        trigger_dag_id="gdelt_silver_to_gold",  # 방금 만든 새 DAG의 id
+        wait_for_completion=False, # 일단 호출만 하고 나는 내 할 일 끝냄
+    )
+
+    # Task 의존성 정의: Producer → Bronze → Silver → dbt
+    gdelt_producer >> bronze_consumer >> silver_processor >> trigger_dbt_gold_pipeline
