@@ -308,7 +308,7 @@ services:
       - ./.env:/opt/airflow/.env
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
     command: >
       bash -c "
         wait-for-it.sh postgres:5432 -t 60 -- echo '✅ Postgres ready for webserver.' &&
@@ -350,7 +350,7 @@ services:
       - ./.env:/opt/airflow/.env
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-      - .:/app
+      - /var/run/docker.sock:/var/run/docker.sock
     command: >
       bash -c "
         wait-for-it.sh postgres:5432 -t 60 -- echo '✅ Postgres ready for scheduler.' &&

@@ -357,6 +357,7 @@ services:
       - ./.env:/opt/airflow/.env
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - /var/run/docker.sock:/var/run/docker.sock
       - .:/app
     command: >
       bash -c "
@@ -404,6 +405,7 @@ services:
       - ./.env:/opt/airflow/.env
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
+      - /var/run/docker.sock:/var/run/docker.sock
       - .:/app
     command: >
       bash -c "
