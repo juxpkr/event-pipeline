@@ -1,297 +1,297 @@
 code,description
-010,Make statement not specified below
-011,Decline comment
-012,Make pessimistic comment
-013,Make optimistic comment
-014,Consider policy option
-015,Acknowledge or claim responsibility
-016,Deny responsibility
-017,Engage in symbolic act
-018,Make empathetic comment
-019,Express accord
-020,Make an appeal or request not specified below
-021,Appeal for material cooperation not specified below
-0211,Appeal for economic cooperation
-0212,Appeal for military cooperation
-0213,Appeal for judicial cooperation
-0214,Appeal for intelligence
-022,Appeal for diplomatic cooperation
-023,Appeal for aid not specified below
-0231,Appeal for economic aid
-0232,Appeal for military aid
-0233,Appeal for humanitarian aid
-0234,Appeal for military protection or peacekeeping
-024,Appeal for political reform not specified below
-0241,Appeal for change in leadership
-0242,Appeal for policy change
-0243,Appeal for rights
-0244,Appeal for change in institutions regime
-025,Appeal to yield not specified below
-0251,Appeal for easing of administrative sanctions
-0252,Appeal for easing of political dissent
-0253,Appeal for release of persons or property
-0254,Appeal for easing of economic sanctions boycott or embargo
-0255,Appeal for target to allow international involvement
-0256,Appeal for de-escalation of military engagement
-026,Appeal to others to meet or negotiate
-027,Appeal to others to settle dispute
-028,Appeal to engage in or accept mediation
-030,Express intent to cooperate not specified below
-031,Express intent to engage in material cooperation
-0311,Express intent to cooperate economically
-0312,Express intent to cooperate militarily
-0313,Express intent to cooperate on judicial matters
-0314,Express intent to cooperate on intelligence
-032,Express intent to engage in diplomatic cooperation
-033,Express intent to provide material aid
-0331,Express intent to provide economic aid
-0332,Express intent to provide military aid
-0333,Express intent to provide humanitarian aid
-0334,Express intent to provide military protection or peacekeeping
-034,Express intent to institute political reform
-0341,Express intent to change leadership
-0342,Express intent to change policy
-0343,Express intent to provide rights
-0344,Express intent to change institutions regime
-035,Express intent to yield not specified below
-0351,Express intent to ease administrative sanctions
-0352,Express intent to ease popular dissent
-0353,Express intent to release persons or property
-0354,Express intent to ease economic sanctions boycott or embargo
-0355,Express intent to allow international involvement
-0356,Express intent to de-escalate military engagement
-036,Express intent to meet or negotiate
-037,Express intent to settle dispute
-038,Express intent to accept mediation
-039,Express intent to mediate
-040,Consult not specified below
-041,Discuss by telephone
-042,Make a visit
-043,Host a visit
-044,Meet at a third location
-045,Mediate
-046,Engage in negotiation
-050,Engage in diplomatic cooperation not specified below
-051,Praise or endorse
-052,Defend verbally
-053,Rally support on behalf of
-054,Grant diplomatic recognition
-055,Apologize
-056,Forgive
-057,Sign formal agreement
-060,Engage in material cooperation not specified below
-061,Cooperate economically
-062,Cooperate militarily
-063,Engage in judicial cooperation
-064,Share intelligence or information
-070,Provide aid not specified below
-071,Provide economic aid
-072,Provide military aid
-073,Provide humanitarian aid
-074,Provide military protection or peacekeeping
-075,Grant asylum
-080,Yield not specified below
-081,Ease administrative sanctions not specified below
-0811,Ease restrictions on political freedoms
-0812,Ease ban on political parties or politicians
-0813,Ease curfew
-0814,Ease state of emergency or martial law
-082,Ease political dissent
-083,Accede to requests or demands for political reform
-0831,Accede to demands for change in leadership
-0832,Accede to demands for change in policy
-0833,Accede to demands for rights
-0834,Accede to demands for change in institutions regime
-084,Return release not specified below
-0841,Return release persons
-0842,Return release property
-085,Ease economic sanctions boycott embargo
-086,Allow international involvement not specified below
-0861,Receive deployment of peacekeepers
-0862,Receive inspectors
-0863,Allow humanitarian access
-087,De-escalate military engagement
-0871,Declare truce ceasefire
-0872,Ease military blockade
-0873,Demobilize armed forces
-0874,Retreat or surrender militarily
-090,Investigate not specified below
-091,Investigate crime corruption
-092,Investigate human rights abuses
-093,Investigate military action
-094,Investigate war crimes
-100,Demand not specified below
-101,Demand material cooperation not specified below
-1011,Demand economic cooperation
-1012,Demand military cooperation
-1013,Demand judicial cooperation
-1014,Demand intelligence cooperation
-102,Demand diplomatic cooperation
-103,Demand material aid not specified below
-1031,Demand economic aid
-1032,Demand military aid
-1033,Demand humanitarian aid
-1034,Demand military protection or peacekeeping
-104,Demand political reform not specified below
-1041,Demand change in leadership
-1042,Demand policy change
-1043,Demand rights
-1044,Demand change in institutions regime
-105,Demand that target yields not specified below
-1051,Demand easing of administrative sanctions
-1052,Demand easing of political dissent
-1053,Demand release of persons or property
-1054,Demand easing of economic sanctions boycott or embargo
-1055,Demand that target allows international involvement
-1056,Demand de-escalation of military engagement
-106,Demand meeting negotiation
-107,Demand settling of dispute
-108,Demand mediation
-110,Disapprove not specified below
-111,Criticize or denounce
-112,Accuse not specified below
-1121,Accuse of crime corruption
-1122,Accuse of human rights abuses
-1123,Accuse of aggression
-1124,Accuse of war crimes
-1125,Accuse of espionage treason
-113,Rally opposition against
-114,Complain officially
-115,Bring lawsuit against
-116,Find guilty or liable (legally)
-120,Reject not specified below
-121,Reject material cooperation
-1211,Reject economic cooperation
-1212,Reject military cooperation
-122,Reject request or demand for material aid
-1221,Reject request for economic aid
-1222,Reject request for military aid
-1223,Reject request for humanitarian aid
-1224,Reject request for military protection or peacekeeping
-123,Reject request or demand for political reform
-1231,Reject request for change in leadership
-1232,Reject request for policy change
-1233,Reject request for rights
-1234,Reject request for change in institutions regime
-124,Refuse to yield not specified below
-1241,Refuse to ease administrative sanctions
-1242,Refuse to ease popular dissent
-1243,Refuse to release persons or property
-1244,Refuse to ease economic sanctions boycott or embargo
-1245,Refuse to allow international involvement
-1246,Refuse to de-escalate military engagement
-125,Reject proposal to meet discuss or negotiate
-126,Reject mediation
-127,Reject plan agreement to settle dispute
-128,Defy norms law
-129,Veto
-130,Threaten not specified below
-131,Threaten non-force not specified below
-1311,Threaten to reduce or stop aid
-1312,Threaten with sanctions boycott embargo
-1313,Threaten to reduce or break relations
-132,Threaten with administrative sanctions
-1321,Threaten with restrictions on political freedoms
-1322,Threaten to ban political parties or politicians
-1323,Threaten to impose curfew
-1324,Threaten to impose state of emergency or martial law
-133,Threaten with political dissent protest
-134,Threaten to halt negotiations
-135,Threaten to halt mediation
-136,Threaten to halt international involvement
-137,Threaten with repression
-138,Threaten with military force not specified below
-1381,Threaten blockade
-1382,Threaten occupation
-1383,Threaten unconventional violence
-1384,Threaten conventional attack
-1385,Threaten attack with WMD
-139,Give ultimatum
-140,Engage in political dissent not specified below
-141,Demonstrate or rally not specified below
-1411,Demonstrate for leadership change
-1412,Demonstrate for policy change
-1413,Demonstrate for rights
-1414,Demonstrate for change in institutions regime
-142,Conduct hunger strike not specified below
-1421,Conduct hunger strike for leadership change
-1422,Conduct hunger strike for policy change
-1423,Conduct hunger strike for rights
-1424,Conduct hunger strike for change in institutions regime
-143,Conduct strike or boycott not specified below
-1431,Conduct strike or boycott for leadership change
-1432,Conduct strike or boycott for policy change
-1433,Conduct strike or boycott for rights
-1434,Conduct strike or boycott for change in institutions regime
-144,Obstruct passage block not specified below
-1441,Obstruct passage to demand leadership change
-1442,Obstruct passage to demand policy change
-1443,Obstruct passage to demand rights
-1444,Obstruct passage to demand change in institutions regime
-145,Protest violently riot not specified below
-1451,Engage in violent protest for leadership change
-1452,Engage in violent protest for policy change
-1453,Engage in violent protest for rights
-1454,Engage in violent protest for change in institutions regime
-150,Demonstrate military or police power not specified below
-151,Increase police alert status
-152,Increase military alert status
-153,Mobilize or increase police power
-154,Mobilize or increase armed forces
-155,Mobilize or increase cyber-forces
-160,Reduce relations not specified below
-161,Reduce or break diplomatic relations
-162,Reduce or stop material aid not specified below
-1621,Reduce or stop economic assistance
-1622,Reduce or stop military assistance
-1623,Reduce or stop humanitarian assistance
-163,Impose embargo boycott or sanctions
-164,Halt negotiations
-165,Halt mediation
-166,Expel or withdraw not specified below
-1661,Expel or withdraw peacekeepers
-1662,Expel or withdraw inspectors observers
-1663,Expel or withdraw aid agencies
-170,Coerce not specified below
-171,Seize or damage property not specified below
-1711,Confiscate property
-1712,Destroy property
-172,Impose administrative sanctions not specified below
-1721,Impose restrictions on political freedoms
-1722,Ban political parties or politicians
-1723,Impose curfew
-1724,Impose state of emergency or martial law
-173,"Arrest detain or charge with legal action"
-174,Expel or deport individuals
-175,Use tactics of violent repression
-176,Attack cybernetically
-180,Use unconventional violence not specified below
-181,Abduct hijack or take hostage
-182,Physically assault not specified below
-1821,Sexually assault
-1822,Torture
-1823,Kill by physical assault
-183,"Conduct suicide car or other non-military bombing"
-1831,Carry out suicide bombing
-1832,Carry out vehicular bombing
-1833,Carry out roadside bombing
-1834,Carry out location bombing
-184,Use as human shield
-185,Attempt to assassinate
-186,Assassinate
-190,Use conventional military force not specified below
-191,Impose blockade restrict movement
-192,Occupy territory
-193,Fight with small arms and light weapons
-194,Fight with artillery and tanks
-195,Employ aerial weapons not specified below
-1951,Employ precision-guided aerial munitions
-1952,Employ remotely piloted aerial munitions
-196,Violate ceasefire
-200,Use unconventional mass violence not specified below
-201,Engage in mass expulsion
-202,Engage in mass killings
-203,Engage in ethnic cleansing
-204,Use weapons of mass destruction not specified below
-2041,Use chemical biological or radiological weapons
-2042,Detonate nuclear weapons
+010,"성명 발표"
+011,"논평 거부"
+012,"비관적 논평"
+013,"낙관적 논평"
+014,"정책 옵션 고려"
+015,"책임 인정 또는 주장"
+016,"책임 부인"
+017,"상징적 행동"
+018,"공감/위로 표명"
+019,"의견 일치 표명"
+020,"호소 및 요청"
+021,"물질적 협력 호소"
+0211,"경제 협력 호소"
+0212,"군사 협력 호소"
+0213,"사법 공조 호소"
+0214,"정보 협력 호소"
+022,"외교적 협력 호소"
+023,"원조 요청"
+0231,"경제 원조 요청"
+0232,"군사 원조 요청"
+0233,"인도적 지원 요청"
+0234,"군사 보호 또는 평화유지군 요청"
+024,"정치 개혁 요구"
+0241,"지도부 교체 요구"
+0242,"정책 변경 요구"
+0243,"권리 요구"
+0244,"제도/체제 변경 요구"
+025,"양보 요구"
+0251,"행정 제재 완화 요구"
+0252,"정치적 반대 완화 요구"
+0253,"인물 또는 재산 석방/반환 요구"
+0254,"경제 제재/보이콧/금수 조치 완화 요구"
+0255,"국제적 개입 허용 요구"
+0256,"군사적 교전 완화 요구"
+026,"타 주체 간 회담/협상 촉구"
+027,"타 주체 간 분쟁 해결 촉구"
+028,"중재 참여 또는 수용 촉구"
+030,"협력 의사 표명"
+031,"물질적 협력 의사 표명"
+0311,"경제 협력 의사 표명"
+0312,"군사 협력 의사 표명"
+0313,"사법 공조 의사 표명"
+0314,"정보 협력 의사 표명"
+032,"외교적 협력 의사 표명"
+033,"물질적 원조 제공 의사 표명"
+0331,"경제 원조 제공 의사 표명"
+0332,"군사 원조 제공 의사 표명"
+0333,"인도적 지원 제공 의사 표명"
+0334,"군사 보호 또는 평화유지군 제공 의사 표명"
+034,"정치 개혁 단행 의사 표명"
+0341,"지도부 교체 의사 표명"
+0342,"정책 변경 의사 표명"
+0343,"권리 제공 의사 표명"
+0344,"제도/체제 변경 의사 표명"
+035,"양보 의사 표명"
+0351,"행정 제재 완화 의사 표명"
+0352,"정치적 반대 완화 의사 표명"
+0353,"인물 또는 재산 석방/반환 의사 표명"
+0354,"경제 제재/보이콧/금수 조치 완화 의사 표명"
+0355,"국제적 개입 허용 의사 표명"
+0356,"군사적 교전 완화 의사 표명"
+036,"회담 또는 협상 의사 표명"
+037,"분쟁 해결 의사 표명"
+038,"중재 수용 의사 표명"
+039,"중재 의사 표명"
+040,"협의"
+041,"전화 협의"
+042,"방문"
+043,"방문 접견"
+044,"제3국에서의 회담"
+045,"중재"
+046,"협상"
+050,"외교적 협력"
+051,"칭찬 또는 지지"
+052,"언어적 방어"
+053,"지지 규합"
+054,"외교적 승인"
+055,"사과"
+056,"용서"
+057,"공식 협정 체결"
+060,"물질적 협력"
+061,"경제적 협력"
+062,"군사적 협력"
+063,"사법 공조"
+064,"정보 공유"
+070,"원조 제공"
+071,"경제 원조 제공"
+072,"군사 원조 제공"
+073,"인도적 지원 제공"
+074,"군사 보호 또는 평화유지군 제공"
+075,"망명 허용"
+080,"양보 및 수용"
+081,"행정 제재 완화"
+0811,"정치적 자유 제한 완화"
+0812,"정당 또는 정치인 활동 금지 완화"
+0813,"통금 완화"
+0814,"비상사태 또는 계엄령 완화"
+082,"정치적 반대 완화"
+083,"정치 개혁 요구 수용"
+0831,"지도부 교체 요구 수용"
+0832,"정책 변경 요구 수용"
+0833,"권리 요구 수용"
+0834,"제도/체제 변경 요구 수용"
+084,"반환 및 석방"
+0841,"인물 반환 및 석방"
+0842,"재산 반환 및 석방"
+085,"경제 제재/보이콧/금수 조치 완화"
+086,"국제적 개입 허용"
+0861,"평화유지군 배치 수용"
+0862,"사찰단 수용"
+0863,"인도적 지원 접근 허용"
+087,"군사적 교전 완화"
+0871,"휴전 선언"
+0872,"군사적 봉쇄 완화"
+0873,"군대 동원 해제"
+0874,"군사적 후퇴 또는 항복"
+090,"조사"
+091,"범죄 및 부패 조사"
+092,"인권 침해 조사"
+093,"군사 행동 조사"
+094,"전쟁 범죄 조사"
+100,"요구"
+101,"물질적 협력 요구"
+1011,"경제 협력 요구"
+1012,"군사 협력 요구"
+1013,"사법 공조 요구"
+1014,"정보 협력 요구"
+102,"외교적 협력 요구"
+103,"물질적 원조 요구"
+1031,"경제 원조 요구"
+1032,"군사 원조 요구"
+1033,"인도적 지원 요구"
+1034,"군사 보호 또는 평화유지군 요구"
+104,"정치 개혁 요구"
+1041,"지도부 교체 요구"
+1042,"정책 변경 요구"
+1043,"권리 요구"
+1044,"제도/체제 변경 요구"
+105,"양보 요구"
+1051,"행정 제재 완화 요구"
+1052,"정치적 반대 완화 요구"
+1053,"인물 또는 재산 석방/반환 요구"
+1054,"경제 제재/보이콧/금수 조치 완화 요구"
+1055,"국제적 개입 허용 요구"
+1056,"군사적 교전 완화 요구"
+106,"회담 및 협상 요구"
+107,"분쟁 해결 요구"
+108,"중재 요구"
+110,"비판 및 반대"
+111,"비난 또는 규탄"
+112,"고발"
+1121,"범죄 및 부패 고발"
+1122,"인권 침해 고발"
+1123,"침략 행위 고발"
+1124,"전쟁 범죄 고발"
+1125,"간첩 및 반역 행위 고발"
+113,"반대 세력 규합"
+114,"공식 항의"
+115,"소송 제기"
+116,"유죄 판결"
+120,"거부"
+121,"물질적 협력 거부"
+1211,"경제 협력 거부"
+1212,"군사 협력 거부"
+122,"물질적 원조 요청 거부"
+1221,"경제 원조 요청 거부"
+1222,"군사 원조 요청 거부"
+1223,"인도적 지원 요청 거부"
+1224,"군사 보호 또는 평화유지군 요청 거부"
+123,"정치 개혁 요구 거부"
+1231,"지도부 교체 요구 거부"
+1232,"정책 변경 요구 거부"
+1233,"권리 요구 거부"
+1234,"제도/체제 변경 요구 거부"
+124,"양보 거부"
+1241,"행정 제재 완화 거부"
+1242,"정치적 반대 완화 거부"
+1243,"인물 또는 재산 석방/반환 거부"
+1244,"경제 제재/보이콧/금수 조치 완화 거부"
+1245,"국제적 개입 허용 거부"
+1246,"군사적 교전 완화 거부"
+125,"회담/논의/협상 제안 거부"
+126,"중재 거부"
+127,"분쟁 해결 계획/합의 거부"
+128,"규범 및 법률 위반"
+129,"거부권 행사"
+130,"위협"
+131,"비군사적 위협"
+1311,"원조 축소 또는 중단 위협"
+1312,"제재/보이콧/금수 조치 위협"
+1313,"관계 축소 또는 단절 위협"
+132,"행정 제재 위협"
+1321,"정치적 자유 제한 위협"
+1322,"정당 또는 정치인 활동 금지 위협"
+1323,"통금 선포 위협"
+1324,"비상사태 또는 계엄령 선포 위협"
+133,"정치적 반대 시위 위협"
+134,"협상 중단 위협"
+135,"중재 중단 위협"
+136,"국제적 개입 중단 위협"
+137,"탄압 위협"
+138,"무력 사용 위협"
+1381,"봉쇄 위협"
+1382,"점령 위협"
+1383,"비전통적 공격 위협"
+1384,"전통적 공격 위협"
+1385,"대량살상무기(WMD) 공격 위협"
+139,"최후통첩"
+140,"정치적 반대"
+141,"시위 또는 집회"
+1411,"지도부 교체 요구 시위"
+1412,"정책 변경 요구 시위"
+1413,"권리 요구 시위"
+1414,"제도/체제 변경 요구 시위"
+142,"단식 투쟁"
+1421,"지도부 교체 요구 단식 투쟁"
+1422,"정책 변경 요구 단식 투쟁"
+1423,"권리 요구 단식 투쟁"
+1424,"제도/체제 변경 요구 단식 투쟁"
+143,"파업 또는 보이콧"
+1431,"지도부 교체 요구 파업 또는 보이콧"
+1432,"정책 변경 요구 파업 또는 보이콧"
+1433,"권리 요구 파업 또는 보이콧"
+1434,"제도/체제 변경 요구 파업 또는 보이콧"
+144,"통행 방해 및 봉쇄"
+1441,"지도부 교체 요구 통행 방해"
+1442,"정책 변경 요구 통행 방해"
+1443,"권리 요구 통행 방해"
+1444,"제도/체제 변경 요구 통행 방해"
+145,"폭력 시위 및 폭동"
+1451,"지도부 교체 요구 폭력 시위"
+1452,"정책 변경 요구 폭력 시위"
+1453,"권리 요구 폭력 시위"
+1454,"제도/체제 변경 요구 폭력 시위"
+150,"군사력 또는 경찰력 과시"
+151,"경찰 경계 태세 격상"
+152,"군사 경계 태세 격상"
+153,"경찰력 동원 또는 증강"
+154,"군대 동원 또는 증강"
+155,"사이버 부대 동원 또는 증강"
+160,"관계 축소"
+161,"외교 관계 축소 또는 단절"
+162,"물질적 원조 축소 또는 중단"
+1621,"경제 원조 축소 또는 중단"
+1622,"군사 원조 축소 또는 중단"
+1623,"인도적 지원 축소 또는 중단"
+163,"금수 조치/보이콧/제재 부과"
+164,"협상 중단"
+165,"중재 중단"
+166,"추방 또는 철수"
+1661,"평화유지군 추방 또는 철수"
+1662,"사찰단/감시단 추방 또는 철수"
+1663,"원조 기관 추방 또는 철수"
+170,"강압"
+171,"재산 압류 또는 손상"
+1711,"재산 몰수"
+1712,"재산 파괴"
+172,"행정 제재 부과"
+1721,"정치적 자유 제한"
+1722,"정당 또는 정치인 활동 금지"
+1723,"통금 실시"
+1724,"비상사태 또는 계엄령 선포"
+173,"체포, 구금 또는 기소"
+174,"개인 추방 또는 국외 이송"
+175,"폭력적 탄압 전술 사용"
+176,"사이버 공격"
+180,"비전통적 폭력 사용"
+181,"납치, 공중납치 또는 인질극"
+182,"물리적 폭행"
+1821,"성폭행"
+1822,"고문"
+1823,"폭행으로 인한 살해"
+183,"자살, 차량 또는 기타 비군사적 폭탄 테러"
+1831,"자살 폭탄 테러"
+1832,"차량 폭탄 테러"
+1833,"도로변 폭탄 테러"
+1834,"시설물 폭탄 테러"
+184,"인간 방패 사용"
+185,"암살 시도"
+186,"암살"
+190,"전통적 군사력 사용"
+191,"봉쇄 및 이동 제한"
+192,"영토 점령"
+193,"소화기 및 경화기 전투"
+194,"포병 및 탱크 전투"
+195,"공중 무기 사용"
+1951,"정밀 유도 공중 무기 사용"
+1952,"원격 조종 공중 무기 사용"
+196,"휴전 위반"
+200,"비전통적 대량 폭력 사용"
+201,"대규모 추방"
+202,"대량 학살"
+203,"인종 청소"
+204,"대량살상무기(WMD) 사용"
+2041,"화학, 생물학 또는 방사능 무기 사용"
+2042,"핵무기 폭발"

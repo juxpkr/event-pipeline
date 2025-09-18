@@ -1,233 +1,262 @@
-code,description
-AFG,Afghanistan
-ALA,Aland Islands
-ALB,Albania
-DZA,Algeria
-ASM,American Samoa
-AND,Andorra
-AGO,Angola
-AIA,Anguilla
-ATG,Antigua and Barbuda
-ARG,Argentina
-ARM,Armenia
-ABW,Aruba
-AUS,Australia
-AUT,Austria
-AZE,Azerbaijan
-BHS,Bahamas
-BHR,Bahrain
-BGD,Bangladesh
-BRB,Barbados
-BLR,Belarus
-BEL,Belgium
-BLZ,Belize
-BEN,Benin
-BMU,Bermuda
-BTN,Bhutan
-BOL,Bolivia
-BIH,Bosnia and Herzegovina
-BWA,Botswana
-BRA,Brazil
-VGB,British Virgin Islands
-BRN,Brunei Darussalam
-BGR,Bulgaria
-BFA,Burkina Faso
-BDI,Burundi
-KHM,Cambodia
-CMR,Cameroon
-CAN,Canada
-CPV,Cape Verde
-CYM,Cayman Islands
-CAF,Central African Republic
-TCD,Chad
-CHL,Chile
-CHN,China
-COL,Columbia
-COM,Comoros
-COD,"Congo, Democratic R. of the"
-COG,"Congo, People’s R. of the"
-COK,Cook Islands
-CRI,Costa Rica
-CIV,"Cte d’Ivoire (Ivory Coast)"
-HRV,Croatia
-CUB,Cuba
-CYP,Cyprus
-CZE,Czech Republic
-DNK,Denmark
-DJI,Djibouti
-DMA,Dominica
-DOM,Dominican Republic
-TMP,"East Timor (Timor-Leste)"
-ECU,Ecuador
-EGY,Egypt
-SLV,El Salvador
-GNQ,Equatorial Guinea
-ERI,Eritrea
-EST,Estonia
-ETH,Ethiopia
-FRO,Faeroe Islands
-FLK,"Falkland Islands (Malvinas)"
-FJI,Fiji
-FIN,Finland
-FRA,France
-GUF,French Guiana
-PYF,French Polynesia
-GAB,Gabon
-GMB,Gambia
-GEO,Georgia
-DEU,Germany
-GHA,Ghana
-GIB,Gibraltar
-GRC,Greece
-GRL,Greenland
-GRD,Grenada
-GLP,Guadeloupe
-GUM,Guam
-GTM,Guatemala
-GIN,Guinea
-GNB,Guinea-Bissau
-GUY,Guyana
-HTI,Haiti
-VAT,"Holy See (Vatican City)"
-HND,Honduras
-HKG,"Hong Kong Special Adm. Region of China"
-HUN,Hungary
-ISL,Iceland
-IND,India
-IDN,Indonesia
-IRN,Iran
-IRQ,Iraq
-IRL,Ireland
-IMY,Isle of Man
-ISR,Israel
-ITA,Italy
-JAM,Jamaica
-JPN,Japan
-JOR,Jordan
-KAZ,Kazakhstan
-KEN,Kenya
-KIR,Kiribati
-PRK,"Korea, Democratic People’s R."
-KOR,"Korea, Republic of"
-KWT,Kuwait
-KGZ,Kyrgyzstan
-LAO,Laos
-LVA,Latvia
-LBN,Lebanon
-LSO,Lesotho
-LBR,Liberia
-LBY,Libya
-LIE,Liechtenstein
-LTU,Lithuania
-LUX,Luxembourg
-MAC,"Macao Special Adm. Region of China"
-MKD,Macedonia
-MDG,Madagascar
-MWI,Malawi
-MYS,Malaysia
-MDV,Maldives
-MLI,Mali
-MLT,Malta
-MHL,Marshall Islands
-MTQ,Martinique
-MRT,Mauritania
-MUS,Mauritius
-MYT,Mayotte
-MEX,Mexico
-FSM,Micronesia
-MDA,Moldova
-MCO,Monaco
-MNG,Mongolia
-MTN,Montenegro
-MSR,Montserrat
-MAR,Morocco
-MOZ,Mozambique
-MMR,Myanmar
-NAM,Namibia
-NRU,Nauru
-NPL,Nepal
-NLD,Netherlands
-ANT,Netherlands Antilles
-NCL,New Caledonia
-NZL,New Zealand
-NIC,Nicaragua
-NER,Niger
-NGA,Nigeria
-NIU,Niue
-NFK,Norfolk Island
-MNP,Northern Mariana Islands
-NOR,Norway
-PSE,Occupied Palestinian Territory
-OMN,Oman
-PAK,Pakistan
-PLW,Palau
-PAN,Panama
-PNG,Papua New Guinea
-PRY,Paraguay
-PER,Peru
-PHL,Philippines
-PCN,Pitcairn
-POL,Poland
-PRT,Portugal
-PRI,Puerto Rico
-QAT,Qatar
-REU,Reunion
-ROM,Romania
-RUS,Russia
-RWA,Rwanda
-SHN,Saint Helena
-KNA,Saint Kitts-Nevis
-LCA,Saint Lucia
-SPM,Saint Pierre and Miquelon
-VCT,Saint Vincent and the Grenadines
-WSM,Samoa
-SMR,San Marino
-STP,Sao Tome and Principe
-SAU,Saudi Arabia
-SEN,Senegal
-SRB,Serbia
-SYC,Seychelles
-SLE,Sierra Leone
-SGP,Singapore
-SVK,Slovakia
-SVN,Slovenia
-SLB,Solomon Islands
-SOM,Somalia
-ZAF,South Africa
-ESP,Spain
-LKA,Sri Lanka
-SDN,Sudan
-SUR,Suriname
-SJM,Svalbard and Jan Mayen Islands
-SWZ,Swaziland
-SWE,Sweden
-CHE,Switzerland
-SYR,Syria
-TJK,Tajikistan
-TZA,Tanzania
-THA,Thailand
-TGO,Togo
-TKL,Tokelau
-TON,Tonga
-TTO,Trinidad and Tobago
-TUN,Tunisia
-TUR,Turkey
-TKM,Turkmenistan
-TCA,Turks and Caicos Islands
-TUV,Tuvalu
-UGA,Uganda
-UKR,Ukraine
-ARE,United Arab Emirates
-GBR,United Kingdom
-USA,United States
-VIR,United States Virgin Islands
-URY,Uruguay
-UZB,Uzbekistan
-VUT,Vanuatu
-VEN,Venezuela
-VNM,Viet Nam
-WLF,Wallis and Futuna Islands
-ESH,Western Sahara
-YEM,Yemen
-ZMB,Zambia
-ZWE,Zimbabwe
+code,name_eng,name_kor
+AFG,"Afghanistan","아프가니스탄"
+ALA,"Aland Islands","올란드 제도"
+ALB,"Albania","알바니아"
+DZA,"Algeria","알제리"
+ASM,"American Samoa","아메리칸사모아"
+AND,"Andorra","안도라"
+AGO,"Angola","앙골라"
+AIA,"Anguilla","앵귈라"
+ATG,"Antigua and Barbuda","앤티가 바부다"
+ARG,"Argentina","아르헨티나"
+ARM,"Armenia","아르메니아"
+ABW,"Aruba","아루바"
+AUS,"Australia","호주"
+AUT,"Austria","오스트리아"
+AZE,"Azerbaijan","아제르바이잔"
+BHS,"Bahamas","바하마"
+BHR,"Bahrain","바레인"
+BGD,"Bangladesh","방글라데시"
+BRB,"Barbados","바베이도스"
+BLR,"Belarus","벨라루스"
+BEL,"Belgium","벨기에"
+BLZ,"Belize","벨리즈"
+BEN,"Benin","베냉"
+BMU,"Bermuda","버뮤다"
+BTN,"Bhutan","부탄"
+BOL,"Bolivia","볼리비아"
+BIH,"Bosnia and Herzegovina","보스니아 헤르체고비나"
+BWA,"Botswana","보츠와나"
+BRA,"Brazil","브라질"
+VGB,"British Virgin Islands","영국령 버진아일랜드"
+BRN,"Brunei Darussalam","브루나이"
+BGR,"Bulgaria","불가리아"
+BFA,"Burkina Faso","부르키나파소"
+BDI,"Burundi","부룬디"
+KHM,"Cambodia","캄보디아"
+CMR,"Cameroon","카메룬"
+CAN,"Canada","캐나다"
+CPV,"Cape Verde","카보베르데"
+CYM,"Cayman Islands","케이맨 제도"
+CAF,"Central African Republic","중앙아프리카공화국"
+TCD,"Chad","차드"
+CHL,"Chile","칠레"
+CHN,"China","중국"
+COL,"Colombia","콜롬비아"
+COM,"Comoros","코모로"
+COD,"Congo, Democratic Republic of the","콩고민주공화국"
+COG,"Congo, Republic of the","콩고공화국"
+COK,"Cook Islands","쿡 제도"
+CRI,"Costa Rica","코스타리카"
+CIV,"Cote d'Ivoire","코트디부아르"
+HRV,"Croatia","크로아티아"
+CUB,"Cuba","쿠바"
+CYP,"Cyprus","키프로스"
+CZE,"Czech Republic","체코"
+DNK,"Denmark","덴마크"
+DJI,"Djibouti","지부티"
+DMA,"Dominica","도미니카 연방"
+DOM,"Dominican Republic","도미니카 공화국"
+TMP,"Timor-Leste","동티모르"
+ECU,"Ecuador","에콰도르"
+EGY,"Egypt","이집트"
+SLV,"El Salvador","엘살바도르"
+GNQ,"Equatorial Guinea","적도 기니"
+ERI,"Eritrea","에리트레아"
+EST,"Estonia","에스토니아"
+ETH,"Ethiopia","에티오피아"
+FRO,"Faroe Islands","페로 제도"
+FLK,"Falkland Islands (Islas Malvinas)","포클랜드 제도"
+FJI,"Fiji","피지"
+FIN,"Finland","핀란드"
+FRA,"France","프랑스"
+GUF,"French Guiana","프랑스령 기아나"
+PYF,"French Polynesia","프랑스령 폴리네시아"
+GAB,"Gabon","가봉"
+GMB,"Gambia, The","감비아"
+GEO,"Georgia","조지아"
+DEU,"Germany","독일"
+GHA,"Ghana","가나"
+GIB,"Gibraltar","지브롤터"
+GRC,"Greece","그리스"
+GRL,"Greenland","그린란드"
+GRD,"Grenada","그레나다"
+GLP,"Guadeloupe","과들루프"
+GUM,"Guam","괌"
+GTM,"Guatemala","과테말라"
+GIN,"Guinea","기니"
+GNB,"Guinea-Bissau","기니비사우"
+GUY,"Guyana","가이아나"
+HTI,"Haiti","아이티"
+VAT,"Holy See (Vatican City)","바티칸 시국"
+HND,"Honduras","온두라스"
+HKG,"Hong Kong","중국 홍콩 특별행정구"
+HUN,"Hungary","헝가리"
+ISL,"Iceland","아이슬란드"
+IND,"India","인도"
+IDN,"Indonesia","인도네시아"
+IRN,"Iran","이란"
+IRQ,"Iraq","이라크"
+IRL,"Ireland","아일랜드"
+IMY,"Isle of Man","맨섬"
+ISR,"Israel","이스라엘"
+ITA,"Italy","이탈리아"
+JAM,"Jamaica","자메이카"
+JPN,"Japan","일본"
+JOR,"Jordan","요르단"
+KAZ,"Kazakhstan","카자흐스탄"
+KEN,"Kenya","케냐"
+KIR,"Kiribati","키리바시"
+PRK,"Korea, Democratic People's Republic of","조선민주주의인민공화국"
+KOR,"Korea, Republic of","대한민국"
+KWT,"Kuwait","쿠웨이트"
+KGZ,"Kyrgyzstan","키르기스스탄"
+LAO,"Laos","라오스"
+LVA,"Latvia","라트비아"
+LBN,"Lebanon","레바논"
+LSO,"Lesotho","레소토"
+LBR,"Liberia","라이베리아"
+LBY,"Libya","리비아"
+LIE,"Liechtenstein","리히텐슈타인"
+LTU,"Lithuania","리투아니아"
+LUX,"Luxembourg","룩셈부르크"
+MAC,"Macao","중국 마카오 특별행정구"
+MKD,"Macedonia, Republic of","북마케도니아"
+MDG,"Madagascar","마다가스카르"
+MWI,"Malawi","말라위"
+MYS,"Malaysia","말레이시아"
+MDV,"Maldives","몰디브"
+MLI,"Mali","말리"
+MLT,"Malta","몰타"
+MHL,"Marshall Islands","마셜 제도"
+MTQ,"Martinique","마르티니크"
+MRT,"Mauritania","모리타니"
+MUS,"Mauritius","모리셔스"
+MYT,"Mayotte","마요트"
+MEX,"Mexico","멕시코"
+FSM,"Micronesia, Federated States of","미크로네시아 연방"
+MDA,"Moldova","몰도바"
+MCO,"Monaco","모나코"
+MNG,"Mongolia","몽골"
+MTN,"Montenegro","몬테네그로"
+MSR,"Montserrat","몬트세랫"
+MAR,"Morocco","모로코"
+MOZ,"Mozambique","모잠비크"
+MMR,"Myanmar","미얀마"
+NAM,"Namibia","나미비아"
+NRU,"Nauru","나우루"
+NPL,"Nepal","네팔"
+NLD,"Netherlands","네덜란드"
+ANT,"Netherlands Antilles","네덜란드령 안틸레스"
+NCL,"New Caledonia","누벨칼레도니"
+NZL,"New Zealand","뉴질랜드"
+NIC,"Nicaragua","니카라과"
+NER,"Niger","니제르"
+NGA,"Nigeria","나이지리아"
+NIU,"Niue","니우에"
+NFK,"Norfolk Island","노퍽섬"
+MNP,"Northern Mariana Islands","북마리아나 제도"
+NOR,"Norway","노르웨이"
+PSE,"Palestinian Territories","팔레스타인"
+OMN,"Oman","오만"
+PAK,"Pakistan","파키스탄"
+PLW,"Palau","팔라우"
+PAN,"Panama","파나마"
+PNG,"Papua New Guinea","파푸아뉴기니"
+PRY,"Paraguay","파라과이"
+PER,"Peru","페루"
+PHL,"Philippines","필리핀"
+PCN,"Pitcairn Islands","핏케언 제도"
+POL,"Poland","폴란드"
+PRT,"Portugal","포르투갈"
+PRI,"Puerto Rico","푸에르토리코"
+QAT,"Qatar","카타르"
+REU,"Reunion","레위니옹"
+ROM,"Romania","루마니아"
+RUS,"Russia","러시아"
+RWA,"Rwanda","르완다"
+SHN,"Saint Helena","세인트헬레나"
+KNA,"Saint Kitts and Nevis","세인트키츠 네비스"
+LCA,"Saint Lucia","세인트루시아"
+SPM,"Saint Pierre and Miquelon","생피에르 미클롱"
+VCT,"Saint Vincent and the Grenadines","세인트빈센트 그레나딘"
+WSM,"Samoa","사모아"
+SMR,"San Marino","산마리노"
+STP,"Sao Tome and Principe","상투메 프린시페"
+SAU,"Saudi Arabia","사우디아라비아"
+SEN,"Senegal","세네갈"
+SRB,"Serbia","세르비아"
+SYC,"Seychelles","세이셸"
+SLE,"Sierra Leone","시에라리온"
+SGP,"Singapore","싱가포르"
+SVK,"Slovakia","슬로바키아"
+SVN,"Slovenia","슬로베니아"
+SLB,"Solomon Islands","솔로몬 제도"
+SOM,"Somalia","소말리아"
+ZAF,"South Africa","남아프리카 공화국"
+ESP,"Spain","스페인"
+LKA,"Sri Lanka","스리랑카"
+SDN,"Sudan","수단"
+SUR,"Suriname","수리남"
+SJM,"Svalbard","스발바르 얀마옌"
+SWZ,"Eswatini","에스와티니"
+SWE,"Sweden","스웨덴"
+CHE,"Switzerland","스위스"
+SYR,"Syria","시리아"
+TWN,"Taiwan","대만"
+TJK,"Tajikistan","타지키스탄"
+TZA,"Tanzania","탄자니아"
+THA,"Thailand","태국"
+TGO,"Togo","토고"
+TKL,"Tokelau","토켈라우"
+TON,"Tonga","통가"
+TTO,"Trinidad and Tobago","트리니다드 토바고"
+TUN,"Tunisia","튀니지"
+TUR,"Turkey","튀르키예"
+TKM,"Turkmenistan","투르크메니스탄"
+TCA,"Turks and Caicos Islands","터크스 케이커스 제도"
+TUV,"Tuvalu","투발루"
+UGA,"Uganda","우간다"
+UKR,"Ukraine","우크라이나"
+ARE,"United Arab Emirates","아랍에미리트"
+GBR,"United Kingdom","영국"
+USA,"United States","미국"
+VIR,"Virgin Islands, U.S.","미국령 버진아일랜드"
+URY,"Uruguay","우루과이"
+UZB,"Uzbekistan","우즈베키스탄"
+VUT,"Vanuatu","바누아투"
+VEN,"Venezuela","베네수엘라"
+VNM,"Vietnam","베트남"
+WLF,"Wallis and Futuna","왈리스 푸투나"
+ESH,"Western Sahara","서사하라"
+YEM,"Yemen","예멘"
+ZMB,"Zambia","잠비아"
+ZWE,"Zimbabwe","짐바브웨"
+WSB,"West Bank","웨스트뱅크"
+BAG,"Baghdad","바그다드"
+GZS,"Gaza Strip","가자 지구"
+AFR,"Africa","아프리카"
+ASA,"Asia","아시아"
+BLK,"Balkans","발칸"
+CRB,"Caribbean","카리브"
+CAU,"Caucasus","캅카스"
+CFR,"Central Africa","중앙아프리카"
+CAS,"Central Asia","중앙아시아"
+CEU,"Central Europe","중부유럽"
+EIN,"East Indies","동인도"
+EAF,"Eastern Africa","동아프리카"
+EEU,"Eastern Europe","동유럽"
+EUR,"Europe","유럽"
+LAM,"Latin America","라틴아메리카"
+MEA,"Middle East","중동"
+MDT,"Mediterranean","지중해"
+NAF,"North Africa","북아프리카"
+NMR,"North America","북아메리카"
+PGS,"Persian Gulf","페르시아만"
+SCN,"Scandinavia","스칸디나비아"
+SAM,"South America","남아메리카"
+SAS,"South Asia","남아시아"
+SEA,"Southeast Asia","동남아시아"
+SAF,"Southern Africa","남아프리카"
+WAF,"West Africa","서아프리카"
+WST,"The West","서방"

@@ -1,6 +1,6 @@
 code,description
-1,COUNTRY
-2,US STATE
-3,US CITY
-4,WORLD CITY
-5,WORLD STATE
+1,"국가"
+2,"미국 주"
+3,"미"국 도시"
+4,"미국 외 도시"
+5,"해외 1단계 행정구역"
