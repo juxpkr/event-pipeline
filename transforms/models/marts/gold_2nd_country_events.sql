@@ -1,8 +1,15 @@
 -- models/marts/gold_2nd_country_events.sql
 -- [골드 테이블] 국가 레벨
 
+-- 증분 모델 (Incremental Model) 설정
+{{ config(
+    materialized='incremental',
+    unique_key=['event_date', 'actor1_country', 'actor2_country']
+) }}
+
 WITH events AS (
-    SELECT * FROM {{ ref('stg_seed_mapping') }}
+    -- 증분 처리를 위해 Silver 레이어 테이블을 직접 참조
+    SELECT * FROM {{ ref('stg_gdelt_microbatch_events') }}
 )
 
 SELECT
@@ -40,3 +47,11 @@ GROUP BY
 ORDER BY
     event_date DESC,
     event_count DESC
+
+{% if is_incremental() %}
+
+  -- 이 모델이 이미 데이터를 가지고 있다면,
+  -- 최신 날짜보다 더 새로운 데이터만 처리 (3일 버퍼 포함)
+  AND event_date >= date_add('day', -3, (SELECT MAX(event_date) FROM {{ this }}))
+
+{% endif %}
