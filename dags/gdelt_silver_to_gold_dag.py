@@ -3,6 +3,7 @@ import os
 import pendulum
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
+from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 from docker.types import Mount
 
@@ -34,7 +35,7 @@ with DAG(
         environment={
             "DBT_PROFILES_DIR": "/app",
         },
-        cpus=3,  # CPU 코어 3개 사용
+        cpus=6,  # CPU 코어 6개 사용
         auto_remove="success",  # 실행 후 컨테이너 자동 삭제
         doc_md="""
         dbt Gold Layer Transformation (DockerOperator)
@@ -46,16 +47,17 @@ with DAG(
     )
 
     # 2단계: Gold -> Postgres 마이그레이션
-    # 이것도 BashOperator나 DockerOperator로 실행
-    migrate_to_postgres_task = BashOperator(
+    # SparkSubmitOperator로 리소스 설정과 통일성 확보
+    migrate_to_postgres_task = SparkSubmitOperator(
         task_id="migrate_gold_to_postgres",
-        bash_command="""
-        SPARK_MASTER_URL=spark://spark-master:7077 \
-        spark-submit \
-        --master spark://spark-master:7077 \
-        --packages org.postgresql:postgresql:42.5.0 \
-        /opt/airflow/src/processing/migration/gdelt_gold_to_postgres.py
-        """,
+        conn_id="spark_conn",
+        application="/opt/airflow/src/processing/migration/gdelt_gold_to_postgres.py",
+        packages="org.postgresql:postgresql:42.5.0",
+        conf={
+            "spark.cores.max": "6",
+            "spark.executor.memory": "10g",
+            "spark.executor.cores": "3",
+        },
         doc_md="""
         Gold Layer to PostgreSQL Migration
         - dbt Gold 테이블들을 PostgreSQL 데이터 마트로 이전

@@ -54,7 +54,11 @@ with DAG(
         # Airflow UI에서 만들어야 할 Spark Master 접속 정보
         conn_id=SPARK_CONN_ID,
         application="/opt/airflow/src/ingestion/gdelt_bronze_consumer.py",
-        conf={"spark.cores.max": "3"},
+        conf={
+            "spark.cores.max": "4",
+            "spark.executor.memory": "8g",
+            "spark.executor.cores": "2",
+        },
     )
 
     # Task 3: Silver Layer Processing
@@ -64,7 +68,11 @@ with DAG(
         application="/opt/airflow/src/processing/gdelt_silver_processor.py",
         # Airflow의 작업 시간 구간을 Spark 코드의 인자로 전달
         application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
-        conf={"spark.cores.max": "3"},
+        conf={
+            "spark.cores.max": "4",
+            "spark.executor.memory": "8g",
+            "spark.executor.cores": "2",
+        },
         doc_md="""
         Silver Layer Processing
         - Bronze Layer → Silver Layer 데이터 변환
