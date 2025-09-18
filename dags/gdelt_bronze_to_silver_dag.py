@@ -38,7 +38,7 @@ with DAG(
     # Task 1: GDELT 3-Way Producer → Kafka
     gdelt_producer = BashOperator(
         task_id="gdelt_producer",
-        bash_command=f"PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/ingestion/gdelt_producer.py",
+        bash_command=f"PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/ingestion/gdelt_producer.py --logical-date '{{{{ data_interval_start }}}}'",
         env=dict(os.environ),
         doc_md="""
         GDELT 3-Way Producer

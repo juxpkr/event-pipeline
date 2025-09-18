@@ -11,6 +11,7 @@ import csv
 import json
 import time
 import logging
+import argparse
 from confluent_kafka import Producer
 from dotenv import load_dotenv
 from src.utils.kafka_producer import get_kafka_producer
@@ -90,7 +91,7 @@ def get_latest_gdelt_urls(
     return gdelt_urls
 
 
-def send_bronze_data_to_kafka(url: str, data_type: str, producer: Producer) -> int:
+def send_bronze_data_to_kafka(url: str, data_type: str, producer: Producer, logical_date: str) -> int:
     """
     URL에서 GDELT 데이터를 다운로드하고, 데이터 타입별 토픽으로 전송
 
@@ -131,8 +132,9 @@ def send_bronze_data_to_kafka(url: str, data_type: str, producer: Producer) -> i
                             "bronze_data": row,  # 전체 컬럼을 리스트로
                             "row_number": row_num,
                             "source_file": csv_filename,
-                            "extracted_time": current_utc.strftime("%Y-%m-%d %H:%M:%S"),
+                            "extracted_time": logical_date,
                             "producer_timestamp": current_utc.isoformat(),  # ★ 중복 제거용 타임스탬프
+                            "processed_at": logical_date,  # ★ Airflow logical date
                             "source_url": url,
                             "total_columns": len(row),
                         }
@@ -187,7 +189,7 @@ def send_bronze_data_to_kafka(url: str, data_type: str, producer: Producer) -> i
         return 0
 
 
-def process_data_type(data_type: str, urls: List[str], producer: Producer) -> int:
+def process_data_type(data_type: str, urls: List[str], producer: Producer, logical_date: str) -> int:
     """
     events, mentions, gkg 데이터의 모든 URL을 처리
 
@@ -206,7 +208,7 @@ def process_data_type(data_type: str, urls: List[str], producer: Producer) -> in
         logger.info(f"Processing {data_type} file {i}/{len(urls)}")
 
         try:
-            record_count = send_bronze_data_to_kafka(url, data_type, producer)
+            record_count = send_bronze_data_to_kafka(url, data_type, producer, logical_date)
             total_processed += record_count
             logger.info(f"{data_type} file {i} completed: {record_count:,} records")
 
@@ -227,7 +229,16 @@ def process_data_type(data_type: str, urls: List[str], producer: Producer) -> in
 
 
 def main():
-    logger.info("Starting GDELT 3-Way Bronze Data Producer...")
+    # 커맨드라인 인자 파싱
+    parser = argparse.ArgumentParser(description="GDELT 3-Way Bronze Data Producer")
+    parser.add_argument(
+        "--logical-date",
+        required=True,
+        help="Airflow logical date (data_interval_start)"
+    )
+    args = parser.parse_args()
+
+    logger.info(f"Starting GDELT 3-Way Bronze Data Producer with logical_date: {args.logical_date}")
 
     producer = None
     total_stats = {}
@@ -254,7 +265,7 @@ def main():
                 continue
 
             processed_count = process_data_type(
-                data_type, gdelt_urls[data_type], producer
+                data_type, gdelt_urls[data_type], producer, args.logical_date
             )
             total_stats[data_type] = processed_count
 
