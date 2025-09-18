@@ -45,6 +45,8 @@ def get_spark_session(app_name: str, master: str = None) -> SparkSession:
         )
         # 시간 해석기 옛날 버전을 사용하도록 설정
         .config("spark.sql.legacy.timeParserPolicy", "LEGACY")
+        # Spark 세션 타임존을 UTC로 설정 (시간 동기화)
+        .config("spark.sql.session.timeZone", "UTC")
         .enableHiveSupport()
     )
 
