@@ -182,6 +182,9 @@ services:
       - spark-jars:/opt/spark/jars
     env_file:
       - ./.env
+    deploy:
+      mode: replicated
+      replicas: 3
 
   spark-thrift-server:
     image: juxpkr/geoevent-spark-base:0.1
