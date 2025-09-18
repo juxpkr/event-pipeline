@@ -2,6 +2,7 @@
 GDELT 3-Way Test Pipeline DAG
 테스트용 GDELT 3개 데이터타입 수집 → Silver 처리 → MinIO 저장
 """
+
 from __future__ import annotations
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
