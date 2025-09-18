@@ -18,8 +18,7 @@ from pyspark.sql import SparkSession, DataFrame
 
 # 로깅 설정
 logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s [%(levelname)s] %(message)s"
+    level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s"
 )
 logger = logging.getLogger(__name__)
 
@@ -35,20 +34,24 @@ class GDELTGoldMigrator:
         self.migration_tables = {
             "default.gold_1st_global_overview": {
                 "postgres_table": "gold_global_overview",
-                "description": "전세계 레벨 - 국가별 & 일일 요약"
+                "postgres_schema": "gold_datamart",
+                "description": "전세계 레벨 - 국가별 & 일일 요약",
             },
             "default.gold_2nd_country_events": {
                 "postgres_table": "gold_country_events",
-                "description": "국가간 이벤트 분석"
+                "postgres_schema": "gold_datamart",
+                "description": "국가간 이벤트 분석",
             },
             "default.gold_4th_daily_detail_summary": {
                 "postgres_table": "gold_daily_detail_summary",
-                "description": "이벤트 상세 - 일일 요약"
+                "postgres_schema": "gold_datamart",
+                "description": "이벤트 상세 - 일일 요약",
             },
             "default.gdelt_microbatch_country_analysis": {
                 "postgres_table": "gold_microbatch_country_analysis",
-                "description": "GDELT 마이크로배치 데이터의 국가별/이벤트 타입별 분석"
-            }
+                "postgres_schema": "gold_datamart",
+                "description": "GDELT 마이크로배치 데이터의 국가별/이벤트 타입별 분석",
+            },
         }
 
     def _get_postgres_config(self) -> Dict[str, str]:
@@ -67,7 +70,7 @@ class GDELTGoldMigrator:
             "database": postgres_db,
             "user": os.getenv("POSTGRES_USER", "airflow"),
             "password": os.getenv("POSTGRES_PASSWORD", "airflow"),
-            "url": f"jdbc:postgresql://{postgres_host}:{postgres_port}/{postgres_db}"
+            "url": f"jdbc:postgresql://{postgres_host}:{postgres_port}/{postgres_db}",
         }
 
     def read_gold_table(self, table_name: str) -> Optional[DataFrame]:
@@ -86,14 +89,18 @@ class GDELTGoldMigrator:
             # Hive Metastore를 통해 테이블 읽기
             gold_df = self.spark.table(table_name)
             record_count = gold_df.count()
-            logger.info(f"Successfully read {record_count:,} records from '{table_name}'")
+            logger.info(
+                f"Successfully read {record_count:,} records from '{table_name}'"
+            )
             return gold_df
 
         except Exception as e:
             logger.error(f"Failed to read table '{table_name}': {e}")
             return None
 
-    def write_to_postgres(self, df: DataFrame, postgres_table: str, description: str) -> bool:
+    def write_to_postgres(
+        self, df: DataFrame, postgres_table: str, description: str, postgres_schema: str
+    ) -> bool:
         """
         DataFrame을 PostgreSQL 테이블에 저장
 
@@ -107,14 +114,18 @@ class GDELTGoldMigrator:
         """
         try:
             record_count = df.count()
-            logger.info(f"Writing {record_count:,} records to PostgreSQL table '{postgres_table}'...")
+            logger.info(
+                f"Writing {record_count:,} records to PostgreSQL table '{postgres_table}'..."
+            )
             logger.info(f"Description: {description}")
+
+            full_table_name = f"{postgres_schema}.{postgres_table}"
 
             # PostgreSQL에 저장
             (
                 df.write.format("jdbc")
                 .option("url", self.postgres_config["url"])
-                .option("dbtable", postgres_table)
+                .option("dbtable", full_table_name)
                 .option("user", self.postgres_config["user"])
                 .option("password", self.postgres_config["password"])
                 .option("driver", "org.postgresql.Driver")
@@ -152,9 +163,7 @@ class GDELTGoldMigrator:
 
         # 2. PostgreSQL에 저장
         success = self.write_to_postgres(
-            gold_df,
-            config["postgres_table"],
-            config["description"]
+            gold_df, config["postgres_table"], config["description"]
         )
 
         return success
@@ -212,7 +221,9 @@ class GDELTGoldMigrator:
                 postgres_table = config["postgres_table"]
 
                 # 테이블 존재 및 레코드 수 확인
-                count_query = f"(SELECT COUNT(*) as count FROM {postgres_table}) as count_table"
+                count_query = (
+                    f"(SELECT COUNT(*) as count FROM {postgres_table}) as count_table"
+                )
 
                 count_df = (
                     self.spark.read.format("jdbc")
@@ -225,7 +236,9 @@ class GDELTGoldMigrator:
                 )
 
                 record_count = count_df.collect()[0]["count"]
-                logger.info(f"PostgreSQL table '{postgres_table}': {record_count:,} records")
+                logger.info(
+                    f"PostgreSQL table '{postgres_table}': {record_count:,} records"
+                )
 
             logger.info("Migration verification completed successfully")
             return True
@@ -241,12 +254,13 @@ def main():
 
     # Spark 세션 생성 (환경에 따라 동적 설정)
     is_swarm = os.getenv("DOCKER_SWARM_MODE", "false").lower() == "true"
-    default_spark_master = "spark://geoevent_spark-master:7077" if is_swarm else "spark://spark-master:7077"
-    spark_master = os.getenv("SPARK_MASTER_URL", default_spark_master)
-    spark = get_spark_session(
-        "GDELT_Gold_To_PostgreSQL_Migration",
-        spark_master
+    default_spark_master = (
+        "spark://geoevent_spark-master:7077"
+        if is_swarm
+        else "spark://spark-master:7077"
     )
+    spark_master = os.getenv("SPARK_MASTER_URL", default_spark_master)
+    spark = get_spark_session("GDELT_Gold_To_PostgreSQL_Migration", spark_master)
 
     try:
         # 마이그레이터 인스턴스 생성
