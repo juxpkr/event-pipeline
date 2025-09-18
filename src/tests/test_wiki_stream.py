@@ -15,12 +15,14 @@ def run_live_feed(duration_seconds=10, keywords=None):
         keywords: 필터링할 키워드 리스트 (None이면 모든 이벤트 출력)
     """
     print(f"--- Starting Live Feed for {duration_seconds} seconds ---")
-    
+
     # 1. 키워드 리스트를 set으로 변환하여 검색 속도를 O(1)으로 최적화합니다.
     keyword_set = set(keywords) if keywords else set()
 
     if keyword_set:
-        print(f"🎯 Filtering for {len(keyword_set)} exact titles in English Wikipedia...")
+        print(
+            f"🎯 Filtering for {len(keyword_set)} exact titles in English Wikipedia..."
+        )
     else:
         print("📡 Monitoring all events (no filter)")
     print("Press Ctrl+C to stop early.")
@@ -30,9 +32,7 @@ def run_live_feed(duration_seconds=10, keywords=None):
     filtered_count = 0
 
     try:
-        headers = {
-            'User-Agent': 'GDELT-WikiStream-Monitor/1.0 Python/3.x'
-        }
+        headers = {"User-Agent": "GDELT-WikiStream-Monitor/1.0 Python/3.x"}
         with EventSource(WIKIMEDIA_STREAM_URL, headers=headers) as event_source:
             for event in event_source:
                 if time.time() - start_time > duration_seconds:
@@ -45,7 +45,7 @@ def run_live_feed(duration_seconds=10, keywords=None):
 
                         # 2. **영어 위키피디아** 이벤트만 보도록 필터링합니다. (가장 중요!)
                         # 키워드가 영어이므로, 다른 언어 위키는 볼 필요가 없습니다.
-                        if change_data.get("wiki") != 'enwiki':
+                        if change_data.get("wiki") != "enwiki":
                             continue
 
                         # 봇 활동은 제외합니다.
@@ -67,7 +67,7 @@ def run_live_feed(duration_seconds=10, keywords=None):
                         event_type = change_data.get("type")
                         user = change_data.get("user")
                         title = change_data.get("title")
-                        
+
                         # 한 줄로 깔끔하게 출력
                         print(
                             f"🎯 [{timestamp}] WIKI:{wiki:<10} | TYPE:{event_type:<5} | USER:{user:<20} | TITLE: {title}"

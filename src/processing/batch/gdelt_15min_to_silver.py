@@ -64,7 +64,7 @@ def get_gdelt_silver_schema():
             StructField("num_articles", IntegerType(), False),
             StructField("avg_tone", DoubleType(), True),
             # 주체1 지리정보
-            StructField("actor1_geo_type", IntegerType(), True), # 코드북 기준: Integer
+            StructField("actor1_geo_type", IntegerType(), True),  # 코드북 기준: Integer
             StructField("actor1_geo_fullname", StringType(), True),
             StructField("actor1_geo_country_code", StringType(), True),
             StructField("actor1_geo_adm1_code", StringType(), True),
@@ -73,7 +73,7 @@ def get_gdelt_silver_schema():
             StructField("actor1_geo_long", DoubleType(), True),
             StructField("actor1_geo_feature_id", StringType(), True),
             # 대상2 지리정보
-            StructField("actor2_geo_type", IntegerType(), True), # 코드북 기준: Integer
+            StructField("actor2_geo_type", IntegerType(), True),  # 코드북 기준: Integer
             StructField("actor2_geo_fullname", StringType(), True),
             StructField("actor2_geo_country_code", StringType(), True),
             StructField("actor2_geo_adm1_code", StringType(), True),
@@ -82,7 +82,7 @@ def get_gdelt_silver_schema():
             StructField("actor2_geo_long", DoubleType(), True),
             StructField("actor2_geo_feature_id", StringType(), True),
             # 사건 지리정보
-            StructField("action_geo_type", IntegerType(), True), # 코드북 기준: Integer
+            StructField("action_geo_type", IntegerType(), True),  # 코드북 기준: Integer
             StructField("action_geo_fullname", StringType(), True),
             StructField("action_geo_country_code", StringType(), True),
             StructField("action_geo_adm1_code", StringType(), True),
@@ -105,13 +105,15 @@ def transform_raw_to_silver(raw_df: DataFrame) -> DataFrame:
 
     # 1. 데이터 유효성 검사: raw_data 배열의 크기가 최소 58개 이상인 데이터만 처리
     min_expected_columns = 58
-    
+
     valid_df = raw_df.filter(F.size("raw_data") >= min_expected_columns)
     invalid_df = raw_df.filter(F.size("raw_data") < min_expected_columns)
 
     invalid_count = invalid_df.count()
     if invalid_count > 0:
-        logger.warning(f"⚠️ Found {invalid_count} records with less than {min_expected_columns} columns. These records will be skipped.")
+        logger.warning(
+            f"⚠️ Found {invalid_count} records with less than {min_expected_columns} columns. These records will be skipped."
+        )
 
     # 2. raw_data 배열에서 각 컬럼 추출 및 타입 캐스팅
     silver_df = valid_df.select(
@@ -187,14 +189,20 @@ def transform_raw_to_silver(raw_df: DataFrame) -> DataFrame:
     ).filter(F.col("global_event_id").isNotNull())
 
     # 3. 데이터 정제 및 변환
-    silver_df = silver_df.withColumn(
-        "event_date", F.to_date(F.col("event_date_str"), "yyyyMMdd")
-    ).withColumn(
-        "date_added", F.to_timestamp(F.col("date_added_str"), "yyyyMMddHHmmss")
-    ).drop("event_date_str", "date_added_str")
+    silver_df = (
+        silver_df.withColumn(
+            "event_date", F.to_date(F.col("event_date_str"), "yyyyMMdd")
+        )
+        .withColumn(
+            "date_added", F.to_timestamp(F.col("date_added_str"), "yyyyMMddHHmmss")
+        )
+        .drop("event_date_str", "date_added_str")
+    )
 
     # 4. 빈 문자열을 NULL로 변환
-    string_columns = [f.name for f in silver_df.schema.fields if isinstance(f.dataType, StringType)]
+    string_columns = [
+        f.name for f in silver_df.schema.fields if isinstance(f.dataType, StringType)
+    ]
     for col_name in string_columns:
         silver_df = silver_df.withColumn(
             col_name,
@@ -202,12 +210,10 @@ def transform_raw_to_silver(raw_df: DataFrame) -> DataFrame:
         )
 
     # 5. NULL 값을 기본값(0)으로 채우기
-    silver_df = silver_df.fillna({
-        "num_mentions": 0,
-        "num_sources": 0,
-        "num_articles": 0
-    })
-    
+    silver_df = silver_df.fillna(
+        {"num_mentions": 0, "num_sources": 0, "num_articles": 0}
+    )
+
     # 6. 최종 스키마에 맞게 컬럼 순서 정리 및 선택
     final_columns = [f.name for f in get_gdelt_silver_schema().fields]
     silver_df = silver_df.select(final_columns)
@@ -240,7 +246,10 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
     logger.info("📥 Reading RAW data from Kafka...")
     raw_df = (
         spark.read.format("kafka")
-        .option("kafka.bootstrap.servers", os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
+        .option(
+            "kafka.bootstrap.servers",
+            os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"),
+        )
         .option("subscribe", "gdelt_raw_events")
         .option("startingOffsets", "earliest")
         .option("endingOffsets", "latest")
@@ -287,7 +296,6 @@ def main():
     # 메인 실행 함수
     logger.info("🚀 Starting GDELT Silver Processor...")
 
-
     # Kafka 지원을 위해 get_spark_session 사용
     spark = get_spark_session("GDELT Silver Processor", "spark://spark-master:7077")
 
@@ -309,7 +317,7 @@ def main():
 
         # 3. 데이터 변환
         silver_df = transform_raw_to_silver(parsed_df)
-        
+
         # 4. 이상치 탐지 및 알림
         notify_gdelt_anomalies(silver_df)
 
@@ -324,7 +332,7 @@ def main():
             "actor1_country_code",
             "event_root_code",
             "avg_tone",
-            "num_mentions"
+            "num_mentions",
         ).show(5)
 
     except Exception as e:

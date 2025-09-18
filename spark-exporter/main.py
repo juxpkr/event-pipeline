@@ -12,7 +12,9 @@ jmx_metric_cache = {"driver": "", "executor": ""}
 
 
 # --- 로깅 설정 ---
-logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logging.basicConfig(
+    level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
+)
 
 # --- Flask 앱 초기화 ---
 app = Flask(__name__)
@@ -73,7 +75,9 @@ def scrape_jmx_in_background():
             executor_jmx_url = "http://spark-worker:8091/metrics"
             jmx_executor_response = requests.get(executor_jmx_url, timeout=5)
             if jmx_executor_response.status_code == 200:
-                processed_text = add_label_to_jmx(jmx_executor_response.text, "executor")
+                processed_text = add_label_to_jmx(
+                    jmx_executor_response.text, "executor"
+                )
                 jmx_metric_cache["executor"] = processed_text
         except requests.exceptions.RequestException as e:
             logging.warning(f"Background scrape failed for Executor JMX: {e}")
@@ -89,7 +93,9 @@ def respond_metrics():
     """
     metrics_report = ""
     try:
-        r = redis.Redis(host=REDIS_HOST, port=int(REDIS_PORT), db=0, decode_responses=True)
+        r = redis.Redis(
+            host=REDIS_HOST, port=int(REDIS_PORT), db=0, decode_responses=True
+        )
         r.ping()
 
         master_api_url = f"{SPARK_MASTER_URL}/json/"
@@ -119,38 +125,62 @@ def respond_metrics():
                 jobs_response.raise_for_status()
                 jobs_data = jobs_response.json()
                 if isinstance(jobs_data, list):
-                    succeeded_jobs = len([j for j in jobs_data if j.get("status") == "SUCCEEDED"])
-                    running_jobs = len([j for j in jobs_data if j.get("status") == "RUNNING"])
-                    failed_jobs = len([j for j in jobs_data if j.get("status") == "FAILED"])
+                    succeeded_jobs = len(
+                        [j for j in jobs_data if j.get("status") == "SUCCEEDED"]
+                    )
+                    running_jobs = len(
+                        [j for j in jobs_data if j.get("status") == "RUNNING"]
+                    )
+                    failed_jobs = len(
+                        [j for j in jobs_data if j.get("status") == "FAILED"]
+                    )
                 else:
                     succeeded_jobs, running_jobs, failed_jobs = 0, 0, 0
-                
-                metrics_report += f"spark_driver_succeeded_jobs{{{driver_labels}}} {succeeded_jobs}\n"
-                metrics_report += f"spark_driver_running_jobs{{{driver_labels}}} {running_jobs}\n"
-                metrics_report += f"spark_driver_failed_jobs{{{driver_labels}}} {failed_jobs}\n"
-                
+
+                metrics_report += (
+                    f"spark_driver_succeeded_jobs{{{driver_labels}}} {succeeded_jobs}\n"
+                )
+                metrics_report += (
+                    f"spark_driver_running_jobs{{{driver_labels}}} {running_jobs}\n"
+                )
+                metrics_report += (
+                    f"spark_driver_failed_jobs{{{driver_labels}}} {failed_jobs}\n"
+                )
+
                 # --- Driver API 호출 (Stages) ---
                 stages_api_url = f"{driver_ui_url}/api/v1/applications/{app_id}/stages"
                 stages_response = requests.get(stages_api_url, timeout=3)
                 stages_response.raise_for_status()
                 stages_data = stages_response.json()
                 if isinstance(stages_data, list):
-                    active_stages = len([s for s in stages_data if s.get("status") == "ACTIVE"])
-                    completed_stages = len([s for s in stages_data if s.get("status") == "COMPLETE"])
-                    failed_stages = len([s for s in stages_data if s.get("status") == "FAILED"])
+                    active_stages = len(
+                        [s for s in stages_data if s.get("status") == "ACTIVE"]
+                    )
+                    completed_stages = len(
+                        [s for s in stages_data if s.get("status") == "COMPLETE"]
+                    )
+                    failed_stages = len(
+                        [s for s in stages_data if s.get("status") == "FAILED"]
+                    )
                 else:
                     active_stages, completed_stages, failed_stages = 0, 0, 0
 
-                metrics_report += f"spark_driver_active_stages{{{driver_labels}}} {active_stages}\n"
+                metrics_report += (
+                    f"spark_driver_active_stages{{{driver_labels}}} {active_stages}\n"
+                )
                 metrics_report += f"spark_driver_completed_stages{{{driver_labels}}} {completed_stages}\n"
-                metrics_report += f"spark_driver_failed_stages{{{driver_labels}}} {failed_stages}\n"
+                metrics_report += (
+                    f"spark_driver_failed_stages{{{driver_labels}}} {failed_stages}\n"
+                )
 
                 # --- Driver API 호출 (Executors) ---
-                executors_api_url = f"{driver_ui_url}/api/v1/applications/{app_id}/executors"
+                executors_api_url = (
+                    f"{driver_ui_url}/api/v1/applications/{app_id}/executors"
+                )
                 exec_response = requests.get(executors_api_url, timeout=3)
                 exec_response.raise_for_status()
                 executors = exec_response.json()
-                
+
                 for executor in executors:
                     exec_id = executor.get("id")
                     active_tasks = executor.get("activeTasks", 0)
@@ -163,12 +193,16 @@ def respond_metrics():
                     metrics_report += f"spark_executor_shuffle_read_bytes{{{executor_labels}}} {total_shuffle_read}\n"
                     metrics_report += f"spark_executor_shuffle_write_bytes{{{executor_labels}}} {total_shuffle_write}\n"
 
-                logging.info(f"Successfully collected REST API metrics for app {app_id}")
+                logging.info(
+                    f"Successfully collected REST API metrics for app {app_id}"
+                )
 
             except Exception as e:
                 app_id_for_log = app_data.get("id", "unknown")
-                logging.error(f"Failed to fetch REST API data for app {app_id_for_log}, skipping. Reason: {e}")
-        
+                logging.error(
+                    f"Failed to fetch REST API data for app {app_id_for_log}, skipping. Reason: {e}"
+                )
+
         # --- 캐시된 JMX 메트릭 추가 ---
         metrics_report += jmx_metric_cache["driver"]
         metrics_report += jmx_metric_cache["executor"]
