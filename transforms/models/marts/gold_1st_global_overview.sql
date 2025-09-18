@@ -5,7 +5,7 @@
 -- 새로 들어온 Silver 데이터만 처리하는 설정!
 {{ config(
     materialized='incremental',
-    unique_key=['event_date', 'country_name'] -- event_date와 country_name 조합으로 고유 키 설정
+    unique_key=['event_date', 'country_name']
 ) }}
 
 WITH events AS (
