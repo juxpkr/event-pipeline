@@ -32,22 +32,22 @@ class GDELTGoldMigrator:
 
         # 마이그레이션할 테이블 정의
         self.migration_tables = {
-            "default.gold_1st_global_overview": {
-                "postgres_table": "gold_global_overview",
+            "gold.gold_1st_global_overview": {
+                "postgres_table": "gold_1st_global_overview",
                 "postgres_schema": "gold_datamart",
                 "description": "전세계 레벨 - 국가별 & 일일 요약",
             },
-            "default.gold_2nd_country_events": {
+            "gold.gold_2nd_country_events": {
                 "postgres_table": "gold_country_events",
                 "postgres_schema": "gold_datamart",
                 "description": "국가간 이벤트 분석",
             },
-            "default.gold_4th_daily_detail_summary": {
+            "gold.gold_4th_daily_detail_summary": {
                 "postgres_table": "gold_daily_detail_summary",
                 "postgres_schema": "gold_datamart",
                 "description": "이벤트 상세 - 일일 요약",
             },
-            "default.gdelt_microbatch_country_analysis": {
+            "gold.gdelt_microbatch_country_analysis": {
                 "postgres_table": "gold_microbatch_country_analysis",
                 "postgres_schema": "gold_datamart",
                 "description": "GDELT 마이크로배치 데이터의 국가별/이벤트 타입별 분석",
@@ -163,7 +163,7 @@ class GDELTGoldMigrator:
 
         # 2. PostgreSQL에 저장
         success = self.write_to_postgres(
-            gold_df, config["postgres_table"], config["description"]
+            gold_df, config["postgres_table"], config["description"], config["postgres_schema"]
         )
 
         return success
