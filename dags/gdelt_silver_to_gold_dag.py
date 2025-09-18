@@ -50,6 +50,7 @@ with DAG(
     migrate_to_postgres_task = BashOperator(
         task_id="migrate_gold_to_postgres",
         bash_command="""
+        SPARK_MASTER_URL=spark://spark-master:7077 \
         spark-submit \
         --master spark://spark-master:7077 \
         --packages org.postgresql:postgresql:42.5.0 \
