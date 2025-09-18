@@ -153,13 +153,6 @@ SELECT
 FROM
     source_data AS src
 
-{% if is_incremental() %}
-WHERE
-    -- 이 모델이 이미 데이터를 가지고 있다면,
-    -- 최신 날짜보다 더 새로운 데이터만 처리 (3일 버퍼 포함)
-    src.processed_at >= date_add('day', -3, (SELECT MAX(processed_at) FROM {{ this }}))
-{% endif %}
-
 -- 각 코드 필드를 해당하는 seed 테이블과 LEFT JOIN 합니다.
 LEFT JOIN event_root_codes AS evtr ON src.event_root_code = evtr.code
 LEFT JOIN event_detail_codes AS evtd ON src.event_code = evtd.code
@@ -183,3 +176,10 @@ LEFT JOIN ethnic_codes AS a1_eth ON src.actor1_ethnic_code = a1_eth.code
 LEFT JOIN ethnic_codes AS a2_eth ON src.actor2_ethnic_code = a2_eth.code
 LEFT JOIN religion_codes AS a1_rel ON src.actor1_religion1_code = a1_rel.code
 LEFT JOIN religion_codes AS a2_rel ON src.actor2_religion1_code = a2_rel.code
+
+{% if is_incremental() %}
+WHERE
+    -- 이 모델이 이미 데이터를 가지고 있다면,
+    -- 최신 날짜보다 더 새로운 데이터만 처리 (3일 버퍼 포함)
+    src.processed_at >= date_add('day', -3, (SELECT MAX(processed_at) FROM {{ this }}))
+{% endif %}
