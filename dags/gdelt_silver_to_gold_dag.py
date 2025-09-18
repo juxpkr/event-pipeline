@@ -15,6 +15,9 @@ with DAG(
     최종 결과를 PostgreSQL 데이터 마트로 이전합니다.
     """,
 ) as dag:
+    # Airflow 워커 컨테이너 내부에 있는 dbt 프로젝트 경로를 변수로 지정
+    dbt_project_host_path = f"{os.getenv('PROJECT_ROOT', '/opt/airflow')}/transforms"
+
     # Task 1: dbt Transformation (Silver → Gold)
     dbt_transformation = DockerOperator(
         task_id="dbt_transformation",
@@ -26,6 +29,15 @@ with DAG(
             # PWD 대신, 환경변수를 사용
             f"{os.getenv('PROJECT_ROOT')}/transforms:/app",  # dbt 프로젝트 마운트 (Swarm 호환)
         ],
+        # dbt가 파일을 찾을 수 있도록 두 개의 통로를 열어준다
+        volumes=[
+            # 1: dbt 프로젝트 전체를 /app 폴더에 연결
+            f"{dbt_project_host_path}:/app",
+            # 2: profiles.yml를 dbt가 원하는 경로에 직접 연결
+            f"{dbt_project_host_path}/profiles.yml:/home/dbt_user/.dbt/profiles.yml",
+        ],
+        # dbt가 /app 폴더에서 프로젝트를 찾도록 작업 디렉토리 설정
+        working_dir="/app",
         environment={
             "DBT_PROFILES_DIR": "/app",
         },
