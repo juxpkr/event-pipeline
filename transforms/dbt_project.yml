@@ -43,3 +43,4 @@ models:
 on-run-start:
   - "{{ create_schema(relation=none, schema_name='silver') }}"
   - "{{ create_schema(relation=none, schema_name='gold') }}"
+  - "{{ create_schema(relation=none, schema_name='gold_dev') }}"

@@ -15,7 +15,7 @@ analytics_dbt:
       port: 10001                 # 운영용 Thrift 서버 포트
       user: root
       auth: NOSASL
-      schema: gold_prod         # 운영용 Gold 데이터가 저장될 최종 스키마
+      schema: gold         # 운영용 Gold 데이터가 저장될 최종 스키마
       http_path: cliservice
       # 연결 안정성을 위한 옵션
       connect_retries: 5
