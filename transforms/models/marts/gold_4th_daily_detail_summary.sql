@@ -48,7 +48,7 @@ SELECT
         ELSE 'Neutral'
     END AS event_type,
     
-    evt.processed_time,
+    evt.processed_at,
 
     -- 그래프를 위한 기본 지표
     evt.mp_event_info,
