@@ -19,15 +19,18 @@ services:
       retries: 5
       start_period: 30s
     deploy:
-      #placement:
-      #  constraints:
-      #    - node.role == manager
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
 
   kafka:
     image: juxpkr/geoevent-kafka:0.1
     hostname: kafka
-    depends_on:
-      - zookeeper
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -50,14 +53,13 @@ services:
       start_period: 60s
     deploy:
       resources:
-        reservations:
-          cpus: '0.50'
-          memory: 1G
         limits:
+          memory: 4G
+        reservations:
           memory: 2G
-      #placement:
-      #  constraints:
-      #    - node.role == manager
+      placement:
+        constraints:
+          - node.role == manager
 
   kafka-jmx-exporter:
     image: sscaling/jmx-prometheus-exporter:latest
@@ -72,14 +74,10 @@ services:
       - JMX_EXPORTER_CONFIG_FILE=/config.yml
     volumes:
       - ./monitoring/jmx/kafka_jmx_config.yml:/config.yml:ro
-    depends_on:
-      - kafka
 
   kafka-setup:
     image: juxpkr/geoevent-kafka-setup:0.1
     container_name: kafka-setup
-    depends_on:
-      - kafka
     networks:
       - data-network
     environment:
@@ -107,8 +105,6 @@ services:
   minio-setup:
     image: minio/mc
     container_name: minio-setup
-    depends_on:
-      - minio
     networks:
       - data-network
     env_file:
@@ -131,10 +127,6 @@ services:
         wait-for-it.sh minio:9000 -t 30 -- echo "✅ MinIO is ready for Master."
         exec /usr/bin/tini -- /opt/entrypoint.sh master
     user: root # 나중에 배포할때 수정
-    depends_on:
-      - minio
-      - kafka
-      - kafka-setup
     ports:
       - "8081:8080"
       - "7077:7077"
@@ -155,11 +147,10 @@ services:
       start_period: 30s
     deploy:
       resources:
-        reservations:
-          cpus: '0.50'
-          memory: 1G
         limits:
-          memory: 3G
+          memory: 4G
+        reservations:
+          memory: 2G
 
   spark-worker:
     image: juxpkr/geoevent-spark-base:0.1
@@ -172,8 +163,6 @@ services:
     user: root # 나중에 배포할때 수정
     networks:
       - data-network
-    depends_on:
-      - spark-master
     ports:
       - "8091:8091"
     volumes:
@@ -184,7 +173,12 @@ services:
       - ./.env
     deploy:
       mode: replicated
-      replicas: 3
+      replicas: 2
+      resources:
+        limits:
+          memory: 24G
+        reservations:
+          memory: 16G
 
   spark-thrift-server:
     image: juxpkr/geoevent-spark-base:0.1
@@ -200,9 +194,6 @@ services:
       - ./.env
     networks:
       - data-network
-    depends_on:
-      - spark-master
-      - hive-metastore
     ports:
       - "10001:10001" # dbt 연결용
       - "4040:4040" # Spark Application UI
@@ -220,9 +211,6 @@ services:
       - data-network
     ports:
       - "9083:9083"
-    depends_on:
-      - postgres
-      - minio-setup
     env_file:
       - ./.env
       - ./config/hive-metastore/hive-metastore.env
@@ -271,14 +259,18 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
 
   airflow-init:
     image: juxpkr/geoevent-airflow:0.1
     container_name: airflow-init
     networks:
       - data-network
-    depends_on:
-      - postgres
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
@@ -293,9 +285,6 @@ services:
     image: juxpkr/geoevent-airflow:0.1
     container_name: airflow-webserver
     user: "${AIRFLOW_UID:-50000}"
-    depends_on:
-      - airflow-init
-      - kafka-setup
     ports:
       - "8082:8080" # <--- Spark와 충돌하지 않도록 8082 포트 사용
     networks:
@@ -330,10 +319,9 @@ services:
         constraints:
           - node.role == manager
       resources:
-        reservations:
-          cpus: '0.25'
-          memory: 512M
         limits:
+          memory: 4G
+        reservations:
           memory: 2G
 
     security_opt:
@@ -345,9 +333,6 @@ services:
     user: "${AIRFLOW_UID:-50000}"
     networks:
       - data-network
-    depends_on:
-      - airflow-init
-      - kafka-setup
     environment:
       - PROJECT_ROOT=/app/event-pipeline
       - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=5
@@ -378,10 +363,9 @@ services:
         constraints:
           - node.role == manager
       resources:
-        reservations:
-          cpus: '0.25'
-          memory: 512M
         limits:
+          memory: 4G
+        reservations:
           memory: 2G
 
     security_opt:
@@ -390,8 +374,6 @@ services:
   jupyter-lab:
     image: juxpkr/geoevent-jupyter-lab:0.1
     container_name: jupyter-lab
-    depends_on:
-      - spark-master
     ports:
       - "8888:8888"
     env_file:
@@ -419,8 +401,6 @@ services:
   superset:
     image: ${SUPERSET_IMAGE}
     container_name: superset
-    depends_on:
-      - postgres
     ports:
       - "8088:8088"
     networks:
@@ -442,10 +422,6 @@ services:
   prometheus:
     image: ${PROMETHEUS_IMAGE}
     container_name: prometheus
-    depends_on:
-      - spark-master
-      - spark-worker
-      - kafka
     ports:
       - "${PROMETHEUS_PORT}:9090"
     networks:
@@ -475,8 +451,6 @@ services:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana:/etc/grafana/provisioning
       - ./monitoring/grafana/run-grafana.sh:/run-grafana.sh
-    depends_on:
-      - prometheus
     command: [ "sh", "/run-grafana.sh" ]
     deploy:
       restart_policy:
@@ -491,9 +465,6 @@ services:
       - "9191:9191"
     env_file:
       - ./.env
-    depends_on:
-      - spark-master
-      - redis
     volumes:
       - ./spark-exporter:/app
 
