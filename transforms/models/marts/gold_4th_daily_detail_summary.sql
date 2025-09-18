@@ -8,8 +8,8 @@
 ) }}
 
 WITH events_mapped AS (
-    -- 증분 처리를 위해 Silver 레이어 테이블을 직접 참조
-    SELECT * FROM {{ ref('stg_gdelt_microbatch_events') }}
+    -- 증분 처리를 위해 매핑된 Silver 데이터 참조
+    SELECT * FROM {{ ref('stg_seed_mapping') }}
 ),
 
 actors_descriptions AS (
