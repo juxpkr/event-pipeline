@@ -25,7 +25,7 @@ with DAG(
         task_id="dbt_transformation",
         # image="juxpkr/geoevent-dbt:0.1",
         image=os.getenv("DBT_IMAGE", "juxpkr/geoevent-dbt:0.1"),
-        command="dbt seed --target prod && dbt run --target prod --select +gold_1st_global_overview +gold_2nd_country_events +gold_4th_daily_detail_summary",
+        command=["/bin/sh", "-c", "dbt seed --target prod && dbt run --target prod --select +gold_1st_global_overview +gold_2nd_country_events +gold_4th_daily_detail_summary"],
         network_mode="geoevent_data-network",  # docker-compose 네트워크
         mounts=[
             Mount(source=dbt_project_host_path, target="/app", type="bind"),
