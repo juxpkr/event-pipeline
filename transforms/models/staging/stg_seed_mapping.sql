@@ -1,5 +1,11 @@
 -- models/staging/stg_seed_mapping.sql
 
+-- 증분 모델 (Incremental Model) 설정
+{{ config(
+    materialized='incremental',
+    unique_key=['global_event_id']
+) }}
+
 -- 1. 필요한 테이블들을 CTE(WITH 절)로 미리 정의합니다.
 WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events') }}),
     event_root_codes AS (SELECT * FROM {{ ref('event_root_codes') }}),
@@ -146,6 +152,13 @@ SELECT
 
 FROM
     source_data AS src
+
+{% if is_incremental() %}
+WHERE
+    -- 이 모델이 이미 데이터를 가지고 있다면,
+    -- 최신 날짜보다 더 새로운 데이터만 처리 (3일 버퍼 포함)
+    src.processed_at >= date_add('day', -3, (SELECT MAX(processed_at) FROM {{ this }}))
+{% endif %}
 
 -- 각 코드 필드를 해당하는 seed 테이블과 LEFT JOIN 합니다.
 LEFT JOIN event_root_codes AS evtr ON src.event_root_code = evtr.code
