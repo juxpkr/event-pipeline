@@ -1,24 +1,124 @@
 version: 2
 
 sources:
-  - name: gdelt_silver_layer 
+  - name: gdelt_silver_layer
     description: "MinIO S3에 저장된 GDELT Silver Layer (Delta Lake 형식)"
-    schema: default 
-    tables: 
+    schema: default
+    tables:
       - name: gdelt_events
         description: "15분마다 수집되는 GDELT 실시간 이벤트 데이터 (Silver)"
         columns:
           - name: global_event_id
             description: "GDELT 고유 이벤트 ID"
-          - name: day
+          - name: event_date
             description: "이벤트 발생일"
-          - name: actor1_country_code
-            description: "주체 국가 코드 (ISO 3자리)"
-          - name: event_root_code
-            description: "CAMEO 이벤트 루트 코드"
-          - name: avg_tone
-            description: "이벤트 톤 (-100~100, 부정적~긍정적)"
+          - name: actor1_code
+            description: "주체 코드"
           - name: actor1_name
             description: "주체 이름"
-          - name: processed_time
+          - name: actor1_country_code
+            description: "주체 국가 코드 (ISO 3자리)"
+          - name: actor1_known_group_code
+            description: "주체 알려진 그룹 코드"
+          - name: actor1_ethnic_code
+            description: "주체 민족 코드"
+          - name: actor1_religion1_code
+            description: "주체 종교1 코드"
+          - name: actor1_religion2_code
+            description: "주체 종교2 코드"
+          - name: actor1_type1_code
+            description: "주체 타입1 코드"
+          - name: actor1_type2_code
+            description: "주체 타입2 코드"
+          - name: actor1_type3_code
+            description: "주체 타입3 코드"
+          - name: actor2_code
+            description: "대상 코드"
+          - name: actor2_name
+            description: "대상 이름"
+          - name: actor2_country_code
+            description: "대상 국가 코드"
+          - name: actor2_known_group_code
+            description: "대상 알려진 그룹 코드"
+          - name: actor2_ethnic_code
+            description: "대상 민족 코드"
+          - name: actor2_religion1_code
+            description: "대상 종교1 코드"
+          - name: actor2_religion2_code
+            description: "대상 종교2 코드"
+          - name: actor2_type1_code
+            description: "대상 타입1 코드"
+          - name: actor2_type2_code
+            description: "대상 타입2 코드"
+          - name: actor2_type3_code
+            description: "대상 타입3 코드"
+          - name: event_code
+            description: "CAMEO 이벤트 상세 코드"
+          - name: event_base_code
+            description: "CAMEO 이벤트 기본 코드"
+          - name: event_root_code
+            description: "CAMEO 이벤트 루트 코드"
+          - name: is_root_event
+            description: "루트 이벤트 여부"
+          - name: quad_class
+            description: "Quad Class (협력/갈등 분류)"
+          - name: goldstein_scale
+            description: "골드스타인 척도 (-10~10)"
+          - name: num_mentions
+            description: "언급 횟수"
+          - name: num_sources
+            description: "소스 수"
+          - name: num_articles
+            description: "기사 수"
+          - name: avg_tone
+            description: "이벤트 톤 (-100~100, 부정적~긍정적)"
+          - name: actor1_geo_type
+            description: "주체 지리 타입"
+          - name: actor1_geo_fullname
+            description: "주체 지리 전체명"
+          - name: actor1_geo_country_code
+            description: "주체 지리 국가 코드"
+          - name: actor1_geo_adm1_code
+            description: "주체 지리 행정구역1 코드"
+          - name: actor1_geo_lat
+            description: "주체 위도"
+          - name: actor1_geo_long
+            description: "주체 경도"
+          - name: actor1_geo_feature_id
+            description: "주체 지리 특성 ID"
+          - name: actor2_geo_type
+            description: "대상 지리 타입"
+          - name: actor2_geo_fullname
+            description: "대상 지리 전체명"
+          - name: actor2_geo_country_code
+            description: "대상 지리 국가 코드"
+          - name: actor2_geo_adm1_code
+            description: "대상 지리 행정구역1 코드"
+          - name: actor2_geo_lat
+            description: "대상 위도"
+          - name: actor2_geo_long
+            description: "대상 경도"
+          - name: actor2_geo_feature_id
+            description: "대상 지리 특성 ID"
+          - name: action_geo_type
+            description: "액션 지리 타입"
+          - name: action_geo_fullname
+            description: "액션 지리 전체명"
+          - name: action_geo_country_code
+            description: "액션 지리 국가 코드"
+          - name: action_geo_adm1_code
+            description: "액션 지리 행정구역1 코드"
+          - name: action_geo_lat
+            description: "액션 위도"
+          - name: action_geo_long
+            description: "액션 경도"
+          - name: action_geo_feature_id
+            description: "액션 지리 특성 ID"
+          - name: date_added
+            description: "데이터 추가일"
+          - name: source_url
+            description: "소스 URL"
+          - name: processed_at
             description: "데이터 처리 시간"
+          - name: source_file
+            description: "소스 파일명"
