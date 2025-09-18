@@ -4,6 +4,7 @@ import pendulum
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.docker.operators.docker import DockerOperator
+from docker.types import Mount
 
 with DAG(
     dag_id="gdelt_silver_to_gold",
@@ -26,15 +27,12 @@ with DAG(
         command="dbt build --select +stg_seed_mapping +stg_seed_actors_parsed +stg_actors_description",
         network_mode="geoevent_data-network",  # docker-compose 네트워크
         mounts=[
-            # PWD 대신, 환경변수를 사용
-            f"{os.getenv('PROJECT_ROOT')}/transforms:/app",  # dbt 프로젝트 마운트 (Swarm 호환)
-        ],
-        # dbt가 파일을 찾을 수 있도록 두 개의 통로를 열어준다
-        volumes=[
-            # 1: dbt 프로젝트 전체를 /app 폴더에 연결
-            f"{dbt_project_host_path}:/app",
-            # 2: profiles.yml를 dbt가 원하는 경로에 직접 연결
-            f"{dbt_project_host_path}/profiles.yml:/home/dbt_user/.dbt/profiles.yml",
+            Mount(source=dbt_project_host_path, target="/app", type="bind"),
+            Mount(
+                source=f"{dbt_project_host_path}/.dbt/profiles.yml",
+                target="/home/dbt_user/.dbt/profiles.yml",
+                type="bind",
+            ),
         ],
         # dbt가 /app 폴더에서 프로젝트를 찾도록 작업 디렉토리 설정
         working_dir="/app",
