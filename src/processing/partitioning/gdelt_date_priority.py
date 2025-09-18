@@ -22,21 +22,15 @@ def create_priority_date(df: DataFrame) -> DataFrame:
         "priority_date",
         F.coalesce(
             # 1순위: Mentions mention_time_date (가장 정확)
-            F.when(
-                F.col("mention_time_date").isNotNull(),
-                F.to_timestamp(F.col("mention_time_date"), "yyyyMMddHHmmss"),
-            ),
+            F.to_timestamp(F.col("mention_time_date"), "yyyyMMddHHmmss"),
             # 2순위: GKG date (기사 발행일)
-            F.when(
-                F.col("date").isNotNull(),
-                F.to_timestamp(F.col("date"), "yyyyMMddHHmmss"),
-            ),
+            F.to_timestamp(F.col("date"), "yyyyMMddHHmmss"),
             # 3순위: Events event_date (최후 보루)
             F.to_timestamp(F.col("event_date")),
             # 4순위: processed_at (처리 시간)
             F.col("processed_at"),
             # 5순위: 고정 fallback 날짜 (절대 null 방지)
-            F.lit("1900-01-01 00:00:00").cast("timestamp"),
+            F.lit("1900-01-01T00:00:00Z").cast("timestamp"),
         ),
     )
 
