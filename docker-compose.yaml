@@ -192,7 +192,8 @@ services:
     user: root # 나중에 배포할때 수정
     env_file:
       - ./.env
-    environment: SPARK_OPTS=--conf hive.server2.thrift.max.worker.threads=200
+    environment:
+      SPARK_OPTS: "--conf hive.server2.thrift.max.worker.threads=200"
     networks:
       - data-network
     ports:
@@ -229,7 +230,8 @@ services:
       - ./.env
     networks:
       - data-network
-    environment: SPARK_OPTS=--conf hive.server2.thrift.max.worker.threads=200
+    environment:
+      SPARK_OPTS: "--conf hive.server2.thrift.max.worker.threads=200"
     ports:
       - "10002:10001" # dbt 연결용
       - "4042:4040" # Spark Application UI
