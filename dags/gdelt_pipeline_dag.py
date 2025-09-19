@@ -12,8 +12,8 @@ with DAG(
     max_active_runs=1,  # 동시 실행 방지
     doc_md="""
     ### GDELT 전체 파이프라인 DAG
-    - 목적: Raw Producer → Kafka → Spark Processor → MinIO Silver Table
-    - 순서: Raw Producer → Silver Processor
+    - 목적: Raw Producer → Kafka → MinIO Raw Bucket → Spark Processor → MinIO Silver Table
+    - 순서: Raw Producer → Kafka to MinIO → Silver Processor
     """,
 ) as dag:
     # 공통 상수 정의
@@ -39,5 +39,5 @@ with DAG(
         env=dict(os.environ),
     )
 
-    # Task 순서 정의 (Producer → Processor)
+    # Task 순서 정의
     task_raw_producer >> task_silver_processor

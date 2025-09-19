@@ -12,7 +12,7 @@ kafka-topics --create \
     --partitions 1 \
     --replication-factor 1 \
     --if-not-exists \
-    --bootstrap-server kafka:29092
+    --bootstrap-server kafka:9092
 
 # Create Wiki events topic  
 kafka-topics --create \
@@ -20,10 +20,10 @@ kafka-topics --create \
     --partitions 1 \
     --replication-factor 1 \
     --if-not-exists \
-    --bootstrap-server kafka:29092
+    --bootstrap-server kafka:9092
 
 echo "Topics created successfully!"
 
 # List topics to verify
 echo "Available topics:"
-kafka-topics --list --bootstrap-server kafka:29092
+kafka-topics --list --bootstrap-server kafka:9092

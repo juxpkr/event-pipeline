@@ -2,6 +2,7 @@
 GDELT Silver Processor - Kafka Raw 데이터를 읽어서 정제 후 Silver Delta Table로 저장
 """
 
+import os
 import sys
 from pathlib import Path
 
@@ -11,6 +12,7 @@ project_root = Path(__file__).resolve().parents[3]
 sys.path.append(str(project_root))
 
 from src.utils.spark_builder import get_spark_session
+from src.utils.redis_client import redis_client
 from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
 import time
@@ -253,7 +255,10 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
     logger.info("📥 Reading RAW data from Kafka...")
     raw_df = (
         spark.read.format("kafka")
-        .option("kafka.bootstrap.servers", "kafka:29092")
+        .option(
+            "kafka.bootstrap.servers",
+            os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"),
+        )
         .option("subscribe", "gdelt_raw_events")
         .option("startingOffsets", "earliest")
         .option("endingOffsets", "latest")
@@ -303,6 +308,9 @@ def main():
     # Kafka 지원을 위해 get_spark_session 사용
     spark = get_spark_session("GDELT Silver Processor", "spark://spark-master:7077")
 
+    # Redis에 드라이버 UI 정보 등록
+    redis_client.register_driver_ui(spark, "GDELT Silver Processor")
+
     try:
         # 1. 빈 테이블을 선점 해야함.
         silver_schema = get_gdelt_silver_schema()
@@ -339,6 +347,19 @@ def main():
         logger.error(f"❌ Error in Silver processing: {e}", exc_info=True)
 
     finally:
+        # 개발/디버깅 모드에서만 사용자 입력 대기
+        if os.getenv("SPARK_DEBUG_MODE", "false").lower() == "true":
+            try:
+                logging.info(
+                    "🔍 Debug mode: Press Enter in the container's terminal to stop Spark session..."
+                )
+                input()  # 디버깅 시에만 대기
+            except Exception:
+                logging.info("Non-interactive mode detected. Continuing...")
+        else:
+            logging.info("✅ Job finished. Shutting down Spark session.")
+        # Redis에서 드라이버 UI 정보 정리
+        redis_client.unregister_driver_ui(spark)
         spark.stop()
         logger.info("✅ Spark session closed")
 

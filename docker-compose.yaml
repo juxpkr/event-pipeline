@@ -9,32 +9,85 @@ services:
     env_file:
       - ./.env
       - ./config/zookeeper/zookeeper.env
+    volumes:
+      - zookeeper-data:/var/lib/zookeeper/data
+      - zookeeper-log:/var/lib/zookeeper/log
+    healthcheck:
+      test: [ "CMD-SHELL", "echo 'ruok' | nc localhost 2181" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+    deploy:
+      #placement:
+      #  constraints:
+      #    - node.role == manager
 
   kafka:
-    image: ${KAFKA_IMAGE}
-    container_name: kafka
+    image: juxpkr/geoevent-kafka:0.1
+    hostname: kafka
     depends_on:
-      zookeeper:
-        condition: service_started
+      - zookeeper
     ports:
       - "9092:9092"
+      - "29092:29092"
     networks:
       - data-network
     env_file:
       - ./.env
       - ./config/kafka/kafka.env
+    environment:
+      # 서버에서는 .env 파일의 KAFKA_EXTERNAL_HOST 변수값을 사용
+      - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:29092
+    volumes:
+      - ./config/kafka/entrypoint.sh:/entrypoint.sh:ro
+    entrypoint: [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
+    healthcheck:
+      test: [ "CMD-SHELL", "kafka-topics --bootstrap-server localhost:9092 --list" ]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.50'
+          memory: 1G
+        limits:
+          memory: 2G
+      #placement:
+      #  constraints:
+      #    - node.role == manager
 
-  kafka-setup:
-    image: ${KAFKA_IMAGE}
-    container_name: kafka-setup
-    depends_on:
-      kafka:
-        condition: service_started
+  kafka-jmx-exporter:
+    image: sscaling/jmx-prometheus-exporter:latest
+    hostname: kafka-jmx-exporter
+    ports:
+      - "19404:5556" # 프로메테우스는 19404로 접속, 컨테이너 내부는 5556 포트
     networks:
       - data-network
+    environment:
+      - JMX_HOST=kafka
+      - JMX_PORT=9999
+      - JMX_EXPORTER_CONFIG_FILE=/config.yml
     volumes:
-      - ./config/kafka:/config
-    command: [ "sh", "/config/setup-topics.sh" ]
+      - ./monitoring/jmx/kafka_jmx_config.yml:/config.yml:ro
+    depends_on:
+      - kafka
+
+  kafka-setup:
+    image: juxpkr/geoevent-kafka-setup:0.1
+    container_name: kafka-setup
+    depends_on:
+      - kafka
+    networks:
+      - data-network
+    environment:
+      - KAFKA_BOOTSTRAP_SERVER=kafka:9092
+    command: [ "/bin/sh", "-c", "wait-for-it.sh kafka:9092 -t 60 -- sleep 15 && /etc/kafka-setup/setup-topics.sh" ]
+    deploy:
+      restart_policy:
+        condition: on-failure # <-- 실패 시에만 재시작
 
   minio:
     image: ${MINIO_IMAGE}
@@ -55,8 +108,7 @@ services:
     image: minio/mc
     container_name: minio-setup
     depends_on:
-      minio:
-        condition: service_started
+      - minio
     networks:
       - data-network
     env_file:
@@ -64,141 +116,110 @@ services:
       - ./config/minio/minio.env
     volumes:
       - ./config/minio:/config
-    entrypoint: [ "/bin/sh" ]
-    command: [ "/config/setup-minio.sh" ]
+    entrypoint: [ "/bin/sh", "/config/setup-minio.sh" ]
+    deploy:
+      restart_policy:
+        condition: on-failure # <-- 실패 시에만 재시작
 
   spark-master:
-    build:
-      context: ./spark-base
-      args:
-        - SPARK_VERSION=${SPARK_VERSION}
-        - HADOOP_VERSION=${HADOOP_VERSION}
-        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
-        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
-        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
-        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
-        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
-        - SCALA_VERSION=${SCALA_VERSION}
-        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
-        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
-        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+    image: juxpkr/geoevent-spark-base:0.1
     container_name: spark-master
-    command: master
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        wait-for-it.sh kafka:9092 -t 60 -- echo "✅ Kafka is ready for Master."
+        wait-for-it.sh minio:9000 -t 30 -- echo "✅ MinIO is ready for Master."
+        exec /usr/bin/tini -- /opt/entrypoint.sh master
     user: root # 나중에 배포할때 수정
     depends_on:
-      minio:
-        condition: service_started
-      kafka:
-        condition: service_started
-      kafka-setup:
-        condition: service_started
-      tools-downloader:
-        condition: service_healthy
+      - minio
+      - kafka
+      - kafka-setup
     ports:
       - "8081:8080"
       - "7077:7077"
-      - "7071:7071" # JMX metrics port
+      - "8090:8090"
     networks:
       - data-network
     volumes:
-      - .:/app
+      #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
     env_file:
       - ./.env
-      - ./config/spark/spark.env
+    healthcheck:
+      test: [ "CMD-SHELL", "curl -f http://localhost:8080 || exit 1" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.50'
+          memory: 1G
+        limits:
+          memory: 3G
 
   spark-worker:
-    build:
-      context: ./spark-base
-      args:
-        - SPARK_VERSION=${SPARK_VERSION}
-        - HADOOP_VERSION=${HADOOP_VERSION}
-        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
-        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
-        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
-        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
-        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
-        - SCALA_VERSION=${SCALA_VERSION}
-        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
-        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
-        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+    image: juxpkr/geoevent-spark-base:0.1
     container_name: spark-worker
-    command: worker spark://spark-master:7077
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        wait-for-it.sh spark-master:7077 -t 60 -- echo "✅ Spark Master is ready for Worker."
+        exec /usr/bin/tini -- /opt/entrypoint.sh worker spark://spark-master:7077
     user: root # 나중에 배포할때 수정
     networks:
       - data-network
     depends_on:
-      spark-master:
-        condition: service_started
-      kafka-setup:
-        condition: service_started
-      tools-downloader:
-        condition: service_healthy
+      - spark-master
     ports:
-      - "7072:7071" # JMX metrics port (다른 포트로 매핑)
+      - "8091:8091"
     volumes:
-      - .:/app
+      #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
     env_file:
       - ./.env
-      - ./config/spark/spark.env
 
   spark-thrift-server:
-    build:
-      context: ./spark-base
-      args:
-        - SPARK_VERSION=${SPARK_VERSION}
-        - HADOOP_VERSION=${HADOOP_VERSION}
-        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
-        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
-        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
-        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
-        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
-        - SCALA_VERSION=${SCALA_VERSION}
-        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
-        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
-        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+    image: juxpkr/geoevent-spark-base:0.1
     container_name: spark-thrift-server
-    command: thrift-http
+    entrypoint: [ "/bin/sh", "-c" ]
+    command:
+      - |
+        wait-for-it.sh spark-master:7077 -t 60 -- echo "✅ Spark Master is ready."
+        wait-for-it.sh hive-metastore:9083 -t 60 -- echo "✅ Hive Metastore is ready."
+        exec /usr/bin/tini -- /opt/entrypoint.sh thrift-binary
     user: root # 나중에 배포할때 수정
     env_file:
       - ./.env
-      - ./config/spark/spark.env
     networks:
       - data-network
     depends_on:
-      spark-master:
-        condition: service_started
-      hive-metastore:
-        condition: service_healthy
-      tools-downloader:
-        condition: service_healthy
+      - spark-master
+      - hive-metastore
     ports:
       - "10001:10001" # dbt 연결용
-      - "7073:7071" # JMX metrics port (또 다른 포트로 매핑)
+      - "4040:4040" # Spark Application UI
+      - "4041:4041"
     volumes:
-      - .:/app
+      #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
 
   hive-metastore:
-    build:
-      context: ./hive
-      args:
-        POSTGRESQL_JDBC_VERSION: ${POSTGRESQL_JDBC_VERSION}
+    image: juxpkr/geoevent-hive:0.1
     container_name: hive-metastore
-    entrypoint: [ "bash", "/custom-entrypoint.sh" ]
+    entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "wait-for-it.sh", "minio:9000", "-t", "30", "--", "bash", "/custom-entrypoint.sh" ]
     networks:
       - data-network
     ports:
       - "9083:9083"
     depends_on:
-      postgres:
-        condition: service_healthy
-      minio-setup:
-        condition: service_completed_successfully
+      - postgres
+      - minio-setup
     env_file:
       - ./.env
       - ./config/hive-metastore/hive-metastore.env
@@ -219,6 +240,13 @@ services:
       retries: 3
       start_period: 30s
     restart: unless-stopped
+    deploy:
+      resources:
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+        limits:
+          memory: 2G
 
   postgres:
     image: ${POSTGRES_IMAGE}
@@ -235,64 +263,36 @@ services:
     networks:
       - data-network
     healthcheck:
-      test: [ "CMD", "healthcheck.sh" ]
-      interval: 5s
-      timeout: 5s
-      retries: 10
-      start_period: 45s
+      test: [ "CMD-SHELL", "pg_isready -U airflow -d airflow -q" ]
+      interval: 10s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   airflow-init:
-    build:
-      context: .
-      dockerfile: ./airflow/Dockerfile
-      args:
-        - SPARK_VERSION=${SPARK_VERSION}
-        - HADOOP_VERSION=${HADOOP_VERSION}
-        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
-        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
-        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
-        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
-        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
-        - SCALA_VERSION=${SCALA_VERSION}
-        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
-        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
-        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+    image: juxpkr/geoevent-airflow:0.1
     container_name: airflow-init
     networks:
       - data-network
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
     volumes:
       - ./config/airflow/init-airflow.sh:/opt/airflow/init-airflow.sh:ro
-    entrypoint: [ "sh", "/opt/airflow/init-airflow.sh" ]
+    entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "sh", "/opt/airflow/init-airflow.sh" ]
+    deploy:
+      restart_policy:
+        condition: none
 
   airflow-webserver:
-    build:
-      context: .
-      dockerfile: ./airflow/Dockerfile
-      args:
-        - SPARK_VERSION=${SPARK_VERSION}
-        - HADOOP_VERSION=${HADOOP_VERSION}
-        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
-        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
-        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
-        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
-        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
-        - SCALA_VERSION=${SCALA_VERSION}
-        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
-        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
-        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+    image: juxpkr/geoevent-airflow:0.1
     container_name: airflow-webserver
     user: "${AIRFLOW_UID:-50000}"
     depends_on:
-      airflow-init:
-        condition: service_completed_successfully
-      kafka-setup:
-        condition: service_started
+      - airflow-init
+      - kafka-setup
     ports:
       - "8082:8080" # <--- Spark와 충돌하지 않도록 8082 포트 사용
     networks:
@@ -308,36 +308,37 @@ services:
       - ./.env:/opt/airflow/.env
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-      # Docker 소켓 연결 통로 추가
-      - /var/run/docker.sock:/var/run/docker.sock
       - .:/app
-    command: webserver
+    command: >
+      bash -c "
+        wait-for-it.sh postgres:5432 -t 60 -- echo '✅ Postgres ready for webserver.' &&
+        wait-for-it.sh kafka:9092 -t 60 -- echo '✅ Kafka ready for webserver.' &&
+        wait-for-it.sh spark-master:7077 -t 60 -- echo '✅ Spark Master ready for webserver.' &&
+        airflow webserver
+      "
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+        limits:
+          memory: 2G
+
+    security_opt:
+      - apparmor:unconfined
 
   airflow-scheduler:
-    build:
-      context: .
-      dockerfile: ./airflow/Dockerfile
-      args:
-        - SPARK_VERSION=${SPARK_VERSION}
-        - HADOOP_VERSION=${HADOOP_VERSION}
-        - DELTA_SPARK_VERSION=${DELTA_SPARK_VERSION}
-        - HADOOP_AWS_VERSION=${HADOOP_AWS_VERSION}
-        - AWS_SDK_VERSION=${AWS_SDK_VERSION}
-        - POSTGRESQL_JDBC_VERSION=${POSTGRESQL_JDBC_VERSION}
-        - KAFKA_CLIENTS_VERSION=${KAFKA_CLIENTS_VERSION}
-        - SCALA_VERSION=${SCALA_VERSION}
-        - COMMONS_POOL2_VERSION=${COMMONS_POOL2_VERSION}
-        - LZ4_JAVA_VERSION=${LZ4_JAVA_VERSION}
-        - COMMONS_LOGGING_VERSION=${COMMONS_LOGGING_VERSION}
+    image: juxpkr/geoevent-airflow:0.1
     container_name: airflow-scheduler
     user: "${AIRFLOW_UID:-50000}"
     networks:
       - data-network
     depends_on:
-      airflow-init:
-        condition: service_completed_successfully
-      kafka-setup:
-        condition: service_started
+      - airflow-init
+      - kafka-setup
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
@@ -349,17 +350,33 @@ services:
       - ./.env:/opt/airflow/.env
       - ./logs:/opt/airflow/logs
       - ./plugins:/opt/airflow/plugins
-      # -Docker 소켓 연결 통로 추가
-      - /var/run/docker.sock:/var/run/docker.sock
       - .:/app
-    command: scheduler
+    command: >
+      bash -c "
+        wait-for-it.sh postgres:5432 -t 60 -- echo '✅ Postgres ready for scheduler.' &&
+        wait-for-it.sh kafka:9092 -t 60 -- echo '✅ Kafka ready for scheduler.' &&
+        wait-for-it.sh spark-master:7077 -t 60 -- echo '✅ Spark Master ready for scheduler.' &&
+        airflow scheduler
+      "
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        reservations:
+          cpus: '0.25'
+          memory: 512M
+        limits:
+          memory: 2G
+
+    security_opt:
+      - apparmor:unconfined
 
   jupyter-lab:
-    build: .
+    image: juxpkr/geoevent-jupyter-lab:0.1
     container_name: jupyter-lab
     depends_on:
-      spark-master:
-        condition: service_started
+      - spark-master
     ports:
       - "8888:8888"
     env_file:
@@ -372,8 +389,7 @@ services:
       - data-network
 
   dbt:
-    build:
-      context: ./transforms
+    image: juxpkr/geoevent-dbt:0.1
     container_name: dbt
     env_file:
       - ./.env
@@ -389,8 +405,7 @@ services:
     image: ${SUPERSET_IMAGE}
     container_name: superset
     depends_on:
-      postgres:
-        condition: service_healthy
+      - postgres
     ports:
       - "8088:8088"
     networks:
@@ -401,27 +416,21 @@ services:
     volumes:
       - ./superset:/app/superset_home
       - ./config/superset:/config
-    command: sh /config/init-superset.sh
-
-  tools-downloader:
-    image: ${ALPINE_IMAGE}
-    container_name: tools-downloader
-    env_file:
-      - ./.env
-    volumes:
-      - spark-jars:/jars
-      - ./config/tools:/config
-    command: sh /config/download-jmx.sh
-    healthcheck:
-      test: [ "CMD-SHELL", "test -f /jars/jmx_prometheus_javaagent.jar && test -f /jars/jmx_config.yml" ]
-      interval: 5s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
+    entrypoint: [ "sh", "-c", "sleep 5 && /config/wait-for-it.sh postgres:5432 -t 60 -- /config/init-superset.sh" ]
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+      restart_policy:
+        condition: on-failure
 
   prometheus:
     image: ${PROMETHEUS_IMAGE}
     container_name: prometheus
+    depends_on:
+      - spark-master
+      - spark-worker
+      - kafka
     ports:
       - "${PROMETHEUS_PORT}:9090"
     networks:
@@ -450,18 +459,57 @@ services:
     volumes:
       - grafana-data:/var/lib/grafana
       - ./monitoring/grafana:/etc/grafana/provisioning
+      - ./monitoring/grafana/run-grafana.sh:/run-grafana.sh
     depends_on:
-      prometheus:
-        condition: service_started
+      - prometheus
+    command: [ "sh", "/run-grafana.sh" ]
+    deploy:
+      restart_policy:
+        condition: on-failure
+
+  spark-custom-exporter:
+    image: juxpkr/geoevent-spark-custom-exporter:0.1
+    container_name: spark-custom-exporter
+    networks:
+      - data-network
+    ports:
+      - "9191:9191"
+    env_file:
+      - ./.env
+    depends_on:
+      - spark-master
+      - redis
+    volumes:
+      - ./spark-exporter:/app
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
+    networks:
+      - data-network
+    volumes:
+      - redis-data:/data
+    command: redis-server --save 60 1 --loglevel warning
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
+  zookeeper-data:
+  zookeeper-log:
   minio-data:
   spark-jars:
   prometheus-data:
   grafana-data:
   postgres-data:
+  redis-data:
 
 
 networks:
   data-network:
-    driver: bridge
+    external: true
+    name: geoevent_data-network

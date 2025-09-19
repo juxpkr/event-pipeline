@@ -4,6 +4,7 @@ __pycache__/
 .vscode/
 spark-ivy-cache/
 .venv/
+venv/
 
 # dbt 관련
 dbt_packages/

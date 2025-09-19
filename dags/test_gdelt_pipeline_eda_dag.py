@@ -1,0 +1,39 @@
+from __future__ import annotations
+from airflow.models.dag import DAG
+from airflow.operators.bash import BashOperator
+import os
+import pendulum
+
+with DAG(
+    dag_id="test_gdelt_pipeline_eda_dag",
+    start_date=pendulum.datetime(2025, 8, 26, tz="Asia/Seoul"),
+    schedule=None,  # 수동 트리거
+    catchup=False,
+    max_active_runs=1,  # 동시 실행 방지
+) as dag:
+    # 공통 상수 정의
+    PROJECT_ROOT = "/opt/airflow"
+    SPARK_MASTER = "spark://spark-master:7077"
+
+    # GDELT Raw 데이터 Producer (Kafka로 전송)
+    task_raw_producer = BashOperator(
+        task_id="gdelt_raw_producer",
+        bash_command=f"PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/tests/test_gdelt_raw_producer.py",
+        env=dict(os.environ),
+    )
+
+    # Spark Processor (Kafka → MinIO Silver Table)
+    task_silver_processor = BashOperator(
+        task_id="gdelt_silver_processor",
+        bash_command=(
+            f"cd {PROJECT_ROOT} && "
+            f"PYTHONPATH={PROJECT_ROOT} spark-submit "
+            f"--master {SPARK_MASTER} "
+            f"--deploy-mode client "
+            f"{PROJECT_ROOT}/src/tests/test_gdelt_raw_to_silver_processor.py"
+        ),
+        env=dict(os.environ),
+    )
+
+    # Task 순서 정의
+    task_raw_producer >> task_silver_processor

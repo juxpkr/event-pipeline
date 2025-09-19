@@ -30,13 +30,9 @@ elif [ "${ROLE}" = "worker" ]; then
   /opt/spark/sbin/start-worker.sh "$2" &
   exec tail -f /dev/null
 
-elif [ "${ROLE}" = "thrift-http" ]; then
-  # 역할이 "thrift-http"이면, HTTP 모드로 Thrift Server를 실행
-  # Master가 완전히 시작될 때까지 30초간 대기
-  echo "Waiting 30 seconds for Spark Master to be fully ready..."
-  sleep 30
+elif [ "${ROLE}" = "thrift-binary" ]; then
+  # 역할이 "thrift-binary"이면, Binary 모드로 Thrift Server를 실행
 
-  # 30초 후 Thrift 서버 시작
   echo "Starting Spark Thrift Server in BINARY mode with all packages..."
   # 컨테이너가 꺼지지 않도록 tail과 함께 실행
   # spark-defaults.conf에서 모든 설정을 가져오므로 간소화

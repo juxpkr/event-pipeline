@@ -9,6 +9,7 @@ RUN apt-get update && \
     apt-get install -y --no-install-recommends \
     openjdk-17-jdk-headless \
     curl \
+    unzip \
     procps \
     build-essential \
     libsasl2-dev && \
@@ -28,8 +29,9 @@ ENV SPARK_HOME=/opt/spark
 ENV PATH=$SPARK_HOME/bin:$PATH
 ENV PYSPARK_PYTHON=/usr/local/bin/python
 
-# 6. Spark 다운로드 및 설치
-RUN curl -o /tmp/spark.tgz https://archive.apache.org/dist/spark/spark-${SPARK_VERSION}/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION}.tgz \
+# 6. Spark 다운로드 및 설치 (Azure Blob에서 빠르게 다운로드)
+ARG SPARK_TGZ_URL
+RUN curl -L -o /tmp/spark.tgz "${SPARK_TGZ_URL}" \
     && tar -xvzf /tmp/spark.tgz -C /opt \
     && mv /opt/spark-${SPARK_VERSION}-bin-hadoop${HADOOP_VERSION} ${SPARK_HOME} \
     && rm /tmp/spark.tgz
@@ -42,29 +44,28 @@ ARG HADOOP_AWS_VERSION
 ARG AWS_SDK_VERSION
 ARG POSTGRESQL_JDBC_VERSION
 ARG KAFKA_CLIENTS_VERSION
-ARG SCALA_VERSION
-ARG COMMONS_POOL2_VERSION
-ARG LZ4_JAVA_VERSION
-ARG COMMONS_LOGGING_VERSION
 
-RUN curl -o ${SPARK_HOME}/jars/delta-core_${SCALA_VERSION}-${DELTA_SPARK_VERSION}.jar https://repo1.maven.org/maven2/io/delta/delta-core_${SCALA_VERSION}/${DELTA_SPARK_VERSION}/delta-core_${SCALA_VERSION}-${DELTA_SPARK_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/delta-storage-${DELTA_SPARK_VERSION}.jar https://repo1.maven.org/maven2/io/delta/delta-storage/${DELTA_SPARK_VERSION}/delta-storage-${DELTA_SPARK_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/hadoop-aws-${HADOOP_AWS_VERSION}.jar https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/${AWS_SDK_VERSION}/aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/postgresql-${POSTGRESQL_JDBC_VERSION}.jar https://repo1.maven.org/maven2/org/postgresql/postgresql/${POSTGRESQL_JDBC_VERSION}/postgresql-${POSTGRESQL_JDBC_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/commons-logging-${COMMONS_LOGGING_VERSION}.jar https://repo1.maven.org/maven2/commons-logging/commons-logging/${COMMONS_LOGGING_VERSION}/commons-logging-${COMMONS_LOGGING_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/spark-sql-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar https://repo1.maven.org/maven2/org/apache/spark/spark-sql-kafka-0-10_${SCALA_VERSION}/${SPARK_VERSION}/spark-sql-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/spark-token-provider-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar https://repo1.maven.org/maven2/org/apache/spark/spark-token-provider-kafka-0-10_${SCALA_VERSION}/${SPARK_VERSION}/spark-token-provider-kafka-0-10_${SCALA_VERSION}-${SPARK_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/kafka-clients-${KAFKA_CLIENTS_VERSION}.jar https://repo1.maven.org/maven2/org/apache/kafka/kafka-clients/${KAFKA_CLIENTS_VERSION}/kafka-clients-${KAFKA_CLIENTS_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/commons-pool2-${COMMONS_POOL2_VERSION}.jar https://repo1.maven.org/maven2/org/apache/commons/commons-pool2/${COMMONS_POOL2_VERSION}/commons-pool2-${COMMONS_POOL2_VERSION}.jar && \
-    curl -o ${SPARK_HOME}/jars/lz4-java-${LZ4_JAVA_VERSION}.jar https://repo1.maven.org/maven2/org/lz4/lz4-java/${LZ4_JAVA_VERSION}/lz4-java-${LZ4_JAVA_VERSION}.jar
+# Airflow에서 Spark 연동을 위한 공통 JAR 파일들을 Azure Blob에서 다운로드
+ARG COMMON_JARS_ZIP_URL
+RUN curl -L -o /tmp/common-jars.zip "${COMMON_JARS_ZIP_URL}" && \
+    mkdir -p ${SPARK_HOME}/jars && \
+    unzip -oqj /tmp/common-jars.zip "*.jar" -d ${SPARK_HOME}/jars/ && \
+    rm /tmp/common-jars.zip
 
-# 8. Spark 설정 파일 복사
-COPY ./spark-base/spark-defaults.conf /opt/spark/conf/
-COPY ./spark-base/hive-site.xml /opt/spark/conf/
+# 9. Spark 설정 파일 복사
+COPY spark-base/spark-defaults.conf /opt/spark/conf/
+COPY spark-base/hive-site.xml /opt/spark/conf/
+COPY monitoring/jmx/spark_jmx_config.yml /opt/spark/conf/jmx-config.yml
+
+# wait-fot-it 적용
+COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
 
 # 9. pip install을 실행하기 전에, 반드시 airflow 사용자로 돌아와야 함
 USER airflow
+
+# Spark Kafka SQL 패키지 미리 다운로드하여 캐싱
+RUN spark-submit --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.4.1 --version
 
 # 9. Airflow에 필요한 Python 라이브러리 설치
 COPY ./airflow/requirements-airflow.txt /requirements-airflow.txt
