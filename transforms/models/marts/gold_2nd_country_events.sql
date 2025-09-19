@@ -48,10 +48,10 @@ ORDER BY
     event_date DESC,
     event_count DESC
 
-{% if is_incremental() %}
+{% if is_incremental() and adapter.get_relation(this.database, this.schema, this.identifier) %}
 
   -- 이 모델이 이미 데이터를 가지고 있다면,
   -- 최신 날짜보다 더 새로운 데이터만 처리 (3일 버퍼 포함)
-  AND event_date >= date_add('day', -3, (SELECT MAX(event_date) FROM {{ this }}))
+  AND event_date >= date_add((SELECT MAX(event_date) FROM {{ this }}), -3)
 
 {% endif %}
