@@ -10,6 +10,7 @@ from pyspark.sql.window import Window
 import logging
 
 logger = logging.getLogger(__name__)
+_schema_cache = {}
 
 
 def write_to_delta_lake(
@@ -25,7 +26,6 @@ def write_to_delta_lake(
         return
 
     spark = df.sparkSession
-    _schema_cache = {}
 
     # 1. 파티션 컬럼 추가 (결측치 방어 로직 강화)
     df_with_partitions = (
