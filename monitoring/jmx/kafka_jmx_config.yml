@@ -1,52 +1,67 @@
 ---
-# Kafka JMX Prometheus Exporter 설정 파일
-# Kafka JVM 메트릭을 Prometheus 형식으로 변환
+# Kafka 모니터링을 위한 JMX Exporter 설정
 
-# Kafka 브로커 메트릭
 rules:
-  # Kafka 브로커 기본 메트릭
-  - pattern: "kafka.server<type=(.+), name=(.+)><>(.+)"
-    name: "kafka_server_$1_$2"
-    type: GAUGE
+  # === Kafka Broker & Server Metrics ===
+  - pattern: "kafka.server<type=KafkaServer, name=(.+)><>Value"
+    name: "kafka_server_$1"
     labels:
       job: "kafka"
-      
-  # Kafka 네트워크 메트릭
-  - pattern: "kafka.network<type=(.+), name=(.+)><>(.+)"
-    name: "kafka_network_$1_$2" 
-    type: GAUGE
+
+  - pattern: "kafka.server<type=BrokerTopicMetrics, name=(.+)><>Count"
+    name: "kafka_server_brokertopicmetrics_$1_total"
+    type: COUNTER
     labels:
       job: "kafka"
-      
-  # Kafka 로그 메트릭
-  - pattern: "kafka.log<type=(.+), name=(.+)><>(.+)"
-    name: "kafka_log_$1_$2"
-    type: GAUGE
+
+  # === Topic별 상세 메트릭 ===
+  - pattern: "kafka.server<type=BrokerTopicMetrics, name=(.+), topic=(.+)><>Count"
+    name: "kafka_server_brokertopicmetrics_$1_total"
+    type: COUNTER
     labels:
       job: "kafka"
-      
-  # JVM GC 메트릭
-  - pattern: "java.lang<type=GarbageCollector, name=(.+)><>(.+)"
-    name: "kafka_jvm_gc_$2"
-    type: GAUGE
+      topic: "$2"
+
+  # === Log & Partition Metrics ===
+  - pattern: "kafka.log<type=Log, name=(.+), topic=(.+), partition=(.+)><>Value"
+    name: "kafka_log_$1"
     labels:
       job: "kafka"
-      gc_type: "$1"
-      
-  # JVM 메모리 메트릭  
-  - pattern: "java.lang<type=Memory><(.+)>(.+)"
-    name: "kafka_jvm_memory_$2"
-    type: GAUGE
+      topic: "$2"
+      partition: "$3"
+
+  # === Network & Request Metrics ===
+  - pattern: "kafka.network<type=RequestMetrics, name=(.+), request=(.+)><>Count"
+    name: "kafka_network_requestmetrics_$1_total"
+    type: COUNTER
     labels:
       job: "kafka"
-      memory_type: "$1"
-      
-  # Kafka Controller 메트릭
-  - pattern: "kafka.controller<type=(.+), name=(.+)><>(.+)"
-    name: "kafka_server_$1_$2"
-    type: GAUGE
+      request: "$2"
+
+  # === JVM 메모리 (Heap/NonHeap) ===
+  - pattern: "java.lang<type=Memory><>HeapMemoryUsage<name=(.+)>"
+    name: "kafka_jvm_memory_heap_usage_$1"
     labels:
       job: "kafka"
+  - pattern: "java.lang<type=Memory><>NonHeapMemoryUsage<name=(.+)>"
+    name: "kafka_jvm_memory_nonheap_usage_$1"
+    labels:
+      job: "kafka"
+
+  # === JVM 메모리 풀 (G1, Eden, Survivor 등) ===
+  - pattern: "java.lang<type=MemoryPool, name=(.+)><>Usage<name=(.+)>"
+    name: "kafka_jvm_memory_pool_usage_$2"
+    labels:
+      job: "kafka"
+      pool_name: "$1"
+
+  # === JVM GC (Garbage Collection) ===
+  - pattern: "java.lang<type=GarbageCollector, name=(.+)><>Collection(Count|Time)"
+    name: "kafka_jvm_gc_collection_$2_total"
+    type: COUNTER
+    labels:
+      job: "kafka"
+      gc_name: "$1"
 
 lowercaseOutputName: true
 lowercaseOutputLabelNames: true
