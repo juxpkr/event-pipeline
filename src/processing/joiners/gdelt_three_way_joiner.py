@@ -18,29 +18,40 @@ def perform_three_way_join(
     Events, Mentions, GKG 3-way 조인 수행
 
     Args:
-        events_silver: Events Silver DataFrame (필수)
-        mentions_silver: Mentions Silver DataFrame (선택)
-        gkg_silver: GKG Silver DataFrame (선택)
-
+        데이터 지연 특성을 고려한 Lookback 조인
     Returns:
         DataFrame: 조인된 결과
     """
-    logger.info("Performing 3-Way Join for detailed analysis...")
+    logger.info("Performing 3-Way Join with Lookback Window for detailed analysis...")
 
     if events_silver is None:
         raise ValueError("Events data is required for 3-way join")
 
     # 1: Events와 Mentions를 Join
     if mentions_silver is not None:
-        logger.info("...Joining Events with Mentions")
+        logger.info("...Joining Events with Mentions using a 15-hour lookback window.")
+
+        # 조인 전에 중복될 수 있는 컬럼 이름 변경
+        mentions_renamed = mentions_silver.withColumnRenamed(
+            "processed_at", "mention_processed_at"
+        )
+
         events_mentions_joined = events_silver.join(
-            mentions_silver,
-            events_silver["global_event_id"] == mentions_silver["global_event_id"],
-            "left",
+            mentions_renamed,
+            on=[
+                events_silver["global_event_id"] == mentions_renamed["global_event_id"],
+                # event_date를 기준으로, mention_time_date가 과거 15시간 범위 안에 있을 때만 조인
+                mentions_renamed["mention_time_date"].between(
+                    F.col("event_date") - F.expr("INTERVAL 15 HOURS"),
+                    F.col("event_date")
+                    + F.expr("INTERVAL 1 HOURS"),  # 혹시 모를 미래 데이터도 1시간 여유
+                ),
+            ],
+            how="left",
         ).drop(
-            mentions_silver["global_event_id"],
-            mentions_silver["extras"],
-            mentions_silver["source_file"],
+            mentions_renamed["global_event_id"],
+            mentions_renamed["extras"],
+            mentions_renamed["source_file"],
         )
     else:
         logger.warning("No Mentions data found. Skipping join with Mentions.")
@@ -51,16 +62,18 @@ def perform_three_way_join(
         gkg_silver is not None
         and "mention_identifier" in events_mentions_joined.columns
     ):
-        logger.info("...Joining result with GKG")
+        logger.info("...Joining result with GKG using document_identifier.")
+
+        gkg_renamed = gkg_silver.withColumnRenamed("processed_at", "gkg_processed_at")
+
         final_joined_df = events_mentions_joined.join(
-            gkg_silver,
-            events_mentions_joined["mention_identifier"]
-            == gkg_silver["document_identifier"],
-            "left",
+            gkg_renamed,
+            events_mentions_joined["mention_identifier"] == gkg_renamed["document_identifier"],
+            how="left",
         ).drop(
-            gkg_silver["extras"],
-            gkg_silver["source_file"],
-            gkg_silver["gkg_processed_time"],
+            gkg_renamed["extras"],
+            gkg_renamed["source_file"],
+            gkg_renamed["gkg_processed_time"],
         )
     else:
         logger.warning(
@@ -68,6 +81,7 @@ def perform_three_way_join(
         )
         final_joined_df = events_mentions_joined
 
+    logger.info("Intelligent 3-Way Join completed successfully.")
     return final_joined_df
 
 
