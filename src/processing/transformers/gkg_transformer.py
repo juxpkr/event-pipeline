@@ -32,38 +32,36 @@ def transform_gkg_to_silver(df: DataFrame) -> DataFrame:
     logger.info("Transforming GKG Bronze to Silver...")
 
     silver_df = df.select(
-        # 기본 식별자
+        # 실제 GDELT 2.0 컬럼 순서와 이름에 맞게 alias 수정
         F.col("bronze_data")[0].alias("gkg_record_id"),
         F.col("bronze_data")[1].alias("date"),
         F.col("bronze_data")[2]
         .cast(IntegerType())
         .alias("source_collection_identifier"),
         F.col("bronze_data")[3].alias("source_common_name"),
-        F.col("bronze_data")[4].alias("document_identifier"),  # 조인키
-        # 주요 컨텐츠 (복잡한 구조는 일단 String으로)
+        F.col("bronze_data")[4].alias("document_identifier"),
         F.col("bronze_data")[5].alias("counts"),
         F.col("bronze_data")[6].alias("v2_counts"),
         F.col("bronze_data")[7].alias("themes"),
         F.col("bronze_data")[8].alias("v2_themes"),
-        F.col("bronze_data")[9].alias("v2_enhanced_themes"),
-        F.col("bronze_data")[10].alias("locations"),
-        F.col("bronze_data")[11].alias("v2_locations"),
-        F.col("bronze_data")[12].alias("persons"),
-        F.col("bronze_data")[13].alias("v2_persons"),
-        F.col("bronze_data")[14].alias("organizations"),
-        F.col("bronze_data")[15].alias("v2_organizations"),
-        F.col("bronze_data")[16].alias("v2_tone"),
-        F.col("bronze_data")[17].alias("dates"),
-        F.col("bronze_data")[18].alias("gcam"),
-        F.col("bronze_data")[19].alias("sharing_image"),
-        F.col("bronze_data")[20].alias("related_images"),
-        F.col("bronze_data")[21].alias("social_image_embeds"),
-        F.col("bronze_data")[22].alias("social_video_embeds"),
-        F.col("bronze_data")[23].alias("quotations"),
-        F.col("bronze_data")[24].alias("all_names"),
-        F.col("bronze_data")[25].alias("amounts"),
-        F.col("bronze_data")[26].alias("translation_info"),
-        F.col("bronze_data")[27].alias("extras"),
+        F.col("bronze_data")[9].alias("locations"),
+        F.col("bronze_data")[10].alias("v2_locations"),
+        F.col("bronze_data")[11].alias("persons"),
+        F.col("bronze_data")[12].alias("v2_persons"),
+        F.col("bronze_data")[13].alias("organizations"),
+        F.col("bronze_data")[14].alias("v2_organizations"),
+        F.col("bronze_data")[15].alias("v2_enhanced_themes"),
+        F.col("bronze_data")[16].alias("dates"),
+        F.col("bronze_data")[17].alias("gcam"),
+        F.col("bronze_data")[18].alias("sharing_image"),
+        F.col("bronze_data")[19].alias("related_images"),
+        F.col("bronze_data")[20].alias("social_image_embeds"),
+        F.col("bronze_data")[21].alias("social_video_embeds"),
+        F.col("bronze_data")[22].alias("quotations"),
+        F.col("bronze_data")[23].alias("all_names"),
+        F.col("bronze_data")[24].alias("amounts"),
+        F.col("bronze_data")[25].alias("translation_info"),
+        F.col("bronze_data")[26].alias("extras"),
         # 메타데이터
         F.current_timestamp().alias("gkg_processed_time"),
         F.col("source_file"),
