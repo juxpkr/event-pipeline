@@ -4,6 +4,7 @@ GDELT 3개 데이터타입 수집 → Kafka → Bronze Layer → Silver Layer
 """
 
 from __future__ import annotations
+from datetime import timedelta
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
@@ -39,6 +40,7 @@ with DAG(
     gdelt_producer = BashOperator(
         task_id="gdelt_producer",
         bash_command=f"PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/ingestion/gdelt_producer.py --logical-date '{{{{ data_interval_start }}}}'",
+        execution_timeout=timedelta(minutes=10),
         env=dict(os.environ),
         doc_md="""
         GDELT 3-Way Producer
