@@ -530,15 +530,23 @@ services:
       retries: 5
 
 volumes:
+  #
   zookeeper-data:
   zookeeper-log:
-  minio-data:
   spark-jars:
-  prometheus-data:
-  grafana-data:
-  postgres-data:
   redis-data:
-
+  minio-data:
+    external: true
+    name: minio-data
+  postgres-data:
+    external: true
+    name: postgres-data
+  prometheus-data:
+    external: true
+    name: prometheus-data
+  grafana-data:
+    external: true
+    name: grafana-data
 
 networks:
   data-network:
