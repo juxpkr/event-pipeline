@@ -315,51 +315,7 @@ class GDELTSchemas:
             ]
         )
 
-    @staticmethod
-    def get_silver_mentions_schema() -> StructType:
-        """Silver Layer Mentions 스키마 (정제된 버전)"""
-        return StructType(
-            [
-                StructField("global_event_id", StringType(), False),
-                StructField("mention_time_date", DateType(), True),
-                StructField("mention_type", IntegerType(), True),
-                StructField("mention_source_name", StringType(), True),
-                StructField("document_identifier", StringType(), True),  # 조인키
-                StructField("confidence", IntegerType(), True),
-                StructField("mention_doc_tone", DoubleType(), True),
-                StructField("mention_doc_len", IntegerType(), True),
-                # 처리 메타데이터
-                StructField("processed_at", TimestampType(), True),
-                StructField("data_quality_score", DoubleType(), True),
-            ]
-        )
 
-    @staticmethod
-    def get_silver_gkg_schema() -> StructType:
-        """Silver Layer GKG 스키마 (정제된 버전)"""
-        return StructType(
-            [
-                StructField("gkg_record_id", StringType(), False),
-                StructField("date", StringType(), True),
-                StructField("source_common_name", StringType(), True),
-                StructField("document_identifier", StringType(), True),  # 조인키
-                # 파싱된 복합 필드들
-                StructField("themes", ArrayType(StringType()), True),
-                StructField("locations", ArrayType(StringType()), True),
-                StructField("persons", ArrayType(StringType()), True),
-                StructField("organizations", ArrayType(StringType()), True),
-                # Tone 정보 (파싱됨)
-                StructField("tone_positive", DoubleType(), True),
-                StructField("tone_negative", DoubleType(), True),
-                StructField("tone_polarity", DoubleType(), True),
-                StructField("tone_activity", DoubleType(), True),
-                StructField("tone_self_reference", DoubleType(), True),
-                StructField("tone_word_count", IntegerType(), True),
-                # 처리 메타데이터
-                StructField("processed_at", TimestampType(), True),
-                StructField("data_quality_score", DoubleType(), True),
-            ]
-        )
 
 
 # 유틸리티 함수들

@@ -172,7 +172,6 @@ def select_final_columns(df: DataFrame) -> DataFrame:
                 F.col("v2_persons"),
                 F.col("organizations"),
                 F.col("v2_organizations"),
-                F.col("v2_tone"),
                 F.col("dates"),
                 F.col("gcam"),
                 F.col("sharing_image"),
