@@ -71,9 +71,10 @@ with DAG(
         # Airflow의 작업 시간 구간을 Spark 코드의 인자로 전달
         application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
         conf={
-            "spark.cores.max": "4",
-            "spark.executor.cores": "2",
-            "spark.executor.memory": "8g",
+            "spark.cores.max": "10",
+            "spark.executor.cores": "5",
+            "spark.executor.memory": "16g",
+            "spark.driver.memory": "4g",
             "spark.executor.instances": "2",
         },
         doc_md="""
