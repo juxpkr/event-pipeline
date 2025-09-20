@@ -77,6 +77,7 @@ with DAG(
             "spark.driver.memory": "4g",
             "spark.executor.instances": "2",
         },
+        deploy_mode="cluster",
         doc_md="""
         Silver Layer Processing
         - Bronze Layer → Silver Layer 데이터 변환
