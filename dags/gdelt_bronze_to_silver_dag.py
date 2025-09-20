@@ -73,7 +73,7 @@ with DAG(
         conf={
             "spark.cores.max": "6",
             "spark.executor.cores": "3",
-            "spark.executor.memory": "14",
+            "spark.executor.memory": "14g",
             "spark.driver.memory": "4g",
             "spark.executor.instances": "2",
         },
