@@ -71,9 +71,16 @@ with DAG(
         # Airflow의 작업 시간 구간을 Spark 코드의 인자로 전달
         application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
         conf={
-            "spark.cores.max": "6",
-            "spark.executor.memory": "12g",
-            "spark.executor.cores": "2",
+            # Worker VM 2대에 각각 하나씩 Executor를 배치
+            "spark.executor.instances": "2",
+            # Worker의 8개 코어 중 7개를 Executor에 할당
+            "spark.executor.cores": "7",
+            # Worker의 32GB 메모리 중 26GB를 Executor에 할당
+            "spark.executor.memory": "26g",
+            # Driver는 보통 Manager 노드에서 실행되므로 적절한 메모리를 할당
+            "spark.driver.memory": "4g",
+            # 총 Executor 코어 수 (2 instances * 7 cores)와 일치시켜 Spark가 자원을 정확히 예측하도록 설정
+            "spark.cores.max": "14",
         },
         doc_md="""
         Silver Layer Processing
