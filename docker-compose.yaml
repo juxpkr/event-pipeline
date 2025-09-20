@@ -332,7 +332,7 @@ services:
           - node.role == manager
 
   airflow-init:
-    image: juxpkr/geoevent-airflow:0.1
+    image: juxpkr/geoevent-airflow:0.2
     container_name: airflow-init
     networks:
       - data-network
@@ -347,7 +347,7 @@ services:
         condition: on-failure
 
   airflow-webserver:
-    image: juxpkr/geoevent-airflow:0.1
+    image: juxpkr/geoevent-airflow:0.2
     container_name: airflow-webserver
     user: "${AIRFLOW_UID:-50000}"
     ports:
@@ -393,7 +393,7 @@ services:
       - apparmor:unconfined
 
   airflow-scheduler:
-    image: juxpkr/geoevent-airflow:0.1
+    image: juxpkr/geoevent-airflow:0.2
     container_name: airflow-scheduler
     user: "${AIRFLOW_UID:-50000}"
     networks:
@@ -437,7 +437,7 @@ services:
       - apparmor:unconfined
 
   jupyter-lab:
-    image: juxpkr/geoevent-jupyter-lab:0.1
+    image: juxpkr/geoevent-jupyter-lab:0.2
     container_name: jupyter-lab
     ports:
       - "8888:8888"
@@ -455,7 +455,7 @@ services:
           - node.labels.type == monitoring
 
   dbt:
-    image: juxpkr/geoevent-dbt:0.1
+    image: juxpkr/geoevent-dbt:0.2
     container_name: dbt
     env_file:
       - ./.env
