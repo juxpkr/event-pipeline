@@ -126,7 +126,7 @@ services:
         condition: on-failure # <-- 실패 시에만 재시작
 
   spark-master:
-    image: juxpkr/geoevent-spark-base:0.3
+    image: juxpkr/geoevent-spark-base:0.4
     container_name: spark-master
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -163,7 +163,7 @@ services:
         constraints:
           - node.role == manager
   spark-worker:
-    image: juxpkr/geoevent-spark-base:0.3
+    image: juxpkr/geoevent-spark-base:0.4
     container_name: spark-worker
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -191,7 +191,7 @@ services:
           memory: 16G
 
   spark-thrift-server:
-    image: juxpkr/geoevent-spark-base:0.3
+    image: juxpkr/geoevent-spark-base:0.4
     container_name: spark-thrift-server
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -227,7 +227,7 @@ services:
           memory: 4G
 
   spark-thrift-server-dev:
-    image: juxpkr/geoevent-spark-base:0.3
+    image: juxpkr/geoevent-spark-base:0.4
     container_name: spark-thrift-server-dev
     entrypoint: [ "/bin/sh", "-c" ]
     command:
