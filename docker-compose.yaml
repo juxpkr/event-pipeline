@@ -572,8 +572,9 @@ services:
       timeout: 5s
       retries: 5
     deploy:
-      constraints:
-        - node.role == manager
+      placement:
+        constraints:
+          - node.role == manager
 
 volumes:
   zookeeper-data:
