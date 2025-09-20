@@ -74,13 +74,13 @@ with DAG(
             # Worker VM 2대에 각각 하나씩 Executor를 배치
             "spark.executor.instances": "2",
             # Worker의 8개 코어 중 6개를 Executor에 할당
-            "spark.executor.cores": "6",
+            "spark.executor.cores": "5",
             # Worker의 32GB 메모리 중 18GB를 Executor에 할당
             "spark.executor.memory": "18g",
             # Driver는 보통 Manager 노드에서 실행되므로 적절한 메모리를 할당
             "spark.driver.memory": "4g",
             # 총 Executor 코어 수 (2 instances * 6 cores)와 일치시켜 Spark가 자원을 정확히 예측하도록 설정
-            "spark.cores.max": "12",
+            "spark.cores.max": "10",
         },
         doc_md="""
         Silver Layer Processing
