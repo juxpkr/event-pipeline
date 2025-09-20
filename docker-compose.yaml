@@ -482,7 +482,6 @@ services:
       - ./.env
       - ./config/superset/superset.env
     volumes:
-      #- ./superset:/app/superset_home
       - ./config/superset:/config
       - superset-data:/app/superset_home
     entrypoint: [ "sh", "-c", "sleep 5 && /config/wait-for-it.sh postgres:5432 -t 60 -- /config/init-superset.sh" ]
