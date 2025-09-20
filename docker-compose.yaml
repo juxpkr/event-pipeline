@@ -101,6 +101,10 @@ services:
     command: minio server /data --console-address ":9001"
     volumes:
       - minio-data:/data
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
   minio-setup:
     image: minio/mc
@@ -151,7 +155,9 @@ services:
           memory: 4G
         reservations:
           memory: 2G
-
+      placement:
+        constraints:
+          - node.role == manager
   spark-worker:
     image: juxpkr/geoevent-spark-base:0.1
     container_name: spark-worker
@@ -287,6 +293,9 @@ services:
           memory: 512M
         limits:
           memory: 2G
+      placement:
+        constraints:
+          - node.role == manager
 
   postgres:
     image: ${POSTGRES_IMAGE}
@@ -314,6 +323,9 @@ services:
           memory: 4G
         reservations:
           memory: 2G
+      placement:
+        constraints:
+          - node.role == manager
 
   airflow-init:
     image: juxpkr/geoevent-airflow:0.1
@@ -328,7 +340,7 @@ services:
     entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "sh", "/opt/airflow/init-airflow.sh" ]
     deploy:
       restart_policy:
-        condition: none
+        condition: on-failure
 
   airflow-webserver:
     image: juxpkr/geoevent-airflow:0.1
@@ -433,6 +445,10 @@ services:
       - spark-jars:/opt/spark/jars
     networks:
       - data-network
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
   dbt:
     image: juxpkr/geoevent-dbt:0.1
@@ -468,6 +484,9 @@ services:
           memory: 4G
       restart_policy:
         condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
 
   prometheus:
     image: ${PROMETHEUS_IMAGE}
@@ -486,6 +505,10 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
       - '--storage.tsdb.retention.time=15d'
       - '--web.enable-lifecycle'
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
   grafana:
     image: ${GRAFANA_IMAGE}
@@ -505,6 +528,9 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+      placement:
+        constraints:
+          - node.role == manager
 
   spark-custom-exporter:
     image: juxpkr/geoevent-spark-custom-exporter:0.1
@@ -533,6 +559,9 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    deploy:
+      constraints:
+        - node.role == manager
 
 volumes:
   zookeeper-data:
