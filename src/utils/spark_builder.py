@@ -10,8 +10,6 @@ def get_spark_session(app_name: str, master: str = None) -> SparkSession:
     """
     builder = (
         SparkSession.builder.appName(app_name)
-        # Spark 자원 독점 방지 설정
-        .config("spark.cores.max", "2")
         # --- S3 (MinIO) 접속 설정 ---
         .config(
             "spark.hadoop.fs.s3a.endpoint",
