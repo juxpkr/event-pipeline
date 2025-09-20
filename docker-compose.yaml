@@ -74,6 +74,10 @@ services:
       - JMX_EXPORTER_CONFIG_FILE=/config.yml
     volumes:
       - ./monitoring/jmx/kafka_jmx_config.yml:/config.yml:ro
+    deploy:
+      placement:
+        constraints:
+          - node.labels.type == monitoring
 
   kafka-setup:
     image: juxpkr/geoevent-kafka-setup:0.1
@@ -448,7 +452,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.role == manager
+          - node.labels.type == monitoring
 
   dbt:
     image: juxpkr/geoevent-dbt:0.1
@@ -462,6 +466,10 @@ services:
       - ./transforms:/app
     # 이 컨테이너는 시작된 후, tail 명령을 실행하며 계속 살아있게 된다.
     command: [ "tail", "-f", "/dev/null" ]
+    deploy:
+      placement:
+        constraints:
+          - node.role == manager
 
   superset:
     image: ${SUPERSET_IMAGE}
@@ -486,7 +494,7 @@ services:
         condition: on-failure
       placement:
         constraints:
-          - node.role == manager
+          - node.labels.type == monitoring
 
   prometheus:
     image: ${PROMETHEUS_IMAGE}
@@ -508,7 +516,7 @@ services:
     deploy:
       placement:
         constraints:
-          - node.role == manager
+          - node.labels.type == monitoring
 
   grafana:
     image: ${GRAFANA_IMAGE}
@@ -530,7 +538,7 @@ services:
         condition: on-failure
       placement:
         constraints:
-          - node.role == manager
+          - node.labels.type == monitoring
 
   spark-custom-exporter:
     image: juxpkr/geoevent-spark-custom-exporter:0.1
@@ -543,6 +551,10 @@ services:
       - ./.env
     volumes:
       - ./spark-exporter:/app
+    deploy:
+      placement:
+        constraints:
+          - node.labels.type == monitoring
 
   redis:
     image: redis:7-alpine
