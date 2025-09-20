@@ -32,15 +32,12 @@ elif [ "${ROLE}" = "worker" ]; then
 
 elif [ "${ROLE}" = "thrift-binary" ]; then
   # 역할이 "thrift-binary"이면, Binary 모드로 Thrift Server를 실행
-
   echo "Starting Spark Thrift Server in BINARY mode with all packages..."
-  # 컨테이너가 꺼지지 않도록 tail과 함께 실행
-  # spark-defaults.conf에서 모든 설정을 가져오므로 간소화
-  /opt/spark/sbin/start-thriftserver.sh \
-    --master spark://spark-master:7077 &
-  
-  # 컨테이너가 죽지 않도록 유지
-  exec tail -f /dev/null
+  exec $SPARK_HOME/bin/spark-submit \
+    --class org.apache.spark.sql.hive.thriftserver.HiveThriftServer2 \
+    $SPARK_OPTS \
+    --name "Thrift JDBC/ODBC Server" \
+    spark-internal
 
 else
   # 그 외의 인자가 들어오면, 받은 인자를 그대로 명령어로 실행
