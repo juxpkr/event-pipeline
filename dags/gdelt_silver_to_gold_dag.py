@@ -41,7 +41,7 @@ with DAG(
     dbt_transformation = DockerOperator(
         task_id="dbt_transformation",
         # image="juxpkr/geoevent-dbt:0.1",
-        image=os.getenv("DBT_IMAGE", "juxpkr/geoevent-dbt:0.1"),
+        image=os.getenv("DBT_IMAGE", "juxpkr/geoevent-dbt:0.3"),
         command=[
             "/bin/sh",
             "-c",
