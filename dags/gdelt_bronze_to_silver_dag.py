@@ -75,8 +75,8 @@ with DAG(
             "spark.executor.instances": "2",
             # Worker의 8개 코어 중 6개를 Executor에 할당
             "spark.executor.cores": "6",
-            # Worker의 32GB 메모리 중 23GB를 Executor에 할당
-            "spark.executor.memory": "23g",
+            # Worker의 32GB 메모리 중 22GB를 Executor에 할당
+            "spark.executor.memory": "22g",
             # Driver는 보통 Manager 노드에서 실행되므로 적절한 메모리를 할당
             "spark.driver.memory": "4g",
             # 총 Executor 코어 수 (2 instances * 6 cores)와 일치시켜 Spark가 자원을 정확히 예측하도록 설정
