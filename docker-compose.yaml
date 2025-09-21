@@ -203,7 +203,7 @@ services:
     env_file:
       - ./.env
     environment:
-      _JAVA_OPTIONS: '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED'
+      SPARK_SUBMIT_OPTS: '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED'
       SPARK_CONF_hive_server2_thrift_max_worker_threads: 200
       SPARK_CONF_spark_cores_max: 2
       SPARK_CONF_spark_sql_hive_metastore_uris: thrift://hive-metastore:9083
