@@ -203,7 +203,10 @@ services:
     env_file:
       - ./.env
     environment:
-      SPARK_OPTS: "--conf hive.server2.thrift.max.worker.threads=200 --conf spark.cores.max=2 --conf hive.metastore.uris=thrift://hive-metastore:9083"
+      SPARK_OPTS: >
+        --conf hive.server2.thrift.max.worker.threads=200 --conf spark.cores.max=2 --conf hive.metastore.uris=thrift://hive-metastore:9083
+      JAVA_TOOL_OPTIONS: >
+        --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED
     networks:
       - data-network
     ports:
@@ -241,7 +244,10 @@ services:
     networks:
       - data-network
     environment:
-      SPARK_OPTS: "--conf hive.server2.thrift.max.worker.threads=200 --conf spark.cores.max=2 --conf hive.metastore.uris=thrift://hive-metastore:9083"
+      SPARK_OPTS: >
+        --conf hive.server2.thrift.max.worker.threads=200 --conf spark.cores.max=2 --conf hive.metastore.uris=thrift://hive-metastore:9083
+      JAVA_TOOL_OPTIONS: >
+        --add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED
     ports:
       - "10002:10001" # dbt 연결용
       - "4042:4040" # Spark Application UI
