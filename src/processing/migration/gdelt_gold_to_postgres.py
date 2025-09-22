@@ -47,11 +47,6 @@ class GDELTGoldMigrator:
                 "postgres_schema": "gold",
                 "description": "이벤트 상세 - 일일 요약",
             },
-            "gold_prod.gdelt_microbatch_country_analysis": {
-                "postgres_table": "gold_microbatch_country_analysis",
-                "postgres_schema": "gold",
-                "description": "GDELT 마이크로배치 데이터의 국가별/이벤트 타입별 분석",
-            },
         }
 
     def _ensure_postgres_schema_exists(self, schema_name: str):
