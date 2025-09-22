@@ -34,11 +34,13 @@ for HOST in "${ALL_HOSTS[@]}"; do
   echo ">>>>> DEBUG: Current HOST variable is [${HOST}] <<<<<"
   # --------------------
   echo ">>>>> 2. Syncing code and permissions on ${HOST}..."
-  ssh ${HOST} "cd ${REMOTE_PROJECT_PATH} && sudo git reset --hard origin/${BRANCH} && sudo git pull origin ${BRANCH} && sudo chmod +x chown.sh && sudo ./chown.sh"
+  ssh ${HOST} "cd ${REMOTE_PROJECT_PATH} && sudo git fetch origin && sudo git reset --hard origin/${BRANCH} && sudo git pull origin ${BRANCH} && sudo chmod +x chown.sh && sudo ./chown.sh"
 done
 
 echo ">>>>> Waiting for 5 seconds to ensure network stabilization..."
 sleep 5
+
+ssh ${MANAGER_HOST} "cd ${REMOTE_PROJECT_PATH} && sudo chmod +x deploy.sh
 
 ## 3. 매니저 노드에서만 최종 배포 실행
 #echo ""
