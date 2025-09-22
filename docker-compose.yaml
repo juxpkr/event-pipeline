@@ -143,6 +143,8 @@ services:
     env_file:
       - ./.env
       - ./config/spark/spark.env
+    environment:
+      # 추가 설정이 필요하면 여기에
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8080 || exit 1" ]
       interval: 15s
@@ -177,6 +179,8 @@ services:
     env_file:
       - ./.env
       - ./config/spark/spark.env
+    environment:
+      # 추가 설정이 필요하면 여기에
     deploy:
       mode: replicated
       replicas: 2
@@ -200,12 +204,9 @@ services:
       - ./config/spark/spark.env
     environment:
       # 동적 자원 할당
-      SPARK_DYNAMIC_cores_max: 2
+      SPARK_DYNAMIC_cores_max: 4
       SPARK_DYNAMIC_driver_memory: 2g
-      # MinIO S3A 설정 (동적 주입)
-      SPARK_DYNAMIC_hadoop_fs_s3a_endpoint: ${MINIO_ENDPOINT}
-      SPARK_DYNAMIC_hadoop_fs_s3a_access_key: ${MINIO_ROOT_USER}
-      SPARK_DYNAMIC_hadoop_fs_s3a_secret_key: ${MINIO_ROOT_PASSWORD}
+      # 추가 설정이 필요하면 여기에
     networks:
       - data-network
     ports:
@@ -244,12 +245,9 @@ services:
       - data-network
     environment:
       # 동적 자원 할당
-      SPARK_DYNAMIC_cores_max: 2
+      SPARK_DYNAMIC_cores_max: 4
       SPARK_DYNAMIC_driver_memory: 2g
-      # MinIO S3A 설정 (동적 주입)
-      SPARK_DYNAMIC_hadoop_fs_s3a_endpoint: ${MINIO_ENDPOINT}
-      SPARK_DYNAMIC_hadoop_fs_s3a_access_key: ${MINIO_ROOT_USER}
-      SPARK_DYNAMIC_hadoop_fs_s3a_secret_key: ${MINIO_ROOT_PASSWORD}
+      # 추가 설정이 필요하면 여기에
     ports:
       - "10002:10001" # dbt 연결용
       - "4042:4040" # Spark Application UI
