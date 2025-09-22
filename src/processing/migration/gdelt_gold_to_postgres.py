@@ -302,14 +302,8 @@ def main():
     """메인 실행 함수"""
     logger.info("Starting GDELT Gold to PostgreSQL Migration Pipeline...")
 
-    # Spark 세션 생성 (환경에 따라 동적 설정)
-    is_swarm = os.getenv("DOCKER_SWARM_MODE", "false").lower() == "true"
-    default_spark_master = (
-        "spark://geoevent_spark-master:7077"
-        if is_swarm
-        else "spark://spark-master:7077"
-    )
-    spark_master = os.getenv("SPARK_MASTER_URL", default_spark_master)
+    # Spark 세션 생성
+    spark_master = os.getenv("SPARK_MASTER_URL", "spark://spark-master:7077")
     spark = get_spark_session("GDELT_Gold_To_PostgreSQL_Migration", spark_master)
 
     try:
