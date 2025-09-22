@@ -198,10 +198,10 @@ services:
     env_file:
       - ./.env
       - ./config/spark/spark.env
-      #environment:
-      # 동적 자원 할당 (주석처리 - ClassNotFoundException 해결용)
-      # SPARK_DYNAMIC_cores_max: 4
-      # SPARK_DYNAMIC_driver_memory: 2g
+    environment:
+      # 동적 자원 할당
+      SPARK_DYNAMIC_cores_max: 2
+      SPARK_DYNAMIC_driver_memory: 2g
     networks:
       - data-network
     ports:
@@ -238,11 +238,10 @@ services:
       - ./config/spark/spark.env
     networks:
       - data-network
-      #environment:
-      # 동적 자원 할당 (주석처리 - ClassNotFoundException 해결용)
-      # SPARK_DYNAMIC_cores_max: 4
-      # SPARK_DYNAMIC_driver_memory: 2g
-      # 추가 설정이 필요하면 여기에
+    environment:
+      # 동적 자원 할당
+      SPARK_DYNAMIC_cores_max: 2
+      SPARK_DYNAMIC_driver_memory: 2g
     ports:
       - "10002:10001" # dbt 연결용
       - "4042:4040" # Spark Application UI
