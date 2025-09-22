@@ -198,7 +198,7 @@ services:
     env_file:
       - ./.env
       - ./config/spark/spark.env
-    environment:
+      #environment:
       # 동적 자원 할당 (주석처리 - ClassNotFoundException 해결용)
       # SPARK_DYNAMIC_cores_max: 4
       # SPARK_DYNAMIC_driver_memory: 2g
@@ -238,7 +238,7 @@ services:
       - ./config/spark/spark.env
     networks:
       - data-network
-    environment:
+      #environment:
       # 동적 자원 할당 (주석처리 - ClassNotFoundException 해결용)
       # SPARK_DYNAMIC_cores_max: 4
       # SPARK_DYNAMIC_driver_memory: 2g
