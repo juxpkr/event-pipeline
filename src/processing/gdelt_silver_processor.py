@@ -176,7 +176,11 @@ def main():
     end_time_str = sys.argv[2]
 
     try:
-        # 1. Silver 테이블 설정
+        # 1. Silver 스키마 생성
+        logger.info("Creating silver schema...")
+        spark.sql("CREATE SCHEMA IF NOT EXISTS silver LOCATION 's3a://warehouse/silver/'")
+
+        # 2. Silver 테이블 설정
         logger.info("Setting up Silver tables...")
         setup_silver_table(
             spark,
@@ -193,26 +197,26 @@ def main():
             partition_keys=["year", "month", "day", "hour"],
         )
 
-        # 2. MinIO Bronze Layer에서 데이터 읽기 (Airflow가 준 시간 인자 전달)
+        # 3. MinIO Bronze Layer에서 데이터 읽기 (Airflow가 준 시간 인자 전달)
         bronze_dataframes = read_from_bronze_minio(spark, start_time_str, end_time_str)
 
         if not bronze_dataframes:
             logger.warning("No Bronze data found in MinIO. Exiting gracefully.")
             return
 
-        # 3. 데이터 타입별 분리 및 변환 (이제 filter가 필요 없음!)
+        # 4. 데이터 타입별 분리 및 변환 (이제 filter가 필요 없음!)
         events_df = bronze_dataframes.get("events")
         mentions_df = bronze_dataframes.get("mentions")
         gkg_df = bronze_dataframes.get("gkg")
 
-        # 4. 각 데이터 타입 변환 (if df 로 None과 Enpty를 동시에 체크할 수 있음)
+        # 5. 각 데이터 타입 변환 (if df 로 None과 Enpty를 동시에 체크할 수 있음)
         events_silver = transform_events_to_silver(events_df) if events_df else None
         mentions_silver = (
             transform_mentions_to_silver(mentions_df) if mentions_df else None
         )
         gkg_silver = transform_gkg_to_silver(gkg_df) if gkg_df else None
 
-        # 5. Events 단독 Silver 저장
+        # 6. Events 단독 Silver 저장
         if events_silver:
             write_to_delta_lake(
                 df=events_silver,
@@ -226,19 +230,19 @@ def main():
                 "global_event_id", "event_date", "actor1_country_code", "event_code"
             ).show(3)
 
-        # 6. 3-Way 조인 수행
+        # 7. 3-Way 조인 수행
         logger.info("Performing 3-Way Join...")
         joined_df = perform_three_way_join(events_silver, mentions_silver, gkg_silver)
 
         # 조인 결과가 있을 때만 후속 처리 진행
         if joined_df and not joined_df.rdd.isEmpty():  # 조인 후에는 isEmpty() 체크 필요
-            # 7. 우선순위 날짜 생성
+            # 8. 우선순위 날짜 생성
             joined_with_priority = create_priority_date(joined_df)
 
-            # 8. 최종 컬럼 선택
+            # 9. 최종 컬럼 선택
             final_silver_df = select_final_columns(joined_with_priority)
 
-            # 9. Events detailed Silver 저장
+            # 10. Events detailed Silver 저장
             write_to_delta_lake(
                 df=final_silver_df,
                 delta_path="s3a://warehouse/silver/gdelt_events_detailed",
