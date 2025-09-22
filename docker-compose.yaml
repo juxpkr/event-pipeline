@@ -203,9 +203,8 @@ services:
     env_file:
       - ./.env
     environment:
-      SPARK_CONF_spark_cores_max: 2
+      SPARK_SUBMIT_OPTS: "--conf spark.cores.max=2 --conf hive.server2.thrift.max.worker.threads=200"
       SPARK_CONF_spark_sql_hive_metastore_uris: thrift://hive-metastore:9083
-      SPARK_CONF_hive_server2_thrift_max_worker_threads: 200
     networks:
       - data-network
     ports:
@@ -243,8 +242,7 @@ services:
     networks:
       - data-network
     environment:
-      SPARK_CONF_hive_server2_thrift_max_worker_threads: 200
-      SPARK_CONF_spark_cores_max: 2
+      SPARK_SUBMIT_OPTS: "--conf spark.cores.max=2 --conf hive.server2.thrift.max.worker.threads=200"
       SPARK_CONF_spark_sql_hive_metastore_uris: thrift://hive-metastore:9083
     ports:
       - "10002:10001" # dbt 연결용
