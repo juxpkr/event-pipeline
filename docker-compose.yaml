@@ -126,7 +126,7 @@ services:
         condition: on-failure # <-- 실패 시에만 재시작
 
   spark-master:
-    image: juxpkr/geoevent-spark-base:0.9
+    image: juxpkr/geoevent-spark-base:0.1
     container_name: spark-master
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -163,7 +163,7 @@ services:
         constraints:
           - node.role == manager
   spark-worker:
-    image: juxpkr/geoevent-spark-base:0.9
+    image: juxpkr/geoevent-spark-base:0.1
     container_name: spark-worker
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -191,7 +191,7 @@ services:
           memory: 16G
 
   spark-thrift-server:
-    image: juxpkr/geoevent-spark-base:0.9
+    image: juxpkr/geoevent-spark-base:0.1
     container_name: spark-thrift-server
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -202,11 +202,6 @@ services:
     user: root # 나중에 배포할때 수정
     env_file:
       - ./.env
-    environment:
-      SPARK_SUBMIT_OPTS: '--add-opens java.base/jdk.internal.loader=ALL-UNNAMED --add-opens java.base/java.net=ALL-UNNAMED'
-      SPARK_CONF_hive_server2_thrift_max_worker_threads: 200
-      SPARK_CONF_spark_cores_max: 2
-      SPARK_CONF_spark_sql_hive_metastore_uris: thrift://hive-metastore:9083
     networks:
       - data-network
     ports:
@@ -230,7 +225,7 @@ services:
           memory: 4G
 
   spark-thrift-server-dev:
-    image: juxpkr/geoevent-spark-base:0.9
+    image: juxpkr/geoevent-spark-base:0.1
     container_name: spark-thrift-server-dev
     entrypoint: [ "/bin/sh", "-c" ]
     command:
@@ -338,7 +333,7 @@ services:
           - node.role == manager
 
   airflow-init:
-    image: juxpkr/geoevent-airflow:0.9
+    image: juxpkr/geoevent-airflow:0.1
     container_name: airflow-init
     networks:
       - data-network
@@ -353,7 +348,7 @@ services:
         condition: on-failure
 
   airflow-webserver:
-    image: juxpkr/geoevent-airflow:0.9
+    image: juxpkr/geoevent-airflow:0.1
     container_name: airflow-webserver
     user: "${AIRFLOW_UID:-50000}"
     ports:
@@ -399,7 +394,7 @@ services:
       - apparmor:unconfined
 
   airflow-scheduler:
-    image: juxpkr/geoevent-airflow:0.9
+    image: juxpkr/geoevent-airflow:0.1
     container_name: airflow-scheduler
     user: "${AIRFLOW_UID:-50000}"
     networks:
@@ -443,7 +438,7 @@ services:
       - apparmor:unconfined
 
   jupyter-lab:
-    image: juxpkr/geoevent-jupyter-lab:0.9
+    image: juxpkr/geoevent-jupyter-lab:0.1
     container_name: jupyter-lab
     ports:
       - "8888:8888"
@@ -461,7 +456,7 @@ services:
           - node.labels.type == monitoring
 
   dbt:
-    image: juxpkr/geoevent-dbt:0.9
+    image: juxpkr/geoevent-dbt:0.1
     container_name: dbt
     env_file:
       - ./.env
