@@ -33,6 +33,7 @@ with DAG(
     # 공통 상수
     PROJECT_ROOT = "/opt/airflow"
     SPARK_MASTER = "spark://spark-master:7077"
+    SPARK_CONN_ID = "spark_conn"
 
     # Task 1: GDELT 3-Way Producer → Kafka
     gdelt_producer = BashOperator(
@@ -52,6 +53,7 @@ with DAG(
     bronze_consumer = SparkSubmitOperator(
         task_id="bronze_consumer",
         # Airflow UI에서 만들어야 할 Spark Master 접속 정보
+        conn_id=SPARK_CONN_ID,
         application="/opt/airflow/src/ingestion/gdelt_bronze_consumer.py",
         conf={
             "spark.cores.max": "4",
@@ -63,6 +65,7 @@ with DAG(
     # Task 3: Silver Layer Processing
     silver_processor = SparkSubmitOperator(
         task_id="silver_processor",
+        conn_id=SPARK_CONN_ID,
         application="/opt/airflow/src/processing/gdelt_silver_processor.py",
         # Airflow의 작업 시간 구간을 Spark 코드의 인자로 전달
         application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
