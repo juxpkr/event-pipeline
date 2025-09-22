@@ -3,6 +3,7 @@ version: 2
 sources:
   - name: gdelt_silver_layer
     description: "MinIO S3에 저장된 GDELT Silver Layer (Delta Lake 형식)"
+    database: spark_catalog
     schema: silver
     tables:
       - name: gdelt_events
