@@ -45,6 +45,6 @@ seeds:
 
 # dbt 실행 전 필요한 스키마들 자동 생성
 on-run-start:
-  - "CREATE DATABASE IF NOT EXISTS {{ target.schema }}"
-  - "CREATE DATABASE IF NOT EXISTS seed_{{ target.name }}"
-  - "CREATE DATABASE IF NOT EXISTS staging_{{ target.name }}"
+  - "{{ create_schema(none, 'seed_' ~ target.name) }}"
+  - "{{ create_schema(none, 'staging_' ~ target.name) }}"
+  - "{{ create_schema(none, 'gold_' ~ target.name) }}"
