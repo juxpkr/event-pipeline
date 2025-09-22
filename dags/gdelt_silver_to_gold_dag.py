@@ -20,23 +20,6 @@ with DAG(
     # Airflow 워커 컨테이너 내부에 있는 dbt 프로젝트 경로를 변수로 지정
     dbt_project_host_path = f"{os.getenv('PROJECT_ROOT', '/opt/airflow')}/transforms"
 
-    # Task 0: dbt 실행 전, 필요한 스키마 미리 생성
-    prepare_dbt_schemas = BashOperator(
-        task_id="prepare_dbt_schemas",
-        # beeline을 사용해 Spark Thrift 서버에 직접 CREATE DATABASE 명령을 전달
-        bash_command="""
-        beeline -u jdbc:hive2://spark-thrift-server:10001 -n dummy -p dummy -e "
-        CREATE DATABASE IF NOT EXISTS seed_prod;
-        CREATE DATABASE IF NOT EXISTS staging_prod;
-        CREATE DATABASE IF NOT EXISTS gold_prod;
-        "
-        """,
-        doc_md="""
-        dbt 실행에 필요한 Spark/Hive 스키마(데이터베이스)를 미리 생성.
-        dbt의 훅 기능이 불안정하게 동작할 경우를 대비
-        """,
-    )
-
     # Task 1: dbt Transformation (Silver → Gold)
     dbt_transformation = DockerOperator(
         task_id="dbt_transformation",
@@ -88,4 +71,4 @@ with DAG(
     )
 
     # 작업 순서 정의
-    prepare_dbt_schemas >> dbt_transformation >> migrate_to_postgres_task
+    dbt_transformation >> migrate_to_postgres_task
