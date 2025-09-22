@@ -54,7 +54,6 @@ with DAG(
     # SparkSubmitOperator로 리소스 설정과 통일성 확보
     migrate_to_postgres_task = SparkSubmitOperator(
         task_id="migrate_gold_to_postgres",
-        conn_id="spark_conn",
         application="/opt/airflow/src/processing/migration/gdelt_gold_to_postgres.py",
         packages="org.postgresql:postgresql:42.5.0",
         conf={
