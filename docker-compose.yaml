@@ -122,7 +122,7 @@ services:
         condition: on-failure # <-- 실패 시에만 재시작
 
   spark-master:
-    image: juxpkr/geoevent-spark-base:1.1
+    image: juxpkr/geoevent-spark-base:0.1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -159,7 +159,7 @@ services:
         constraints:
           - node.role == manager
   spark-worker:
-    image: juxpkr/geoevent-spark-base:1.1
+    image: juxpkr/geoevent-spark-base:0.1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -187,7 +187,7 @@ services:
           memory: 16G
 
   spark-thrift-server:
-    image: juxpkr/geoevent-spark-base:1.1
+    image: juxpkr/geoevent-spark-base:0.1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -199,9 +199,9 @@ services:
       - ./.env
       - ./config/spark/spark.env
     environment:
-      # 동적 자원 할당
-      SPARK_DYNAMIC_cores_max: 4
-      SPARK_DYNAMIC_driver_memory: 2g
+      # 동적 자원 할당 (주석처리 - ClassNotFoundException 해결용)
+      # SPARK_DYNAMIC_cores_max: 4
+      # SPARK_DYNAMIC_driver_memory: 2g
     networks:
       - data-network
     ports:
@@ -225,7 +225,7 @@ services:
           memory: 4G
 
   spark-thrift-server-dev:
-    image: juxpkr/geoevent-spark-base:1.1
+    image: juxpkr/geoevent-spark-base:0.1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -239,9 +239,9 @@ services:
     networks:
       - data-network
     environment:
-      # 동적 자원 할당
-      SPARK_DYNAMIC_cores_max: 4
-      SPARK_DYNAMIC_driver_memory: 2g
+      # 동적 자원 할당 (주석처리 - ClassNotFoundException 해결용)
+      # SPARK_DYNAMIC_cores_max: 4
+      # SPARK_DYNAMIC_driver_memory: 2g
       # 추가 설정이 필요하면 여기에
     ports:
       - "10002:10001" # dbt 연결용
