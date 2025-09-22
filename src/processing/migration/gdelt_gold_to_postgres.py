@@ -79,6 +79,17 @@ class GDELTGoldMigrator:
             if conn:
                 conn.close()
 
+    def prepare_postgres_schemas(self):
+        """마이그레이션에 필요한 모든 PostgreSQL 스키마를 미리 준비한다."""
+        logger.info("Starting pre-flight check: Preparing all PostgreSQL schemas...")
+        # 마이그레이션할 테이블 목록에서 필요한 스키마 이름들을 중복 없이 추출
+        schemas_to_create = {
+            config["postgres_schema"] for config in self.migration_tables.values()
+        }
+        for schema in schemas_to_create:
+            self._ensure_postgres_schema_exists(schema)
+        logger.info("All PostgreSQL schemas are ready.")
+
     def _get_postgres_config(self) -> Dict[str, str]:
         """PostgreSQL 연결 설정 반환"""
         # Docker Swarm vs Compose 환경별 기본 호스트명 결정
@@ -139,9 +150,6 @@ class GDELTGoldMigrator:
             성공 여부 (bool)
         """
         try:
-            # 스키마가 있는지 검즘
-            self._ensure_postgres_schema_exists(postgres_schema)
-
             record_count = df.count()
             logger.info(
                 f"Writing {record_count:,} records to PostgreSQL table '{postgres_table}'..."
@@ -308,7 +316,10 @@ def main():
         # 마이그레이터 인스턴스 생성
         migrator = GDELTGoldMigrator(spark)
 
-        # 모든 테이블 마이그레이션 실행
+        # PostgreSQL 스키마부터 모두 준비한다.
+        migrator.prepare_postgres_schemas()
+
+        # 모든 테이블 마이그레이션을 실행한다.
         results = migrator.migrate_all_tables()
 
         # 마이그레이션 검증
