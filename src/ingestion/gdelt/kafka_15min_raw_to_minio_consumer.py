@@ -26,7 +26,6 @@ def main():
     """
     logger.info("🚀 Starting Kafka RAW to MinIO Consumer (Spark Batch Job)...")
 
-
     # Spark 세션 생성 (MinIO 접속 정보는 여기서 자동으로 설정됨)
     spark = get_spark_session("KafkaBronzeToMinIO_Consumer")
 

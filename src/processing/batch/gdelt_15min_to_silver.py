@@ -246,7 +246,10 @@ def read_from_kafka(spark: SparkSession) -> DataFrame:
     logger.info("📥 Reading RAW data from Kafka...")
     raw_df = (
         spark.read.format("kafka")
-        .option("kafka.bootstrap.servers", os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"))
+        .option(
+            "kafka.bootstrap.servers",
+            os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092"),
+        )
         .option("subscribe", "gdelt_raw_events")
         .option("startingOffsets", "earliest")
         .option("endingOffsets", "latest")
@@ -293,7 +296,6 @@ def main():
     # 메인 실행 함수
     logger.info("🚀 Starting GDELT Silver Processor...")
 
-
     # Kafka 지원을 위해 get_spark_session 사용
     spark = get_spark_session("GDELT Silver Processor", "spark://spark-master:7077")
 
@@ -315,7 +317,7 @@ def main():
 
         # 3. 데이터 변환
         silver_df = transform_raw_to_silver(parsed_df)
-        
+
         # 4. 이상치 탐지 및 알림
         notify_gdelt_anomalies(silver_df)
 

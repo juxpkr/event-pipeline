@@ -260,7 +260,9 @@ def transform_gkg_to_silver(df: DataFrame) -> DataFrame:
         # 기본 식별자
         F.col("bronze_data")[0].alias("gkg_record_id"),
         F.col("bronze_data")[1].alias("date"),
-        F.col("bronze_data")[2].cast(IntegerType()).alias("source_collection_identifier"),
+        F.col("bronze_data")[2]
+        .cast(IntegerType())
+        .alias("source_collection_identifier"),
         F.col("bronze_data")[3].alias("source_common_name"),
         F.col("bronze_data")[4].alias("document_identifier"),  # 조인키
         # 주요 컨텐츠 (복잡한 구조는 일단 String으로)
@@ -286,7 +288,9 @@ def transform_gkg_to_silver(df: DataFrame) -> DataFrame:
         F.col("bronze_data")[24].alias("all_names"),
         F.col("bronze_data")[25].alias("amounts"),
         F.col("bronze_data")[26].alias("translation_info"),
-        F.col("bronze_data")[27].alias("extras"),  # Extras는 실제로 마지막 컬럼 (인덱스 27)
+        F.col("bronze_data")[27].alias(
+            "extras"
+        ),  # Extras는 실제로 마지막 컬럼 (인덱스 27)
         # 메타데이터
         F.current_timestamp().alias("gkg_processed_time"),
         F.col("source_file"),
