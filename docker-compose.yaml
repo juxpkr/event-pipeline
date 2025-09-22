@@ -1,7 +1,6 @@
 services:
   zookeeper:
     image: ${ZOOKEEPER_IMAGE}
-    container_name: zookeeper
     ports:
       - "2181:2181"
     networks:
@@ -81,7 +80,6 @@ services:
 
   kafka-setup:
     image: juxpkr/geoevent-kafka-setup:0.1
-    container_name: kafka-setup
     networks:
       - data-network
     environment:
@@ -93,7 +91,6 @@ services:
 
   minio:
     image: ${MINIO_IMAGE}
-    container_name: minio
     ports:
       - "9000:9000"
       - "9001:9001"
@@ -112,7 +109,6 @@ services:
 
   minio-setup:
     image: minio/mc
-    container_name: minio-setup
     networks:
       - data-network
     env_file:
@@ -126,8 +122,7 @@ services:
         condition: on-failure # <-- 실패 시에만 재시작
 
   spark-master:
-    image: juxpkr/geoevent-spark-base:0.1
-    container_name: spark-master
+    image: juxpkr/geoevent-spark-base:1.1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -147,6 +142,7 @@ services:
       - spark-jars:/opt/spark/jars
     env_file:
       - ./.env
+      - ./config/spark/spark.env
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8080 || exit 1" ]
       interval: 15s
@@ -163,8 +159,7 @@ services:
         constraints:
           - node.role == manager
   spark-worker:
-    image: juxpkr/geoevent-spark-base:0.1
-    container_name: spark-worker
+    image: juxpkr/geoevent-spark-base:1.1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -181,6 +176,7 @@ services:
       - spark-jars:/opt/spark/jars
     env_file:
       - ./.env
+      - ./config/spark/spark.env
     deploy:
       mode: replicated
       replicas: 2
@@ -191,8 +187,7 @@ services:
           memory: 16G
 
   spark-thrift-server:
-    image: juxpkr/geoevent-spark-base:0.1
-    container_name: spark-thrift-server
+    image: juxpkr/geoevent-spark-base:1.1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -202,9 +197,11 @@ services:
     user: root # 나중에 배포할때 수정
     env_file:
       - ./.env
+      - ./config/spark/spark.env
     environment:
-      SPARK_SUBMIT_OPTS: "--conf spark.cores.max=2 --conf hive.server2.thrift.max.worker.threads=200"
-      SPARK_CONF_spark_sql_hive_metastore_uris: thrift://hive-metastore:9083
+      # 동적 자원 할당
+      SPARK_DYNAMIC_cores_max: 2
+      SPARK_DYNAMIC_driver_memory: 2g
     networks:
       - data-network
     ports:
@@ -228,8 +225,7 @@ services:
           memory: 4G
 
   spark-thrift-server-dev:
-    image: juxpkr/geoevent-spark-base:0.1
-    container_name: spark-thrift-server-dev
+    image: juxpkr/geoevent-spark-base:1.1
     entrypoint: [ "/bin/sh", "-c" ]
     command:
       - |
@@ -239,11 +235,13 @@ services:
     user: root # 나중에 배포할때 수정
     env_file:
       - ./.env
+      - ./config/spark/spark.env
     networks:
       - data-network
     environment:
-      SPARK_SUBMIT_OPTS: "--conf spark.cores.max=2 --conf hive.server2.thrift.max.worker.threads=200"
-      SPARK_CONF_spark_sql_hive_metastore_uris: thrift://hive-metastore:9083
+      # 동적 자원 할당
+      SPARK_DYNAMIC_cores_max: 2
+      SPARK_DYNAMIC_driver_memory: 2g
     ports:
       - "10002:10001" # dbt 연결용
       - "4042:4040" # Spark Application UI
@@ -266,7 +264,6 @@ services:
 
   hive-metastore:
     image: juxpkr/geoevent-hive:0.1
-    container_name: hive-metastore
     entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "wait-for-it.sh", "minio:9000", "-t", "30", "--", "bash", "/custom-entrypoint.sh" ]
     networks:
       - data-network
@@ -305,7 +302,6 @@ services:
 
   postgres:
     image: ${POSTGRES_IMAGE}
-    container_name: postgres
     env_file:
       - ./.env
       - ./config/postgres/postgres.env
@@ -334,13 +330,13 @@ services:
           - node.role == manager
 
   airflow-init:
-    image: juxpkr/geoevent-airflow:0.1
-    container_name: airflow-init
+    image: juxpkr/geoevent-airflow:1.1
     networks:
       - data-network
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
+      - ./config/spark/spark.env
     volumes:
       - ./config/airflow/init-airflow.sh:/opt/airflow/init-airflow.sh:ro
     entrypoint: [ "wait-for-it.sh", "postgres:5432", "-t", "60", "--", "sh", "/opt/airflow/init-airflow.sh" ]
@@ -349,8 +345,7 @@ services:
         condition: on-failure
 
   airflow-webserver:
-    image: juxpkr/geoevent-airflow:0.1
-    container_name: airflow-webserver
+    image: juxpkr/geoevent-airflow:1.1
     user: "${AIRFLOW_UID:-50000}"
     ports:
       - "8082:8080" # <--- Spark와 충돌하지 않도록 8082 포트 사용
@@ -363,6 +358,7 @@ services:
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
+      - ./config/spark/spark.env
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
@@ -395,8 +391,7 @@ services:
       - apparmor:unconfined
 
   airflow-scheduler:
-    image: juxpkr/geoevent-airflow:0.1
-    container_name: airflow-scheduler
+    image: juxpkr/geoevent-airflow:1.1
     user: "${AIRFLOW_UID:-50000}"
     networks:
       - data-network
@@ -407,6 +402,7 @@ services:
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
+      - ./config/spark/spark.env
     volumes:
       - ./dags:/opt/airflow/dags
       - ./src:/opt/airflow/src
@@ -440,7 +436,6 @@ services:
 
   jupyter-lab:
     image: juxpkr/geoevent-jupyter-lab:0.1
-    container_name: jupyter-lab
     ports:
       - "8888:8888"
     env_file:
@@ -458,7 +453,6 @@ services:
 
   dbt:
     image: juxpkr/geoevent-dbt:0.1
-    container_name: dbt
     env_file:
       - ./.env
       - ./config/dbt/dbt.env
@@ -475,7 +469,6 @@ services:
 
   superset:
     image: ${SUPERSET_IMAGE}
-    container_name: superset
     ports:
       - "8088:8088"
     networks:
@@ -499,7 +492,6 @@ services:
 
   prometheus:
     image: ${PROMETHEUS_IMAGE}
-    container_name: prometheus
     ports:
       - "${PROMETHEUS_PORT}:9090"
     networks:
@@ -521,7 +513,6 @@ services:
 
   grafana:
     image: ${GRAFANA_IMAGE}
-    container_name: grafana
     ports:
       - "${GRAFANA_PORT}:3000"
     networks:
@@ -543,7 +534,6 @@ services:
 
   spark-custom-exporter:
     image: juxpkr/geoevent-spark-custom-exporter:0.1
-    container_name: spark-custom-exporter
     networks:
       - data-network
     ports:
@@ -559,7 +549,6 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: redis
     ports:
       - "6379:6379"
     networks:
