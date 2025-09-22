@@ -353,7 +353,6 @@ services:
       - data-network
     environment:
       - PROJECT_ROOT=/app/event-pipeline
-      - AIRFLOW_CONN_SPARK_CONN=spark://spark-master:7077
       - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=5
       - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=10
     env_file:
@@ -398,7 +397,6 @@ services:
       - data-network
     environment:
       - PROJECT_ROOT=/app/event-pipeline
-      - AIRFLOW_CONN_SPARK_CONN=spark://spark-master:7077
       - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=5
       - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=10
     env_file:
