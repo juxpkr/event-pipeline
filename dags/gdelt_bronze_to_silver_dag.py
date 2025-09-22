@@ -52,7 +52,6 @@ with DAG(
     # Task 2: Bronze Consumer → MinIO Bronze Layer
     bronze_consumer = SparkSubmitOperator(
         task_id="bronze_consumer",
-        # Airflow UI에서 만들어야 할 Spark Master 접속 정보
         conn_id=SPARK_CONN_ID,
         application="/opt/airflow/src/ingestion/gdelt_bronze_consumer.py",
         conf={

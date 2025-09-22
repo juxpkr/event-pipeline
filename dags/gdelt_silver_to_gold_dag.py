@@ -17,6 +17,8 @@ with DAG(
     최종 결과를 PostgreSQL 데이터 마트로 이전합니다.
     """,
 ) as dag:
+    # 공통 상수
+    SPARK_MASTER = "spark://spark-master:7077"
     # Airflow 워커 컨테이너 내부에 있는 dbt 프로젝트 경로를 변수로 지정
     dbt_project_host_path = f"{os.getenv('PROJECT_ROOT', '/opt/airflow')}/transforms"
 
