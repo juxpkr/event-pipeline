@@ -72,6 +72,35 @@ def write_to_postgres(df: DataFrame, dbtable: str):
     logger.info(f"✅ Migration completed successfully to table '{dbtable}'.")
 
 
+def get_gold_tables_from_minio(spark: SparkSession, base_path: str) -> list[str]:
+    """
+    주어진 S3 경로에서 모든 하위 폴더(Gold 테이블)의 목록을 가져옵니다.
+    """
+    logger.info(f"🔍 MinIO 경로 '{base_path}'에서 Gold 테이블 목록을 검색 중...")
+    try:
+        s3_uri = spark._jvm.java.net.URI.create(base_path)
+        fs = spark._jvm.org.apache.hadoop.fs.FileSystem.get(
+            s3_uri, spark._jsc.hadoopConfiguration()
+        )
+        status = fs.listStatus(spark._jvm.org.apache.hadoop.fs.Path(base_path))
+
+        gold_tables = [f.getPath().getName() for f in status if f.isDirectory()]
+
+        if not gold_tables:
+            logger.warning(
+                f"⚠️ 해당 경로에서 Gold 테이블 폴더를 찾을 수 없습니다: {base_path}"
+            )
+            return []
+
+        logger.info(
+            f"✅ {len(gold_tables)}개의 Gold 테이블을 찾았습니다: {gold_tables}"
+        )
+        return gold_tables
+    except Exception as e:
+        logger.error(f"❌ MinIO 경로를 읽는 중 에러 발생: {base_path}", exc_info=True)
+        return []
+
+
 def main():
     # 메인 실행 함수
     logger.info("🚀 Starting Gold to PostgreSQL Migration...")
@@ -80,17 +109,44 @@ def main():
     )
 
     try:
-        # 1. Gold 테이블 읽기
-        gold_table_name = "gold.gdelt_microbatch_country_analysis"
-        gold_table_path = "s3a://warehouse/gold/gdelt_microbatch_country_analysis"
-        gold_df = read_gold_table(spark, gold_table_name, gold_table_path)
+        # # 1. Gold 테이블 읽기
+        # gold_table_name = "gold.gold_4th_daily_detail_summary"
+        # gold_table_path = "s3a://warehouse/gold/gold_4th_daily_detail_summary"
+        # gold_df = read_gold_table(spark, gold_table_name, gold_table_path)
 
-        if gold_df is None or gold_df.rdd.isEmpty():
-            logger.warning("⚠️ No data found in Gold table. Exiting gracefully.")
+        # if gold_df is None or gold_df.rdd.isEmpty():
+        #     logger.warning("⚠️ No data found in Gold table. Exiting gracefully.")
+        #     return
+
+        # # 2. PostgreSQL에 쓰기
+        # write_to_postgres(gold_df, "gold_4th_daily_detail_summary")
+
+        gold_base_path = "s3a://warehouse/gold/"
+        gold_tables = get_gold_tables_from_minio(spark, gold_base_path)
+
+        if not gold_tables:
+            logger.info("처리할 Gold 테이블이 없습니다. 작업을 종료합니다.")
             return
 
-        # 2. PostgreSQL에 쓰기
-        write_to_postgres(gold_df, "gdelt_country_analysis")
+        for table_folder_name in gold_tables:
+            logger.info(f"\n{'='*20} [{table_folder_name}] 테이블 처리 시작 {'='*20}")
+
+            # 1. Gold 테이블 이름과 경로를 동적으로 생성
+            gold_table_name = f"gold.{table_folder_name}"
+            gold_table_path_s3 = f"{gold_base_path}{table_folder_name}"
+            postgres_table_name = table_folder_name
+
+            # 2. Gold 테이블 읽기
+            gold_df = read_gold_table(spark, gold_table_name, gold_table_path_s3)
+
+            if gold_df is None or gold_df.rdd.isEmpty():
+                logger.warning(
+                    f"⚠️ 테이블 '{table_folder_name}'에 데이터가 없습니다. 다음 테이블로 넘어갑니다."
+                )
+                continue
+
+            # 3. PostgreSQL에 쓰기
+            write_to_postgres(gold_df, postgres_table_name)
 
     except Exception as e:
         logger.error(
