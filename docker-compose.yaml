@@ -143,8 +143,6 @@ services:
     env_file:
       - ./.env
       - ./config/spark/spark.env
-    environment:
-      # 추가 설정이 필요하면 여기에
     healthcheck:
       test: [ "CMD-SHELL", "curl -f http://localhost:8080 || exit 1" ]
       interval: 15s
@@ -179,8 +177,6 @@ services:
     env_file:
       - ./.env
       - ./config/spark/spark.env
-    environment:
-      # 추가 설정이 필요하면 여기에
     deploy:
       mode: replicated
       replicas: 2
@@ -206,7 +202,6 @@ services:
       # 동적 자원 할당
       SPARK_DYNAMIC_cores_max: 4
       SPARK_DYNAMIC_driver_memory: 2g
-      # 추가 설정이 필요하면 여기에
     networks:
       - data-network
     ports:
