@@ -8,6 +8,7 @@ import sys
 import logging
 from pathlib import Path
 from typing import Dict, List, Optional
+import psycopg2
 
 # 프로젝트 루트 경로 추가
 project_root = Path(__file__).resolve().parents[3]
@@ -29,30 +30,54 @@ class GDELTGoldMigrator:
     def __init__(self, spark: SparkSession):
         self.spark = spark
         self.postgres_config = self._get_postgres_config()
-
         # 마이그레이션할 테이블 정의
         self.migration_tables = {
-            "gold.gold_1st_global_overview": {
+            "gold_prod.gold_1st_global_overview": {
                 "postgres_table": "gold_1st_global_overview",
                 "postgres_schema": "gold",
                 "description": "전세계 레벨 - 국가별 & 일일 요약",
             },
-            "gold.gold_2nd_country_events": {
+            "gold_prod.gold_2nd_country_events": {
                 "postgres_table": "gold_2nd_country_events",
                 "postgres_schema": "gold",
                 "description": "국가간 이벤트 분석",
             },
-            "gold.gold_4th_daily_detail_summary": {
+            "gold_prod.gold_4th_daily_detail_summary": {
                 "postgres_table": "gold_4th_daily_detail_summary",
                 "postgres_schema": "gold",
                 "description": "이벤트 상세 - 일일 요약",
             },
-            "gold.gdelt_microbatch_country_analysis": {
+            "gold_prod.gdelt_microbatch_country_analysis": {
                 "postgres_table": "gold_microbatch_country_analysis",
                 "postgres_schema": "gold",
                 "description": "GDELT 마이크로배치 데이터의 국가별/이벤트 타입별 분석",
             },
         }
+
+    def _ensure_postgres_schema_exists(self, schema_name: str):
+        """PostgreSQL에 지정된 스키마가 없으면 생성"""
+        conn = None
+        try:
+            # Spark가 아닌 경량 psycopg2로 직접 연결
+            conn = psycopg2.connect(
+                dbname=self.postgres_config["database"],
+                user=self.postgres_config["user"],
+                password=self.postgres_config["password"],
+                host=self.postgres_config["host"],
+                port=self.postgres_config["port"],
+            )
+            conn.autocommit = True  # DDL은 auto-commit 모드로 실행
+            with conn.cursor() as cur:
+                create_schema_sql = f"CREATE SCHEMA IF NOT EXISTS {schema_name};"
+                logger.info(f"Executing pre-flight check: {create_schema_sql}")
+                cur.execute(create_schema_sql)
+            logger.info(f"Schema '{schema_name}' is ready in PostgreSQL.")
+        except Exception as e:
+            logger.error(f"Failed to create schema '{schema_name}' in PostgreSQL: {e}")
+            raise  # 스키마 생성에 실패하면 파이프라인을 중단시켜야 함
+        finally:
+            if conn:
+                conn.close()
 
     def _get_postgres_config(self) -> Dict[str, str]:
         """PostgreSQL 연결 설정 반환"""
@@ -114,6 +139,9 @@ class GDELTGoldMigrator:
             성공 여부 (bool)
         """
         try:
+            # 스키마가 있는지 검즘
+            self._ensure_postgres_schema_exists(postgres_schema)
+
             record_count = df.count()
             logger.info(
                 f"Writing {record_count:,} records to PostgreSQL table '{postgres_table}'..."
@@ -164,13 +192,18 @@ class GDELTGoldMigrator:
 
         record_count = gold_df.count()
         if record_count == 0:
-            logger.warning(f"Table '{gold_table}' is empty ({record_count} records), but proceeding with schema migration...")
+            logger.warning(
+                f"Table '{gold_table}' is empty ({record_count} records), but proceeding with schema migration..."
+            )
         else:
             logger.info(f"Found {record_count:,} records in '{gold_table}'")
 
         # 2. PostgreSQL에 저장
         success = self.write_to_postgres(
-            gold_df, config["postgres_table"], config["description"], config["postgres_schema"]
+            gold_df,
+            config["postgres_table"],
+            config["description"],
+            config["postgres_schema"],
         )
 
         return success
