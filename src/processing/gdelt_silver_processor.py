@@ -180,14 +180,14 @@ def main():
         logger.info("Setting up Silver tables...")
         setup_silver_table(
             spark,
-            "default.gdelt_events",
+            "silver.gdelt_events",
             "s3a://warehouse/silver/gdelt_events",
             GDELTSchemas.get_silver_events_schema(),
             partition_keys=["year", "month", "day", "hour"],
         )
         setup_silver_table(
             spark,
-            "default.gdelt_events_detailed",
+            "silver.gdelt_events_detailed",
             "s3a://warehouse/silver/gdelt_events_detailed",
             GDELTSchemas.get_silver_events_detailed_schema(),
             partition_keys=["year", "month", "day", "hour"],
