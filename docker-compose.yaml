@@ -353,6 +353,7 @@ services:
       - data-network
     environment:
       - PROJECT_ROOT=/app/event-pipeline
+      - AIRFLOW_CONN_SPARK_CONN=spark://spark-master:7077
       - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=5
       - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=10
     env_file:
@@ -372,9 +373,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
     command: >
       bash -c "
-        wait-for-it.sh postgres:5432 -t 60 -- echo '✅ Postgres ready for webserver.' &&
-        wait-for-it.sh kafka:9092 -t 60 -- echo '✅ Kafka ready for webserver.' &&
-        wait-for-it.sh spark-master:7077 -t 60 -- echo '✅ Spark Master ready for webserver.' &&
+        wait-for-it.sh postgres:5432 -t 60 -- echo '[READY] Postgres ready for webserver.' &&
+        wait-for-it.sh kafka:9092 -t 60 -- echo '[READY] Kafka ready for webserver.' &&
+        wait-for-it.sh spark-master:7077 -t 60 -- echo '[READY] Spark Master ready for webserver.' &&
         airflow webserver
       "
     deploy:
@@ -397,6 +398,7 @@ services:
       - data-network
     environment:
       - PROJECT_ROOT=/app/event-pipeline
+      - AIRFLOW_CONN_SPARK_CONN=spark://spark-master:7077
       - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=5
       - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=10
     env_file:
