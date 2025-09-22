@@ -6,7 +6,7 @@
 
 SELECT
     global_event_id,
-    day as event_date,
+    event_date,
     actor1_country_code,
     actor1_name,
     event_root_code,
@@ -17,7 +17,7 @@ FROM
     {{ source('gdelt_silver_layer', 'gdelt_events')}}
 WHERE
     global_event_id IS NOT NULL
-    AND day IS NOT NULL
+    AND event_date IS NOT NULL
 
 {% if is_incremental() %}
   -- 이 모델이 이미 데이터를 가지고 있다면,
