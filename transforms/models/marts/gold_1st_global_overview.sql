@@ -45,8 +45,7 @@ WHERE
 {% if is_incremental() %}
     -- 이 모델이 이미 데이터(Gold 테이블)를 가지고 있다면,
     -- Gold 테이블의 가장 최신 날짜보다 더 새로운 데이터만 Silver에서 가져온다.
-    -- 혹시 모를 데이터 지연 도착을 고려해, 최근 3일치 데이터를 다시 계산하는 것이 안정적임ㄴ
-    AND event_date >= (SELECT date_add(MAX(event_date), -3) FROM {{ this }})
+    AND event_date > (SELECT MAX(event_date) FROM {{ this }})
 
 {% endif %}
 
