@@ -59,9 +59,10 @@ with DAG(
         application="/opt/airflow/src/processing/migration/gdelt_gold_to_postgres.py",
         packages="org.postgresql:postgresql:42.5.0",
         conf={
-            "spark.cores.max": "6",
-            "spark.executor.memory": "10g",
-            "spark.executor.cores": "3",
+            "spark.executor.instances": "5",  # 5개의 작업팀을 투입
+            "spark.executor.memory": "8g",    # 각 팀은 8GB 메모리 사용
+            "spark.executor.cores": "2",     # 각 팀은 2인 1조로 구성 (총 5*2=10코어)
+            "spark.driver.memory": "4g"
         },
         doc_md="""
         Gold Layer to PostgreSQL Migration
