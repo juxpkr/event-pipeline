@@ -15,7 +15,8 @@ WITH events AS (
 
 SELECT
     event_date,
-    mp_action_location_country AS country_name,
+    mp_action_geo_country_iso AS action_geo_iso,
+    mp_action_geo_country_eng AS action_geo_name,
 
     -- Risk Score 계산 (추천식)
     -- 설명: 갈등 이벤트의 강도(goldstein)와 양(event count), 그리고 부정적인 언론 톤을 조합하여 위험도를 계산합니다.
@@ -49,13 +50,11 @@ WHERE
 
 {% endif %}
 
+    AND mp_action_geo_country_eng IS NOT NULL
 GROUP BY
     event_date,
-    mp_action_location_country
+    action_geo_iso,
+    action_geo_name
 ORDER BY
     event_date DESC,
-    country_name
-
-
-
-
+    action_geo_name
