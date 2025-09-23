@@ -353,8 +353,8 @@ services:
       - data-network
     environment:
       - PROJECT_ROOT=/app/event-pipeline
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=5
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=10
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=10
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=20
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
@@ -397,8 +397,8 @@ services:
       - data-network
     environment:
       - PROJECT_ROOT=/app/event-pipeline
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=5
-      - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=10
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=1
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_MAX_OVERFLOW=20
     env_file:
       - ./.env
       - ./config/airflow/airflow.env
