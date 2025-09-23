@@ -27,3 +27,6 @@ SQLALCHEMY_ENGINE_OPTIONS = {
     "pool_pre_ping": True,
     "pool_recycle": 300,
 }
+
+# deck.gl ar를 위한 mapbox 토큰 (한도 초과 시 유료)
+MAPBOX_API_KEY = "pk.eyJ1IjoiaGVlc29vMjM1IiwiYSI6ImNtZnVqcjMwNTBzankybHB1cWs4MXp3YzUifQ.tFsOgWPl-x4UnSTKjVy5NQ"
