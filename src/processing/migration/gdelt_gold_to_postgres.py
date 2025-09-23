@@ -151,6 +151,8 @@ class GDELTGoldMigrator:
                 .option("user", self.postgres_config["user"])
                 .option("password", self.postgres_config["password"])
                 .option("driver", "org.postgresql.Driver")
+                .option("numPartitions", "4")  # 파티션 수 제한으로 커넥션 수 줄이기
+                .option("batchsize", "50000")  # 배치 크기 늘려서 커넥션 재사용
                 .mode("overwrite")  # 기존 데이터 덮어쓰기
                 .save()
             )
@@ -267,6 +269,7 @@ class GDELTGoldMigrator:
                     .option("user", self.postgres_config["user"])
                     .option("password", self.postgres_config["password"])
                     .option("driver", "org.postgresql.Driver")
+                    .option("numPartitions", "1")  # 카운트만 하니까 파티션 1개면 충분
                     .load()
                 )
 
