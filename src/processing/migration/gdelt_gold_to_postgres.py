@@ -32,20 +32,10 @@ class GDELTGoldMigrator:
         self.postgres_config = self._get_postgres_config()
         # 마이그레이션할 테이블 정의
         self.migration_tables = {
-            "gold_prod.gold_1st_global_overview": {
-                "postgres_table": "gold_1st_global_overview",
+            "gold_prod.gold_dashboard_master": {
+                "postgres_table": "gold_dashboard_master",
                 "postgres_schema": "gold",
-                "description": "전세계 레벨 - 국가별 & 일일 요약",
-            },
-            "gold_prod.gold_2nd_country_events": {
-                "postgres_table": "gold_2nd_country_events",
-                "postgres_schema": "gold",
-                "description": "국가간 이벤트 분석",
-            },
-            "gold_prod.gold_4th_daily_detail_summary": {
-                "postgres_table": "gold_4th_daily_detail_summary",
-                "postgres_schema": "gold",
-                "description": "이벤트 상세 - 일일 요약",
+                "description": "통합 대시보드 마스터 테이블 - 모든 Gold 데이터 통합",
             },
         }
 
