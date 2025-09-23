@@ -70,7 +70,7 @@ def transform_events_to_silver(bronze_df: DataFrame) -> DataFrame:
 
     silver_df = valid_df.select(
         # 기본 식별자 (0-4)
-        F.col("bronze_data")[0].cast(LongType()).alias("global_event_id"),
+        F.col("bronze_data")[0].alias("global_event_id"),
         F.col("bronze_data")[1].alias("event_date_str"),
         # Actor1 (5-14)
         F.col("bronze_data")[5].alias("actor1_code"),
@@ -303,18 +303,31 @@ def transform_gkg_to_silver(df: DataFrame) -> DataFrame:
 
 
 def write_to_silver(df: DataFrame, silver_path: str, table_name: str):
-    """변환된 DataFrame을 Silver Layer에 저장"""
+    """변환된 DataFrame을 Silver Layer에 저장 (월/일 파티셔닝 적용)"""
     logger.info(f"💾 Saving {table_name} data to Silver Delta Table...")
     record_count = df.count()
     if record_count == 0:
         logger.warning(f"⚠️ No {table_name} records to save!")
         return
 
+    # 우선순위 날짜로 년/월/일/시간 파티션 컬럼 추가
+    partition_date_col = (
+        "priority_date" if "priority_date" in df.columns else "event_date"
+    )
+
+    df_with_partitions = (
+        df.withColumn("year", F.year(F.col(partition_date_col)))
+        .withColumn("month", F.month(F.col(partition_date_col)))
+        .withColumn("day", F.dayofmonth(F.col(partition_date_col)))
+        .withColumn("hour", F.hour(F.col("events_processed_time")))
+    )
+
     (
-        df.coalesce(1)
+        df_with_partitions.coalesce(1)
         .write.format("delta")
-        .mode("overwrite")
-        .option("overwriteSchema", "true")
+        .mode("append")
+        .option("mergeSchema", "true")
+        .partitionBy("year", "month", "day", "hour")
         .save(silver_path)
     )
     logger.info(
@@ -453,8 +466,27 @@ def main():
             "🔪 Selecting and renaming final columns for the unified Silver schema..."
         )
 
+        # 우선순위 날짜 컬럼 추가 (Mentions > GKG > Events 순)
+        final_joined_df_with_priority_date = final_joined_df.withColumn(
+            "priority_date",
+            F.coalesce(
+                # 1순위: Mentions mention_time_date (가장 정확)
+                F.when(
+                    F.col("mention_time_date").isNotNull(),
+                    F.to_date(F.col("mention_time_date"), "yyyyMMddHHmmss"),
+                ).otherwise(None),
+                # 2순위: GKG date (기사 발행일)
+                F.when(
+                    F.col("date").isNotNull(),
+                    F.to_date(F.col("date"), "yyyyMMddHHmmss"),
+                ).otherwise(None),
+                # 3순위: Events event_date (최후 보루)
+                F.col("event_date"),
+            ),
+        )
+
         # 전체 컬럼을 포함한 Silver_detailed 테이블 (dbt에서 활용)
-        final_silver_df = final_joined_df.select(
+        final_silver_df = final_joined_df_with_priority_date.select(
             # Events 컬럼들
             F.col("global_event_id"),
             F.col("event_date"),
@@ -565,6 +597,8 @@ def main():
                 else []
             ),
             F.col("source_file"),
+            # 우선순위 날짜 컬럼 추가
+            F.col("priority_date"),
         ).distinct()
 
         # --- 7. Events detailed Silver 저장 ---
@@ -586,17 +620,11 @@ def main():
         logger.error(f"❌ Error in 3-Way Silver processing: {e}", exc_info=True)
 
     finally:
+        logging.info("🔄 Cleaning up Spark session...")
         try:
-            logging.info(
-                "✅ Job finished. Press Enter in the container's terminal to stop Spark session..."
-            )
-            input()
-        except Exception:
-            logging.info(
-                "Running in non-interactive mode. Shutting down after job completion."
-            )
-
-        redis_client.unregister_driver_ui(spark)
+            redis_client.unregister_driver_ui(spark)
+        except:
+            pass
         spark.stop()
         logger.info("✅ Spark session closed")
 

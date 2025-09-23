@@ -10,13 +10,13 @@ WITH country_codes AS (SELECT * FROM {{ ref('geo_country_codes') }}),
 -- 2. 원본 데이터를 불러와 Actor1과 Actor2 코드를 하나의 목록으로 통합합니다.
 source_actors AS (
     SELECT DISTINCT actor1_code AS actor_code
-    FROM {{ source('gdelt_silver_layer', 'gdelt_silver_events') }}
+    FROM {{ source('gdelt_silver_layer', 'gdelt_events') }}
     WHERE actor1_code IS NOT NULL
 
     UNION
 
     SELECT DISTINCT actor2_code AS actor_code
-    FROM {{ source('gdelt_silver_layer', 'gdelt_silver_events') }}
+    FROM {{ source('gdelt_silver_layer', 'gdelt_events') }}
     WHERE actor2_code IS NOT NULL
 ),
 

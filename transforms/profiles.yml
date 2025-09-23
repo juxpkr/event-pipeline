@@ -1,0 +1,55 @@
+# 프로젝트명 (dbt_project.yml과 일치시켜야함)
+analytics_dbt:
+  # 로컬에서 dbt 명령을 실행할 때 기본적으로 사용할 타겟을 'dev'로 설정
+  target: dev
+  outputs:
+
+    # =================================================================
+    # 운영 환경 (Airflow 자동화 파이프라인이 사용)
+    # =================================================================
+    prod:
+      # Spark 엔진 사용
+      type: spark
+      method: thrift
+      host: spark-thrift-server    # Docker 내부 네트워크에서 사용하는 이름
+      port: 10001                 # 운영용 Thrift 서버 포트
+      user: root
+      auth: NOSASL
+      schema: gold         # 운영용 Gold 데이터가 저장될 최종 스키마
+      http_path: cliservice
+      # 연결 안정성을 위한 옵션
+      connect_retries: 5
+      connect_timeout: 60
+      retry_all: true
+
+    # =================================================================
+    #  개발 환경
+    # =================================================================
+    dev:
+      type: spark
+      method: thrift
+      host: "4.230.26.44"        # VM의 실제 IP 주소
+      port: 10002                 # 개발용 Thrift 서버 포트
+      user: root
+      auth: NOSASL
+      # 개인별로 분리된 개발 스키마 (예: gold_dev_captain)
+      # DBT_USER 환경변수를 설정하면 gold_dev_{DBT_USER} 스키마를 사용
+      schema: "gold_dev"
+      http_path: cliservice
+      connect_retries: 5
+      connect_timeout: 60
+      retry_all: true
+
+    # =================================================================
+    # PostgreSQL 설정
+    # =================================================================
+    postgres:
+      type: postgres
+      host: "{{ env_var('POSTGRES_HOST', 'postgres') }}"
+      user: "{{ env_var('POSTGRES_USER', 'airflow') }}"
+      password: "{{ env_var('POSTGRES_PASSWORD', 'airflow') }}"
+      port: "{{ env_var('POSTGRES_PORT', '5432') | int }}"
+      dbname: "{{ env_var('POSTGRES_DB', 'airflow') }}"
+      schema: gold # dbt가 모델을 생성할 기본 스키마
+      threads: 4
+      keepalives_idle: 0

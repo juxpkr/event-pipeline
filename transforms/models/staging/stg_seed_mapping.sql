@@ -1,7 +1,13 @@
 -- models/staging/stg_seed_mapping.sql
 
+-- 증분 모델 (Incremental Model) 설정
+{{ config(
+    materialized='incremental',
+    unique_key=['global_event_id']
+) }}
+
 -- 1. 필요한 테이블들을 CTE(WITH 절)로 미리 정의합니다.
-WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_silver_events') }}),
+WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events') }}),
     event_root_codes AS (SELECT * FROM {{ ref('event_root_codes') }}),
     event_detail_codes AS (SELECT * FROM {{ ref('event_detail_codes') }}),
     quad_class_codes AS (SELECT * FROM {{ ref('event_quad_class_codes') }}),
@@ -124,7 +130,7 @@ SELECT
     -- src.actor1_geo_centroid,
     -- src.actor2_geo_centroid,
     -- src.action_geo_centroid,
-    src.processed_time,
+    src.processed_at,
     src.source_file
 
 FROM
@@ -161,3 +167,11 @@ LEFT JOIN ethnic_codes AS a1_eth ON src.actor1_ethnic_code = a1_eth.code
 LEFT JOIN ethnic_codes AS a2_eth ON src.actor2_ethnic_code = a2_eth.code
 LEFT JOIN religion_codes AS a1_rel ON src.actor1_religion1_code = a1_rel.code
 LEFT JOIN religion_codes AS a2_rel ON src.actor2_religion1_code = a2_rel.code
+
+{% if is_incremental() %}
+WHERE
+    -- 이 모델이 이미 데이터를 가지고 있다면,
+    -- 최신 날짜보다 더 새로운 데이터만 처리
+    src.processed_at > (SELECT MAX(processed_at) FROM {{ this }})
+
+{% endif %}

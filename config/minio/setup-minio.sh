@@ -13,4 +13,8 @@ else
   echo ">>>> Creating bucket: warehouse"
   mc mb minio/warehouse
 fi
+
+echo ">>>> Setting bucket policy for warehouse..."
+mc policy set readwrite minio/warehouse
+
 echo "MinIO setup complete."

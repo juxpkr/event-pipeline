@@ -1,8 +1,14 @@
 -- models/marts/gold_4th_daily_detail_summary.sql
 -- [골드 테이블] 이벤트 상세 - 일일 요약
 
+-- 증분 모델 (Incremental Model) 설정
+{{ config(
+    materialized='incremental',
+    unique_key=['global_event_id']
+) }}
+
 WITH events_mapped AS (
-    -- 1차 매핑이 완료된 Staging 모델
+    -- 증분 처리를 위해 매핑된 Silver 데이터 참조
     SELECT * FROM {{ ref('stg_seed_mapping') }}
 ),
 
@@ -48,7 +54,7 @@ SELECT
         ELSE 'Neutral'
     END AS event_type,
     
-    evt.processed_time,
+    evt.processed_at,
 
     -- 그래프를 위한 기본 지표
     evt.mp_event_info,
@@ -64,3 +70,10 @@ LEFT JOIN
 
 WHERE
     evt.event_date IS NOT NULL
+
+{% if is_incremental() %}
+  -- 이 모델이 이미 데이터를 가지고 있다면,
+  -- 최신 날짜보다 더 새로운 데이터만 처리
+    AND event_date > (SELECT MAX(event_date) FROM {{ this }})
+
+{% endif %}

@@ -1,7 +1,15 @@
 -- models/marts/gold_1st_global_overview.sql
 -- [골드 테이블] 전세계 레벨 - 국가별 & 일일 요약
 
+-- 증분 모델 (Incremental Model) 설정
+-- 새로 들어온 Silver 데이터만 처리하는 설정!
+{{ config(
+    materialized='incremental',
+    unique_key=['event_date', 'country_name']
+) }}
+
 WITH events AS (
+    -- 증분 처리를 위해 매핑된 Silver 데이터 참조
     SELECT * FROM {{ ref('stg_seed_mapping') }}
 )
 
@@ -33,6 +41,15 @@ FROM
     events
 WHERE
     event_date IS NOT NULL
+    AND mp_action_location_country IS NOT NULL
+
+{% if is_incremental() %}
+    -- 이 모델이 이미 데이터(Gold 테이블)를 가지고 있다면,
+    -- Gold 테이블의 가장 최신 날짜보다 더 새로운 데이터만 Silver에서 가져온다.
+    AND event_date > (SELECT MAX(event_date) FROM {{ this }})
+
+{% endif %}
+
     AND mp_action_geo_country_eng IS NOT NULL
 GROUP BY
     event_date,
