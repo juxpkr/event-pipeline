@@ -70,8 +70,11 @@ WHERE
     -- Actor1과 Actor2가 모두 국가 단위이고, 서로 다른 국가일 때의 이벤트만 필터링
 
     {% if is_incremental() %}
+        -- run_query 매크로를 사용해, 대상 테이블의 max(processed_at) 값을 먼저 조회해서 변수에 저장한다.
+      {% set max_processed_at = run_query("SELECT max(processed_at) FROM " ~ this).columns[0].values()[0] %}
+
         -- 이 모델이 이미 데이터를 가지고 있다면, 최신 날짜보다 더 새로운 데이터만 처리
-        processed_at > (SELECT MAX(processed_at) FROM {{ this }})
+        processed_at > '{{ max_processed_at }}'
     {% endif %}
 
 GROUP BY

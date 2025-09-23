@@ -69,7 +69,10 @@ LEFT JOIN stg_detailed ON stg_events.global_event_id = stg_detailed.global_event
 LEFT JOIN stg_actor_info ON stg_events.global_event_id = stg_actor_info.global_event_id
 
 {% if is_incremental() %}
+    -- run_query 매크로를 사용해, 대상 테이블의 max(processed_at) 값을 먼저 조회해서 변수에 저장한다.
+  {% set max_processed_at = run_query("SELECT max(processed_at) FROM " ~ this).columns[0].values()[0] %}
+
 WHERE
     -- 이 모델이 이미 데이터를 가지고 있다면, 최신 날짜보다 더 새로운 데이터만 처리
-    stg_events.processed_at > (SELECT MAX(stg_events.processed_at) FROM {{ this }})
+    stg_events.processed_at > '{{ max_processed_at }}'
 {% endif %}

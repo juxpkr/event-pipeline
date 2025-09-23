@@ -154,7 +154,9 @@ LEFT JOIN religion_codes AS a1_rel ON src.actor1_religion1_code = a1_rel.code
 LEFT JOIN religion_codes AS a2_rel ON src.actor2_religion1_code = a2_rel.code
 
 {% if is_incremental() %}
-WHERE
+    -- run_query 매크로를 사용해, 대상 테이블의 max(processed_at) 값을 먼저 조회해서 변수에 저장한다.
+  {% set max_processed_at = run_query("SELECT max(processed_at) FROM " ~ this).columns[0].values()[0] %}
+  
     -- 이 모델이 이미 데이터를 가지고 있다면, 최신 날짜보다 더 새로운 데이터만 처리
-    src.processed_at > (SELECT MAX(src.processed_at) FROM {{ this }})
+    WHERE src.processed_at > '{{ max_processed_at }}'
 {% endif %}
