@@ -483,7 +483,9 @@ services:
     deploy:
       resources:
         limits:
-          memory: 4G
+          memory: 10G
+        reservations:
+          memory: 6G
       restart_policy:
         condition: on-failure
       placement:
