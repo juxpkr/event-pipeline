@@ -29,7 +29,7 @@ with DAG(
         command=[
             "/bin/sh",
             "-c",
-            "dbt build --target prod --select +gold_1st_global_overview +gold_2nd_country_events +gold_4th_daily_detail_summary",
+            "dbt build --target prod --select +gold_dashboard_master",
         ],
         network_mode="geoevent_data-network",  # docker-compose 네트워크
         mounts=[
