@@ -1,0 +1,295 @@
+fips_code,iso_code,current_iso_code,M49_code,name_eng,name_kor
+AA,ABW,ABW,533,Aruba,아루바
+AF,AFG,AFG,4,Afghanistan,아프가니스탄
+AO,AGO,AGO,24,Angola,앙골라
+AV,AIA,AIA,660,Anguilla,앵귈라
+AX,ALA,ALA,248,Åland Islands,올란드 제도
+AL,ALB,ALB,8,Albania,알바니아
+AN,AND,AND,20,Andorra,안도라
+AE,ARE,ARE,784,The United Arab Emirates,아랍에미리트 연합
+AR,ARG,ARG,32,Argentina,아르헨티나
+AM,ARM,ARM,51,Armenia,아르메니아
+AQ,ASM,ASM,16,American Samoa,아메리칸사모아
+AY,ATA,ATA,10,Antarctica,남극
+GO,,ATF,,Glorioso Islands,글로리오소 제도
+BS,,ATF,,Bassas da India,바사스다앵디아
+EU,,ATF,,Europa Island,유로파섬
+JU,,ATF,,Juan de Nova Island,쥐앙드노바섬
+TE,,ATF,,Tromelin Island,트롬랭섬
+FS,ATF,ATF,260,The French Southern Territories,프랑스령 남방 및 남극 지역
+AC,ATG,ATG,28,Antigua and Barbuda,앤티가 바부다
+CR,,AUS,,Coral Sea Islands,산호해 제도
+AT,,AUS,,Ashmore and Cartier Islands,애시모어 카르티에 제도
+AS,AUS,AUS,36,Australia,호주
+AU,AUT,AUT,40,Austria,오스트리아
+AJ,AZE,AZE,31,Azerbaijan,아제르바이잔
+BY,BDI,BDI,108,Burundi,부룬디
+BE,BEL,BEL,56,Belgium,벨기에
+BN,BEN,BEN,204,Benin,베냉
+,BES,BES,535,"Bonaire, Sint Eustatius and Saba","보네르, 신트에우스타티위스, 사바"
+UV,BFA,BFA,854,Burkina Faso,부르키나파소
+BG,BGD,BGD,50,Bangladesh,방글라데시
+BU,BGR,BGR,100,Bulgaria,불가리아
+BA,BHR,BHR,48,Bahrain,바레인
+BF,BHS,BHS,44,The Bahamas,바하마
+BK,BIH,BIH,70,Bosnia and Herzegovina,보스니아 헤르체고비나
+TB,BLM,BLM,652,Saint Barthélemy,생바르텔레미
+BO,BLR,BLR,112,Belarus,벨라루스
+BH,BLZ,BLZ,84,Belize,벨리즈
+BD,BMU,BMU,60,Bermuda,버뮤다
+BL,BOL,BOL,68,Bolivia (Plurinational State of),볼리비아 다민족국
+BR,BRA,BRA,76,Brazil,브라질
+BB,BRB,BRB,52,Barbados,바베이도스
+BX,BRN,BRN,96,Brunei Darussalam,브루나이
+BT,BTN,BTN,64,Bhutan,부탄
+,BVT,BVT,74,Bouvet Island,부베섬
+BC,BWA,BWA,72,Botswana,보츠와나
+CT,CAF,CAF,140,The Central African Republic,중앙아프리카공화국
+CA,CAN,CAN,124,Canada,캐나다
+CK,CCK,CCK,166,The Cocos (Keeling) Islands,코코스 제도
+SZ,CHE,CHE,756,Switzerland,스위스
+CI,CHL,CHL,152,Chile,칠레
+CH,CHN,CHN,156,China,중국
+IV,CIV,CIV,384,Côte d'Ivoire,코트디부아르
+CM,CMR,CMR,120,Cameroon,카메룬
+,ZAR,COD,,Zaire (former),자이르 (구)
+CG,COD,COD,180,The Democratic Republic of the Congo,콩고 민주 공화국
+CF,COG,COG,178,The Congo,콩고 공화국
+CW,COK,COK,184,The Cook Islands,쿡 제도
+CO,COL,COL,170,Colombia,콜롬비아
+CN,COM,COM,174,The Comoros,코모로
+CV,CPV,CPV,132,Cabo Verde,카보베르데
+CS,CRI,CRI,188,Costa Rica,코스타리카
+CU,CUB,CUB,192,Cuba,쿠바
+,CUW,CUW,531,Curaçao,퀴라소
+KT,CXR,CXR,162,Christmas Island,크리스마스섬
+CJ,CYM,CYM,136,The Cayman Islands,케이맨 제도
+CY,CYP,CYP,196,Cyprus,키프로스
+EZ,CZE,CZE,203,Czechia,체코
+DE,DEU,DEU,276,Germany,독일
+DJ,DJI,DJI,262,Djibouti,지부티
+DO,DMA,DMA,212,Dominica,도미니카 연방
+DA,DNK,DNK,208,Denmark,덴마크
+DR,DOM,DOM,214,The Dominican Republic,도미니카 공화국
+AG,DZA,DZA,12,Algeria,알제리
+EC,ECU,ECU,218,Ecuador,에콰도르
+EG,EGY,EGY,818,Egypt,이집트
+ER,ERI,ERI,232,Eritrea,에리트레아
+WI,ESH,ESH,732,Western Sahara,서사하라
+SP,ESP,ESP,724,Spain,스페인
+EN,EST,EST,233,Estonia,에스토니아
+ET,ETH,ETH,231,Ethiopia,에티오피아
+FI,FIN,FIN,246,Finland,핀란드
+FJ,FJI,FJI,242,Fiji,피지
+FK,FLK,FLK,238,The Falkland Islands (Malvinas),포클랜드 제도
+FR,FRA,FRA,250,France,프랑스
+FO,FRO,FRO,234,The Faroe Islands,페로 제도
+FM,FSM,FSM,583,Micronesia (Federated States of),미크로네시아 연방
+GA,GAB,GAB,266,Gabon,가봉
+DX,,GBR,,Dhekelia Sovereign Base Area,데켈리아 주권 기지 지역
+AX,,GBR,,Akrotiri Sovereign Base Area,아크로티리 주권 기지 지역
+UK,GBR,GBR,826,The United Kingdom of Great Britain and Northern Ireland,영국
+GG,GEO,GEO,268,Georgia,조지아
+GK,GGY,GGY,831,Guernsey,건지섬
+GH,GHA,GHA,288,Ghana,가나
+GI,GIB,GIB,292,Gibraltar,지브롤터
+GV,GIN,GIN,324,Guinea,기니
+GP,GLP,GLP,312,Guadeloupe,과들루프
+GM,GMB,GMB,270,The Gambia,감비아
+PU,GNB,GNB,624,Guinea-Bissau,기니비사우
+EK,GNQ,GNQ,226,Equatorial Guinea,적도 기니
+GR,GRC,GRC,300,Greece,그리스
+GJ,GRD,GRD,308,Grenada,그레나다
+GL,GRL,GRL,304,Greenland,그린란드
+GT,GTM,GTM,320,Guatemala,과테말라
+FG,GUF,GUF,254,French Guiana,프랑스령 기아나
+GQ,GUM,GUM,316,Guam,괌
+GY,GUY,GUY,328,Guyana,가이아나
+HK,HKG,HKG,344,Hong Kong,홍콩
+HM,HMD,HMD,334,Heard Island and McDonald Islands,허드 맥도널드 제도
+HO,HND,HND,340,Honduras,온두라스
+HR,HRV,HRV,191,Croatia,크로아티아
+HA,HTI,HTI,332,Haiti,아이티
+HU,HUN,HUN,348,Hungary,헝가리
+ID,IDN,IDN,360,Indonesia,인도네시아
+IM,IMN,IMN,833,Isle of Man,맨섬
+IN,IND,IND,356,India,인도
+IO,IOT,IOT,86,The British Indian Ocean Territory,영국령 인도양 지역
+EI,IRL,IRL,372,Ireland,아일랜드
+IR,IRN,IRN,364,Iran (Islamic Republic of),이란 이슬람 공화국
+IZ,IRQ,IRQ,368,Iraq,이라크
+IC,ISL,ISL,352,Iceland,아이슬란드
+IS,ISR,ISR,376,Israel,이스라엘
+IT,ITA,ITA,380,Italy,이탈리아
+JM,JAM,JAM,388,Jamaica,자메이카
+JE,JEY,JEY,832,Jersey,저지섬
+JO,JOR,JOR,400,Jordan,요르단
+JA,JPN,JPN,392,Japan,일본
+KZ,KAZ,KAZ,398,Kazakhstan,카자흐스탄
+KE,KEN,KEN,404,Kenya,케냐
+KG,KGZ,KGZ,417,Kyrgyzstan,키르기스스탄
+CB,KHM,KHM,116,Cambodia,캄보디아
+KR,KIR,KIR,296,Kiribati,키리바시
+SC,KNA,KNA,659,Saint Kitts and Nevis,세인트키츠 네비스
+KS,KOR,KOR,410,Republic of Korea,대한민국
+KU,KWT,KWT,414,Kuwait,쿠웨이트
+LA,LAO,LAO,418,Lao People's Democratic Republic,라오 인민 민주 공화국
+LE,LBN,LBN,422,Lebanon,레바논
+LI,LBR,LBR,430,Liberia,라이베리아
+LY,LBY,LBY,434,Libya,리비아
+ST,LCA,LCA,662,Saint Lucia,세인트루시아
+LS,LIE,LIE,438,Liechtenstein,리히텐슈타인
+CE,LKA,LKA,144,Sri Lanka,스리랑카
+LT,LSO,LSO,426,Lesotho,레소토
+LH,LTU,LTU,440,Lithuania,리투아니아
+LU,LUX,LUX,442,Luxembourg,룩셈부르크
+LG,LVA,LVA,428,Latvia,라트비아
+MC,MAC,MAC,446,Macao,마카오
+RN,MAF,MAF,663,Saint Martin (French part),세인트마틴섬
+MO,MAR,MAR,504,Morocco,모로코
+MN,MCO,MCO,492,Monaco,모나코
+MD,MDA,MDA,498,Republic of Moldova,몰도바 공화국
+MA,MDG,MDG,450,Madagascar,마다가스카르
+MV,MDV,MDV,462,Maldives,몰디브
+MX,MEX,MEX,484,Mexico,멕시코
+RM,MHL,MHL,584,The Marshall Islands,마셜 제도
+MK,MKD,MKD,807,Republic of North Macedonia,북마케도니아 공화국
+ML,MLI,MLI,466,Mali,말리
+MT,MLT,MLT,470,Malta,몰타
+,BUR,MMR,,Burma (former),버마 (구)
+BM,MMR,MMR,104,Myanmar,미얀마
+MJ,MNE,MNE,499,Montenegro,몬테네그로
+MG,MNG,MNG,496,Mongolia,몽골
+CQ,MNP,MNP,580,The Northern Mariana Islands,북마리아나 제도
+MZ,MOZ,MOZ,508,Mozambique,모잠비크
+MR,MRT,MRT,478,Mauritania,모리타니
+MH,MSR,MSR,500,Montserrat,몬트세랫
+MB,MTQ,MTQ,474,Martinique,마르티니크
+MP,MUS,MUS,480,Mauritius,모리셔스
+MI,MWI,MWI,454,Malawi,말라위
+MY,MYS,MYS,458,Malaysia,말레이시아
+MF,MYT,MYT,175,Mayotte,마요트
+WA,NAM,NAM,516,Namibia,나미비아
+NC,NCL,NCL,540,New Caledonia,누벨칼레도니
+NG,NER,NER,562,The Niger,니제르
+NF,NFK,NFK,574,Norfolk Island,노퍽섬
+NI,NGA,NGA,566,Nigeria,나이지리아
+NU,NIC,NIC,558,Nicaragua,니카라과
+NE,NIU,NIU,570,Niue,니우에
+NL,NLD,NLD,528,The Netherlands,네덜란드
+NO,NOR,NOR,578,Norway,노르웨이
+NP,NPL,NPL,524,Nepal,네팔
+NR,NRU,NRU,520,Nauru,나우루
+NZ,NZL,NZL,554,New Zealand,뉴질랜드
+MU,OMN,OMN,512,Oman,오만
+PK,PAK,PAK,586,Pakistan,파키스탄
+PM,PAN,PAN,591,Panama,파나마
+PC,PCN,PCN,612,Pitcairn,핏케언 제도
+PE,PER,PER,604,Peru,페루
+RP,PHL,PHL,608,The Philippines,필리핀
+PS,PLW,PLW,585,Palau,팔라우
+PP,PNG,PNG,598,Papua New Guinea,파푸아뉴기니
+PL,POL,POL,616,Poland,폴란드
+RQ,PRI,PRI,630,Puerto Rico,푸에르토리코
+KN,PRK,PRK,408,Democratic People's Republic of Korea,조선민주주의인민공화국
+PO,PRT,PRT,620,Portugal,포르투갈
+PA,PRY,PRY,600,Paraguay,파라과이
+GZ,,PSE,,Gaza Strip,가자 지구
+WE,,PSE,,West Bank,웨스트뱅크
+,PSE,PSE,275,State of Palestine,팔레스타인
+FP,PYF,PYF,258,French Polynesia,프랑스령 폴리네시아
+QA,QAT,QAT,634,Qatar,카타르
+RE,REU,REU,638,Réunion,레위니옹
+RO,ROU,ROU,642,Romania,루마니아
+RS,RUS,RUS,643,The Russian Federation,러시아 연방
+RW,RWA,RWA,646,Rwanda,르완다
+SA,SAU,SAU,682,Saudi Arabia,사우디아라비아
+SU,SDN,SDN,729,The Sudan,수단
+SG,SEN,SEN,686,Senegal,세네갈
+SN,SGP,SGP,702,Singapore,싱가포르
+SX,SGS,SGS,239,South Georgia and the South Sandwich Islands,사우스조지아 사우스샌드위치 제도
+SH,SHN,SHN,654,"Saint Helena, Ascension and Tristan da Cunha",세인트헬레나
+SV,SJM,SJM,744,Svalbard and Jan Mayen,스발바르 얀마옌
+JN,,SJM,,Jan Mayen,얀마옌섬
+BP,SLB,SLB,90,Solomon Islands,솔로몬 제도
+SL,SLE,SLE,694,Sierra Leone,시에라리온
+ES,SLV,SLV,222,El Salvador,엘살바도르
+SM,SMR,SMR,674,San Marino,산마리노
+SO,SOM,SOM,706,Somalia,소말리아
+SB,SPM,SPM,666,Saint Pierre and Miquelon,생피에르 미클롱
+RB,SRB,SRB,688,Serbia,세르비아
+OD,SSD,SSD,728,South Sudan,남수단
+TP,STP,STP,678,Sao Tome and Principe,상투메 프린시페
+NS,SUR,SUR,740,Suriname,수리남
+,SVK,SVK,703,Slovakia,슬로바키아
+SI,SVN,SVN,705,Slovenia,슬로베니아
+SW,SWE,SWE,752,Sweden,스웨덴
+WZ,SWZ,SWZ,748,Eswatini,에스와티니
+,SXM,SXM,534,Sint Maarten (Dutch part),신트마르턴
+SE,SYC,SYC,690,Seychelles,세이셸
+SY,SYR,SYR,760,Syrian Arab Republic,시리아 아랍 공화국
+TK,TCA,TCA,796,The Turks and Caicos Islands,터크스 케이커스 제도
+CD,TCD,TCD,148,Chad,차드
+TO,TGO,TGO,768,Togo,토고
+TH,THA,THA,764,Thailand,태국
+TI,TJK,TJK,762,Tajikistan,타지키스탄
+TL,TKL,TKL,772,Tokelau,토켈라우
+TX,TKM,TKM,795,Turkmenistan,투르크메니스탄
+,TMP,TLS,,East Timor (former),동티모르 (구)
+TT,TLS,TLS,626,Timor-Leste,동티모르
+TN,TON,TON,776,Tonga,통가
+TD,TTO,TTO,780,Trinidad and Tobago,트리니다드 토바고
+TS,TUN,TUN,788,Tunisia,튀니지
+TU,TUR,TUR,792,Türkiye,튀르키예
+TV,TUV,TUV,798,Tuvalu,투발루
+TW,TWN,TWN,158,Taiwan (Province of China),대만
+TZ,TZA,TZA,834,The United Republic of Tanzania,탄자니아 연합 공화국
+UG,UGA,UGA,800,Uganda,우간다
+UP,UKR,UKR,804,Ukraine,우크라이나
+BQ,,UMI,,Navassa Island,나배사섬
+,UMI,UMI,581,The United States Minor Outlying Islands,미국령 군소 제도
+MQ,,UMI,,Midway Islands,미드웨이 환초
+FQ,,UMI,,Baker Island,베이커섬
+WQ,,UMI,,Wake Island,웨이크섬
+DQ,,UMI,,Jarvis Island,자르비스섬
+JQ,,UMI,,Johnston Atoll,존스턴 환초
+KQ,,UMI,,Kingman Reef,킹먼 환초
+LQ,,UMI,,Palmyra Atoll,팔미라 환초
+HQ,,UMI,,Howland Island,하울랜드섬
+UY,URY,URY,858,Uruguay,우루과이
+US,USA,USA,840,The United States of America,미국
+UZ,UZB,UZB,860,Uzbekistan,우즈베키스탄
+VT,VAT,VAT,336,The Holy See,바티칸 시국
+VC,VCT,VCT,670,Saint Vincent and the Grenadines,세인트빈센트 그레나딘
+VE,VEN,VEN,862,Venezuela (Bolivarian Republic of),베네수엘라 볼리바르 공화국
+VI,VGB,VGB,92,Virgin Islands (British),영국령 버진아일랜드
+VQ,VIR,VIR,850,Virgin Islands (U.S.),미국령 버진아일랜드
+VM,VNM,VNM,704,Viet Nam,베트남
+NH,VUT,VUT,548,Vanuatu,바누아투
+WF,WLF,WLF,876,Wallis and Futuna,왈리스 푸투나
+WS,WSM,WSM,882,Samoa,사모아
+KV,XKX,XKX,,Kosovo,코소보
+YM,YEM,YEM,887,Yemen,예멘
+SF,ZAF,ZAF,710,South Africa,남아프리카 공화국
+ZA,ZMB,ZMB,894,Zambia,잠비아
+ZI,ZWE,ZWE,716,Zimbabwe,짐바브웨
+NT,ANT,,,Netherlands Antilles (former),네덜란드령 안틸레스 (구)
+OS,,,,Oceans,대양
+NM,,,,No Mans Land,무인지대
+UU,,,,Undesignated Sovereignty,미지정 주권 지역
+PG,,,,Spratly Islands,스프래틀리 군도
+PJ,,,,"Etorofu, Habomai, Kunashiri and Shikotan Islands","에토로후, 하보마이, 쿠나시리, 시코탄 제도"
+,YUG,,,Yugoslavia (former),유고슬비아 (구)
+LO,CSK,,,Czechoslovakia (former),체코슬로바키아 (구)
+IP,,,,Clipperton Island,클리퍼턴섬
+PF,,,,Paracel Islands,파라셀 제도
+UF,,,,Undersea Features,해저 지형
+GC,DDR,DEU,278,German Democratic Republic (former),독일 민주 공화국 (구)
+YS,YMD,YEM,886,"Yemen, Democratic (former)",예멘 민주 공화국 (구)
+UR,SUN,,810,Union of Soviet Socialist Republics (former),소비에트 사회주의 공화국 연방 (구)
+,BYS,BLR,112,Byelorussian SSR (former),벨로루시 소비에트 사회주의 공화국 (구)
+UV,HVO,BFA,854,Upper Volta (former),오트볼타 공화국 (구)
+,SCG,,891,Serbia and Montenegro (former),세르비아 몬테네그로 (구)
+PC,PCZ,PAN,592,Panama Canal Zone (former),파나마 운하 지대 (구)
+,NTZ,,,Neutral Zone (former),중립 지대 (구)
+,ATN,ATA,10,Dronning Maud Land (former),드론닝모드랜드 (구)

@@ -1,603 +1,626 @@
 code,description
-abk,Abkhaz (Abkhazians)
-abr,Aboriginal-Australians (Aborigines)
-ace,Acehnese (Achinese)
-acg,Achang
-ach,Acholi
-adi,Adivasi
-adj,Adjarians (Adzhars)
-ady,Adyghe (Circasians)
-aar,Afar
-afr,Afrikaners
-ahm,Ahmadis
-ain,Ainu
-aja,Aja
-aka,Akan (Asante)
-aku,Aku (Creoles)
-alb,Albanians
-ale,Aleut
-alg,Algonquian
-alt,Altay (Altai)
-alu,Alur
-amb,Ambonese (Amboinese)
-ame,Americo-Liberians
-amh,Amhara
-anp,Angika speakers
-nyn,Ankole
-apa,Apache
-ara,Arab
-arg,Aragonese
-arp,Arapaho
-arw,Arawak
-atg,Argentinians
-arm,Armenian
-rup,Aromanians
-twi,Ashanti
-asa,Asian
-asm,Assamese
-asy,Assyrian
-ast,Asturian
-ata,Atacamenos
-ath,Athabaskan
-aus,Australians
-auu,Austrians
-awa,Awadhi
-aym,Aymara
-znd,Azande (Azande-Mangbetu)
-aze,Azerbaijani (Azeri)
-bad,Baganda
-bii,Bai
-bkn,Bakongo
-bkw,Bakweri
-bln,Balanta
-ban,Balinese
-blk,Balkars
-bal,Baloch (Baluchis)
-bmr,Bamar (Barman)
-bam,Bambara
-bai,Bamileke
-bnt,Bantu
-bny,Banyarwanda
-bar,Bari
-brb,Bariba
-bak,Bashkirs
-bas,Basoga (Bassa/Duala)
-baq,Basque
-bst,Baster
-btk,Batak
-bke,Bateke
-bej,Beja
-bel,Belarusians (Byelorussians)
-bem,Bemba
-ben,Bengali-Hindu (Bengali)
-bni,Beni-Shugal-Gumez
-ber,Berber
-bte,Beti-Pahuin (Beti)
-bey,Beydan (White Moors)
-bho,Bhojpuri
-bik,Bicolano
-bih,Bihari
-byn,Bilen
-afa,Black-African (Africans)
-blg,Blang
-bod,Bodo
-bol,Bolivia
-bon,Bonan
-bos,Bosniaks
-brh,Brahui
-bre,Breton
-bra,Brijwasi
-bug,Bugis
-bul,Bulgarian
-brk,Burakumin
-bua,Buryat
-bsh,Bushmen (San)
-bou,Buyei
-cab,Cabindan-Mayombe
-cad,Caddo
-cap,Cape Verdean
-cat,Catalan
-ava,Caucasian Avars (Avars)
-ceb,Cebuano
-chg,Chagatai
-cmc,Cham
-cha,Chamorro
-che,Chechen
-chr,Cherokee
-chw,Chewa
-nya,Chewa (Nyanja speakers)
-chy,Cheyenne
-chl,Chileans
-chi,Chinese (Mainland Chinese)
-chn,Chinook
-chp,Chipewyan
-cho,Choctaw
-cht,Ch’orti’ (Chorti)
-chc,Chukchi
-chk,Chuukese
-chv,Chuvash
-col,Colombian
-rar,Cook Islands Maori
-cor,Cornish
-cos,Corsican
-csr,Costa Ricans
-cot,Cotiers
-cre,Cree
-crp,Creole
-crh,Crimean Tatar
-hrv,Croats
-cus,Cushitic
-cze,Czech
-dai,Dai
-dal,Dalit (Backward classes/castes)
-dam,Damara
-dan,Danes
-dar,Dargwa (Dargins)
-dau,Daur
-day,Dayak
-din,Dinka
-dje,Djerma-Songhai
-doi,Dogras
-dgr,Dogrib
-dom,Dominicans
-don,Dong
-dox,Dongxiang
-dra,Dravidian
-dru,Druze
-dua,Duala
-dut,Dutch (Flemings)
-dyu,Dyula
-ein,East Indian
-eat,East Timorese
-ecu,Ecuadorians
-bin,Edo
-efi,Efik
-eka,Ekajuk
-eng,English
-cpe,English-Creole
-esh,Eshira (Bapounou)
-est,Estonian
-eur,Europeans
-eve,Evenks
-ewe,Ewe
-ewo,Ewondo
-fan,Fang (Estuary Fang)
-fat,Fante
-fao,Faroese
-fij,Fijian
-fil,Filipino
-fiu,Finno-Ugric
-fin,Finns
-fon,Fon
-fre,French
-cpf,French-Creole
-frr,Frisians
-fur,Friulan
-ful,Fula (Fulani)
-fru,Fur
-ada,Ga (Ga-Adangbe)
-gla,Gaels
-glg,Galician
-gar,Garifuna (Garifs)
-gay,Gayo
-gba,Gbaya (Baya)
-gel,Gelao (Gelo)
-geo,Georgian
-ger,German
-gia,Gia Rai
-gin,Gin (Jing)
-gio,Gio
-gon,Gondi
-gor,Gorontalonese (Gorontalos)
-gra,Grassfielders
-grb,Grebo
-gre,Greek
-gun,Guan
-grn,Guarani
-gua,Guatemalan
-guj,Gujarati
-gwi,Gwich’in
-had,Hadjerai
-hai,Haida
-hat,Haitian
-hni,Hani
-har,Harari
-hrt,Haratin (Black Moors)
-hau,Hausa (Hausa-Fulani)
-haw,Hawaiian
-haz,Hazara
-her,Herero
-hil,Hiligayon
-hgh,Hill Tribes
-him,Himachali
-hmo,Hiri Motu
-hmn,Hmong
-hoa,Hoa
-hon,Hondurans
-hui,Hui
-hun,Hungarian
-hup,Hupa
-hut,Hutu
-iba,Iban
-ice,Icelanders
-ibo,Igbo
-ijo,Ijaw
-ilo,Ilocono
-idn,Indian
-idg,Indigenous
-ind,Indonesian
-inh,Ingush
-iku,Inuit
-ipk,Inupiat
-ira,Iranian
-gle,Irish
-iro,Iroquois
-ita,Itallian
-jpn,Japanese
-jav,Javanese
-jew,Jewish
-jin,Jino (Jinuo)
-jol,Jola (Diola)
-kbd,Kabarday (Kabardins)
-kby,Kabye (Kabre)
-kab,Kabyle
-kac,Kachin
-kad,Kadazan
-kak,Kakwa-Nubian
-kal,Kalaallit
-car,Kali’na
-xal,Kalmyk
-kam,Kamba
-kan,Kannada
-kau,Kanuri (Kanouri)
-kao,Kaonde
-pam,Kapampangan
-kch,Karachays (Karachai)
-kaa,Karakalpak
-krm,Karamojong
-krl,Karelians
-kar,Karen (Kayin)
-kas,Kashmiri
-csb,Kashubian
-kav,Kavango
-kaz,Kazakhs
-khk,Khakas
-kha,Khasi
-khm,Khmer (Khmer Loei)
-khu,Khmu
-khi,Khoikhoi
-kik,Kikuyu
-kin,Kinyarwanda Speakers
-gil,Kiribati
-kis,Kisii
-kok,Kokani
-kom,Komi (Komi-Permyaks)
-kon,Kongo (Bakongo)
-kno,Kono
-kor,Korean
-kos,Kosraean
-kou,Kouyou
-kpe,Kpelle (Guerze)
-krh,Krahn (Guere)
-kro,Kru
-kut,Ktunaxa
-kum,Kumyks
-kur,Kurd
-brm,Kurichiya (Hill Barhmins)
-kru,Kurukh
-kua,Kwanyama
-kir,Kyrgyz (Kirghis/Kirgiz)
-lhu,Lahu
-lak,Lak (Russia)
-lam,Lamba
-lao,Lao
-lar,Lari
-ltn,Latinos
-ltk,Latoka
-lav,Latvian
-del,Lenape
-len,Lenca
-lez,Lezgian (Lezgins)
-lii,Li
-lba,Limba
-lim,Limburgian
-lin,Lingala
-lsu,Lisu
-lit,Lithuanian
-lom,Lomwe (Nguru)
-lov,Lovale
-dsb,Lower Sorbian
-loz,Lozi (Barotse)
-lua,Luba-Kasai
-lub,Luba-Katanga
-lgb,Lugbara
-luh,Luhya
-lui,Luiseno
-lul,Lulua
-mno,Lumad
-lun,Lunda
-luo,Luo
-lus,Lusei
-ltz,Luxembourgers
-mas,Maasai
-mac,Macedonian
-mdh,Madhesi
-mdi,Madi
-mad,Madurese (Madura)
-maf,Mafwe
-mag,Magahi
-mai,Maithili
-mak,Makassarese
-mok,Makonde (Makonde-Yao)
-mlg,Malagasy
-mal,Malayalam
-may,Malays
-div,Maldivian
-mlt,Maltese
-mng,Mananja-Nayanja
-mnc,Manchu
-mdr,Mandar
-mnd,Mande
-man,Mandinka (Mandigo/Mandingue)
-mni,Manipuri
-mnj,Manjack (Manjaco)
-mnn,Mano
-glv,Manx
-mny,Manyika
-mon,Maonan
-mao,Maori
-arn,Mapuche
-mar,Marathi
-chm,Mari
-mah,Marshallese
-mwr,Marwaris
-myn,Maya
-mya,Mayangnas
-mbk,M’Baka
-mba,Mbandja
-mbe,Mbere (Mbede)
-mbo,Mbochi
-mbu,Mbundu-Mestico
-men,Mende
-mtz,Mestizo
-mia,Miao
-mij,Mijikenda
-mic,Mi’kmaq
-mnh,Minahasa
-min,Minangkabau
-mwl,Mirandese
-msk,Miskito
-miz,Mizo
-moh,Mohajirs
-moh,Mohawk
-mdf,Mokshas
-mld,Mole-Dagbani
-mns,Mon
-lol,Mongo
-mon,Mongol (Mongolians)
-tuu,Mongour (Tu)
-mtn,Montenegrins
-myv,Mordvins (Mordva)
-mro,Moro
-mos,Mossi
-mlo,Mulao
-mla,Mulatto
-mun,Munda
-muo,Muong
-mus,Muscogee
-mye,Myene
-nag,Naga
-nah,Nahua
-nax,Nakhi (Naxi)
-nam,Nama
-nai,Native American
-nau,Nauruan
-nav,Navajo
-ndo,Ndonga
-nap,Neapolitan
-nep,Nepali
-nze,New Zealanders
-new,Newars
-dzo,Ngalop
-ngn,Ngbandi
-ngo,Ngoni
-nir,Niari
-nia,Niasans
-nib,Nibolek
-nca,Nicaraguan
-niu,Niuean
-nkm,Nkomi
-nog,Nogais
-kmb,North Mbundu
-nde,Northern Ndebele
-nso,Northern Sotho
-nor,Norwegians
-nuu,Nu
-nba,Nuba
-nub,Nubian
-ner,Nuer
-nng,Nung
-nur,Nuristani
-nyk,Nyakyusa
-nym,Nyamwezi
-nyo,Nyoro
-nzi,Nzema
-oci,Occitanians
-ogo,Ogoni
-oji,Ojibwe
-oki,Okinawan
-oru,Orgunu
-ori,Oriya
-orm,Oromo
-osa,Osage
-oss,Ossetians (Ossetes)
-oto,Otomi
-ova,Ovambo
-pac,Pacific Islanders
-ran,Pahari Rajput (Rana/Thakuri)
-pau,Palauan
-pal,Palestinian
-pnm,Panamanians
-pag,Pangasinan
-ppl,Papel
-pap,Papiamento-Creole
-paa,Papuan (Papua)
-par,Paraguayan
-psh,Pashayi (Pashai)
-pus,Pashtun
-pon,Pehnpeian
-per,Persian
-pru,Peruvian
-pol,Poles
-pom,Pomaks
-por,Portuguese
-cpp,Portuguese-Creole
-pum,Pumi
-pan,Punjabi
-phu,Puthai (Phuthai)
-qia,Qiang
-qiz,Qizilbash
-que,Quechua
-raj,Rajasthani
-bda,Rakhine (Buddist Arakanese)
-rap,Rapa Nui
-rom,Romani (Roma)
-rum,Romanian
-roh,Romansh
-run,Rundi
-rus,Russian
-slr,Salar
-sal,Salish
-smi,Sami
-smo,Samoans
-sad,Sandawe
-sag,Sango
-fri,Santals
-sar,Sara
-srd,Sardinian
-sas,Sasak
-sco,Scottish (Scots)
-sel,Selkup
-sen,Sena
-srp,Serbs
-srr,Serer
-shy,Shaigiya
-shn,Shan
-she,She
-shl,Shilluk
-sna,Shona (Ndau)
-scn,Sicilian
-sid,Sidama
-bla,Siksikawa
-snd,Sindhi
-sin,Sinhalese
-sio,Siouan
-dak,Sioux
-sla,Slavic
-slo,Slovaks
-slv,Slovenes
-som,Somali
-son,Songhai
-snk,Soninke
-wen,Sorbs
-sot,Sotho
-nbl,South Ndebele
-umb,Southern Mbundu
-spa,Spanish
-srn,Sranan Tongo
-bsu,Subiya (Basubia)
-sat,Sudanese
-sui,Sui
-suk,Sukama
-sus,Susu
-swa,Swahili
-ssw,Swazi
-swe,Swedes
-swf,Swiss French
-gsw,Swiss Germans
-swt,Swiss Italian
-tab,Tabasaran
-tgl,Tagalog
-tah,Tahitian
-tai,Tai (Tha/Tai-Lu/Tai-Yuan)
-twn,Taiwanese
-tgk,Tajik (Pamir Tajiks)
-tms,Tama
-tam,Tamil
-tat,Tatars
-taw,Tawahka
-tay,Tay
-tel,Telugu
-tem,Temne
-ter,Terenan
-trn,Ternate
-tes,Teso
-tet,Tetum
-tha,Thai
-tib,Tibetan
-tir,Tigray-Trigrinya (Tigry)
-tig,Tigre
-tiv,Tiv
-tli,Tlingit
-tpi,Tok Pisin
-tkl,Tokelauan
-tog,Tonga (Africa)
-ton,Tonga (Pacific)
-tor,Tooro
-tou,Toubou
-tra,Transnistrians
-tri,Tripuri
-tsi,Tsimshian
-tso,Tsonga (Tsonga-Chopi)
-tsn,Tswana
-tmh,Tuareg
-tuj,Tujia
-tum,Tumbuka
-tup,Tupi (Tupi-Guarani)
-tur,Turkish (Turks)
-tuk,Turkmen
-tts,Tutsi (Tutsi-Banyamulenge)
-tvl,Tuvaluans
-tyv,Tuvans (Tuvinians)
-udm,Udmurt
-ukr,Ukranian
-hsb,Upper Sorbian
-bis,Urban ni-Vanautu
-urd,Urdu
-uig,Uyghur (Uighur)
-uzb,Uzbeks
-vaa,Va (Wa)
-vai,Vai
-ven,Venda
-vnz,Venezuelan
-vie,Vietnamese (Kinh)
-vil,Vili
-vot,Votes
-wak,Wakashan
-wln,Walloons
-war,Waray
-was,Washoe
-wal,Welayta
-wel,Welsh
-whi,Whites
-wol,Wolof
-xho,Xhosa
-xib,Xibe
-xnc,Xinca
-sah,Yakuts
-yao,Yao (Africa)
-dao,Yao (Asia) (Dao)
-yap,Yapese
-iii,Yi
-yor,Yoruba
-yug,Yugur
-ypk,Yupik
-zag,Zaghawa
-zay,Zaidiyya (Zaydis)
-zap,Zapotec
-zza,Zaza
-zen,Zenaga
-zha,Zhuang
-zom,Zomi (Chins)
-zul,Zulu
-zun,Zuni
+aar,아파르족
+abk,압하스인
+abr,오스트레일리아 원주민
+ace,아체인
+acg,아창족
+ach,아촐리족
+ada,가족(가-아당메족)
+adi,아디바시
+adj,아자르인
+ady,아디게인(체르케스인)
+afa,흑인 아프리카인
+afr,아프리카너
+ahm,아흐마드파
+ain,아이누족
+aja,아자족
+aka,아칸족(아샨티족)
+aku,아쿠(크리올)
+alb,알바니아인
+ale,알류트족
+alg,알공킨족
+alt,알타이인
+alu,알루르족
+amb,암본인
+ame,아메리코-라이베리안
+amh,암하라인
+anp,앙기카인
+apa,아파치족
+ara,아랍인
+arg,아라곤인
+arm,아르메니아인
+arn,마푸체족
+arp,아라파호족
+arw,아라와크족
+asa,아시아인
+ash,아슈케나즈 유대인
+asm,아삼인
+ast,아스투리아스인
+asy,아시리아인
+ata,아타카메뇨족
+atg,아르헨티나인
+ath,애서배스카인
+ats,불가지론자/무신론자
+aus,오스트레일리아인
+auu,오스트리아인
+ava,캅카스 아바르인
+awa,아와드인
+aym,아이마라인
+aze,아제르바이잔인
+bad,바간다족
+bah,바하이교도
+bai,바밀레케족
+bak,바시키르인
+bal,발루치인
+bam,밤바라인
+ban,발리인
+baq,바스크인
+bar,바리족
+bas,바소가족
+bda,라카인족
+bej,베자족
+bel,벨라루스인
+bem,펨바족
+ben,벵골인
+ber,베르베르인
+bey,베이단(백인 무어인)
+bho,보지푸리인
+bih,비하리인
+bii,바이족
+bik,비콜라노족
+bin,에도족
+bis,도시 니-바누아투
+bke,바테케족
+bkn,바콩고족
+bkw,바퀘리족
+bla,식시카와족
+blg,블랑족
+blk,발카르인
+bln,발란타족
+bmr,버마족
+bni,베니-샹굴 구메즈
+bnt,반투족
+bny,바냐롼다족
+bod,보도족
+bol,볼리비아인
+bon,보난족
+bos,보스니아인
+bou,부예이족
+bra,브리지와시
+brb,바리바족
+bre,브르타뉴인
+brh,브라후이족
+brk,부라쿠민
+brm,쿠리치야(고산 브라만)
+bsh,부시맨(산족)
+bst,바스터
+bsu,수비야족
+bte,베티-파후인
+btk,바탁족
+bua,부랴트인
+bug,부기스인
+bul,불가리아인
+byn,빌렌족
+cab,카빈다-마욤베
+cad,카도족
+cap,카보베르데인
+car,칼리나족
+cat,카탈루냐인
+ceb,세부아노족
+cha,차모로족
+chc,축치인
+che,체첸인
+chg,차가타이인
+chi,중국인
+chk,추크인
+chl,칠레인
+chm,마리인
+chn,치누크족
+cho,촉토족
+chp,치페위안족
+chr,체로키족
+cht,초르티족
+chv,추바시인
+chw,체와족
+chy,샤이엔족
+cir,아디게인
+cmc,참족
+col,콜롬비아인
+con,유교
+cop,콥트 기독교인
+cor,콘월인
+cos,코르시카인
+cot,코티에르
+cpe,영어 크리올
+cpf,프랑스어 크리올
+cpp,포르투갈어 크리올
+cre,크리족
+crh,크림 타타르인
+cri,기독교인
+cro,정교회 기독교인
+crp,크리올
+csb,카슈브인
+csr,코스타리카인
+cth,가톨릭교도
+cus,쿠시족
+cze,체코인
+dai,다이족
+dak,다코타족(수족)
+dal,달리트
+dam,다마라족
+dan,덴마크인
+dao,요족(아시아)
+dar,다르긴인
+dau,다우르족
+day,다약족
+del,레나페족
+den,슬레이비
+dgr,도그리브족
+din,딩카족
+div,몰디브인
+dje,제르마-송가이족
+doi,도그라인
+dom,도미니카인
+don,둥족
+dox,둥샹족
+dra,드라비다인
+dru,드루즈인
+drz,드루즈인
+dsb,저지 소르브어 사용자
+dua,두알라족
+dut,네덜란드인(플랑드르인)
+dyu,디울라족
+dzo,종카어 사용자
+eat,동티모르인
+ecu,에콰도르인
+efi,에피크족
+ein,동인도인
+eka,에카주크족
+eng,잉글랜드인
+esh,에시라족
+est,에스토니아인
+eth,에티오피아 유대인
+eur,유럽인
+eve,에벤크인
+ewe,에웨어
+ewo,에원도족
+fan,팡족
+fao,페로인
+fat,판테족
+fij,피지인
+fil,필리핀인
+fin,핀란드인
+fiu,핀-우그리아인
+fon,폰족
+fre,프랑스인
+fri,산탈족
+frr,프리지아인
+fru,푸르족
+ful,풀라족(풀라니족)
+fur,프리울리인
+gar,가리푸나족
+gay,가요족
+gba,그바야족
+gel,거라오족
+geo,조지아인
+ger,독일인
+gia,자라이족
+gil,키리바시인
+gin,경족
+gio,지오족
+gla,게일인
+gle,아일랜드인
+glg,갈리시아인
+glv,만인
+gon,곤드인
+gor,고론탈로인
+gra,그래스필더
+grb,그레보족
+gre,그리스인
+grn,과라니족
+gsw,스위스 독일인
+gua,과테말라인
+guj,구자라트인
+gun,관족
+gwi,그위친족
+had,하제라이족
+hai,하이다족
+har,하라리족
+hat,아이티인
+hau,하우사족(하우사-풀라니족)
+haw,하와이인
+haz,하자라인
+her,헤레로족
+hgh,고산족
+hil,힐리가이논족
+him,히마찰리족
+hjw,하시디즘 유대인
+hmn,몽족
+hmo,히리 모투족
+hni,하니족
+hoa,호아족
+hon,온두라스인
+hrt,하라틴(흑인 무어인)
+hrv,크로아티아인
+hsb,고지 소르브어 사용자
+hui,후이족
+hun,헝가리인
+hup,후파족
+hut,후투족
+iba,이반족
+ibo,이보족
+ice,아이슬란드인
+idg,원주민
+idn,인도인
+iii,이족
+ijo,이조족
+iku,이누이트족
+ilo,일로카노족
+ind,인도네시아인
+inh,인구시인
+ipk,이누피아트족
+ira,이란인
+iro,이로쿼이족
+ita,이탈리아인
+jav,자와인
+jew,유대인
+jin,지노족
+jol,졸라족(디올라족)
+jpn,일본인
+kaa,카라칼파크인
+kab,카빌인
+kac,카친족
+kad,카다잔족
+kak,카콰-누비아인
+kal,칼랄리트인
+kam,캄바족
+kan,칸나다인
+kao,카온데족
+kar,카렌족
+kas,카슈미르인
+kau,카누리족
+kav,카방고족
+kaz,카자흐인
+kbd,카바르다인
+kby,카브레족
+kch,카라차이인
+kha,카시족
+khi,코이코이족
+khk,하카스인
+khm,크메르인
+khu,크무족
+kik,키쿠유족
+kin,키냐르완다족(르완다어 사용자)
+kir,키르기스인
+kis,키시족
+kmb,북 음분두족
+kno,코노족
+kok,코카니족
+kom,코미인
+kon,콩고인(바콩고족)
+kor,한국인
+kos,코스라에인
+kou,코우요우족
+kpe,크펠레족
+krh,크란족
+krl,카리알라인
+krm,카라모종족
+kro,크루족
+kru,쿠루크족
+kua,콰냐마족
+kum,쿠미크인
+kur,쿠르드인
+kut,크투나카족
+lad,세파르딕 유대인
+lak,라크인(러시아)
+lam,람바족
+lao,라오인
+lar,라리족
+lav,라트비아인
+lba,림바족
+len,렌카족
+lez,레즈긴인
+lgb,루그바라족
+lhu,라후족
+lii,리족
+lim,림뷔르흐어 사용자
+lin,링갈라어 사용자
+lit,리투아니아인
+lol,몽고족
+lom,롬웨어(응구루족)
+lov,로발레족
+loz,로지족(바로체족)
+lsu,리수족
+ltk,라토카족
+ltn,라티노
+ltz,룩셈부르크인
+lua,루바카사이족
+lub,루바카탕가족
+luh,루야족
+lui,루이세뇨족
+lul,룰루아족
+lun,룬다족
+luo,루오족
+lus,루세이어 사용자
+mac,마케도니아인
+mad,마두라인
+maf,마프웨어
+mag,마가히어 사용자
+mah,마셜인
+mai,마이틸리어 사용자
+mak,마카사르인
+mal,말라얄람인
+man,만딩고족
+mao,마오리족
+mar,마라티인
+mas,마사이족
+may,말레이인
+mba,음반자족
+mbe,음베레족
+mbk,음바카족
+mbo,음보치족
+mbu,음분두-메스티코
+mdf,모크샤인
+mdh,마데시
+mdi,마디족
+mdr,만다르인
+men,멘데족
+mia,먀오족
+mic,미크맥족
+mij,미지켄다족
+min,미낭카바우족
+miz,미조족
+mla,물라토
+mld,몰-다그바니족
+mlg,말라가시인
+mlo,무라오족
+mlt,몰타인
+mnc,만주족
+mnd,만데족
+mng,마난자-나얀자족
+mnh,미나하사인
+mni,마니푸리족
+mnj,만자크족
+mnn,마노족
+mno,루마드족
+mns,몬족
+mny,마니카족
+moh,모하르인 또는 모호크족
+mok,마콘데족
+mon,마오난족 또는 몽골인
+mos,모시족
+mro,모로족
+msk,미스키토족
+msl,무슬림
+mtn,몬테네그로인
+mtz,메스티소
+mun,문다족
+muo,므엉족
+mus,무스코지족
+mwl,미란다어 사용자
+mwr,마르와리족
+mya,마양나족
+mye,미에네족
+myn,마야인
+myv,모르드바인
+nag,나가족
+nah,나우아족
+nai,북미 원주민
+nam,나마족
+nap,나폴리인
+nau,나우루인
+nav,나바호족
+nax,나시족
+nba,누바족
+nbl,남 은데벨레족
+nca,니카라과인
+nde,북 은데벨레족
+ndo,은동가족
+nep,네팔인
+ner,누에르족
+new,네와르족
+ngn,응반디족
+ngo,응고니족
+nia,니아스인
+nib,니볼레크족
+nir,니아리족
+niu,니우에인
+nkm,은코미족
+nng,눙족
+nog,노가이인
+nor,노르웨이인
+nso,북 소토족
+nub,누비아인
+nur,누리스탄인
+nuu,누족
+nya,체와족(니안자어 사용자)
+nyk,냐쿠사족
+nym,냐뭰지족
+nyn,안콜레족
+nyo,니오로족
+nze,뉴질랜드인
+nzi,은제마족
+oci,오크어 사용자
+ogo,오고니족
+oji,오지브와족
+ojw,정통파/초정통파 유대인
+oki,오키나와인
+ori,오리야인
+orm,오로모족
+oru,오르구누족
+osa,오세이지족
+oss,오세트인
+oto,오토미족
+ova,오밤보족
+paa,파푸아인
+pac,태평양 섬 주민
+pag,팡가시난족
+pal,팔레스타인인
+pam,카팜팡안족
+pan,펀자브인
+pap,파피아멘토 크리올
+par,파라과이인
+pau,팔라우인
+per,페르시아인
+pgn,토속 신앙인
+phu,푸타이족
+pnm,파나마인
+pol,폴란드인
+pom,포마크인
+pon,폰페이인
+por,포르투갈인
+ppl,파펠족
+pro,개신교도
+pru,페루인
+psh,파샤이어 사용자
+pum,푸미족
+pus,파슈툰인
+qia,창족
+qiz,키질바시
+que,케추아족
+raj,라자스탄인
+ran,파하리 라지푸트
+rap,라파누이족
+rar,쿡 제도 마오리인
+rel,특정 종교 없음
+roh,로만슈어 사용자
+rom,로마니
+rum,루마니아인
+run,룬디족
+rup,아로마니아인
+rus,러시아인
+sad,산다웨족
+sag,산고족
+sah,야쿠트인
+sal,세일리시족
+sar,사라족
+sas,사삭족
+sat,수단인
+scn,시칠리아인
+sco,스코틀랜드인
+sel,셀쿠프인
+sen,세나족
+sfi,수피파
+sha,샤피이파
+she,셰족
+shi,시아파
+shl,실루크족
+shn,샨족
+shy,샤이기야족
+sid,시다마족
+sin,싱할라인
+sio,수족
+sla,슬라브인
+slo,슬로바키아인
+slr,살라르족
+slv,슬로베니아인
+smi,사미족
+smo,사모아인
+sna,쇼나족
+snd,신드인
+snk,소닌케족
+som,소말리인
+son,송가이족
+sot,소토족
+spa,스페인인
+srd,사르데냐인
+srn,스라난 통고 사용자
+srp,세르비아인
+srr,세레르족
+ssw,스와지족
+sui,수이족
+suk,수쿠마족
+sun,수니파
+sus,수수족
+swa,스와힐리인
+swe,스웨덴인
+swf,스위스 프랑스인
+swt,스위스 이탈리아인
+tab,타바사란인
+tah,타히티인
+tai,타이족
+tam,타밀인
+tat,타타르인
+taw,타와카족
+tay,떠이족
+tel,텔루구인
+tem,템네족
+ter,테레난족
+tes,테소족
+tet,테툼족
+tgk,타지크인
+tgl,타갈로그인
+tha,태국인
+tib,티베트인
+tig,티그레족
+tir,티그라이-티그리냐인
+tiv,티비족
+tkl,토켈라우인
+tli,틀링깃족
+tmh,투아레그족
+tms,타마족
+tog,통가인(아프리카)
+ton,통가인(태평양)
+tor,토오로족
+tou,투부족
+tpi,톡 피신 사용자
+tra,트란스니스트리아인
+tri,트리푸리족
+trn,테르나테인
+tsi,침시안족
+tsn,츠와나족
+tso,총가족
+tts,투치족
+tuj,투자족
+tuk,투르크멘인
+tum,툼부카족
+tup,투피족
+tur,튀르키예인
+tuu,몽구오르족(투족)
+tvl,투발루인
+twi,아샨티족
+twn,대만인
+tyv,투바인
+udm,우드무르트인
+uig,위구르인
+ukr,우크라이나인
+umb,남 음분두족
+und,미확인
+urd,우르두인
+uzb,우즈베크인
+vaa,와족
+vai,바이족
+ven,벤다족
+vie,베트남인(킨족)
+vil,빌리족
+vnz,베네수엘라인
+vot,보트인
+wak,와카시어족
+wal,웰라이타족
+war,와라이족
+was,와슈족
+wel,웨일스인
+wen,소르브인
+whi,백인
+wln,왈롱인
+wol,월로프족
+xal,칼미크인
+xho,코사족
+xib,시버족
+xnc,신카족
+yao,야오족(아프리카)
+yap,야프인
+yor,요루바족
+ypk,유픽족
+yug,유구르족
+zag,자가와족
+zap,사포텍
+zay,자이디파
+zen,제나가족
+zha,좡족
+znd,아잔데족
+zom,조미족
+zor,조로아스터교도
+zul,줄루족
+zun,주니족
+zza,자자인
