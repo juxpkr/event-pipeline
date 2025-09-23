@@ -1,4 +1,5 @@
--- models/staging/stg_seed_mapping.sql
+-- [Staging 테이블] : models/staging/stg_seed_mapping.sql
+-- 코드성 데이터 매핑
 
 -- 증분 모델 (Incremental Model) 설정
 {{ config(
@@ -6,27 +7,21 @@
     unique_key=['global_event_id']
 ) }}
 
--- 1. 필요한 테이블들을 CTE(WITH 절)로 미리 정의합니다.
 WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events') }}),
     event_root_codes AS (SELECT * FROM {{ ref('event_root_codes') }}),
     event_detail_codes AS (SELECT * FROM {{ ref('event_detail_codes') }}),
     quad_class_codes AS (SELECT * FROM {{ ref('event_quad_class_codes') }}),
     geo_type_codes AS (SELECT * FROM {{ ref('geo_type_codes') }}),
     country_codes AS (SELECT * FROM {{ ref('geo_country_codes') }}),
-    -- adm_codes AS (SELECT * FROM {{ ref('geo_adm_codes') }}),
     role_codes AS (SELECT * FROM {{ ref('actor_role_codes') }}),
     organization_codes AS (SELECT * FROM {{ ref('actor_organization_codes') }}),
     ethnic_codes AS (SELECT * FROM {{ ref('actor_ethnic_group_codes') }}),
     religion_codes AS (SELECT * FROM {{ ref('actor_religion_codes') }})
 
-
--- 2. CTE들을 JOIN하여 코드들을 실제 설명으로 변환(매핑)합니다.
 SELECT
     -- 이벤트 기본 정보
     src.global_event_id,
     src.event_date,
-
-    -- 이벤트 세부 정보
     -- src.is_root_event,
     CASE 
         WHEN src.is_root_event = 1 THEN true
@@ -49,9 +44,9 @@ SELECT
     src.actor1_code,
     src.actor1_name,
     -- src.actor1_country_code,
-    a1_iso.current_iso_code AS mp_actor1_country_iso,
-    a1_iso.name_eng AS mp_actor1_country_eng,   -- 행위자1 '소속' 국가명(영문)
-    a1_iso.name_kor AS mp_actor1_country_kor,   -- 행위자1 '소속' 국가명(국문)
+    a1_iso.current_iso_code AS mp_actor1_from_country_iso,
+    a1_iso.name_eng AS mp_actor1_from_country_eng,   -- 행위자1 '소속' 국가명(영문)
+    a1_iso.name_kor AS mp_actor1_from_country_kor,   -- 행위자1 '소속' 국가명(국문)
     -- src.actor1_known_group_code,
     a1_org.description AS mp_actor1_organization,
     a1_org.type AS mp_actor1_organization_type,
@@ -73,18 +68,18 @@ SELECT
     a1_fips.current_iso_code AS mp_actor1_geo_country_iso,
     a1_fips.name_eng AS mp_actor1_geo_country_eng,   -- 행위자1 행동 '위치' 국가명(영문)
     a1_fips.name_kor AS mp_actor1_geo_country_kor,   -- 행위자1 행동 '위치' 국가명(국문)
-    src.actor1_geo_adm1_code,
+    -- src.actor1_geo_adm1_code,
     src.actor1_geo_lat,
     src.actor1_geo_long,
-    src.actor1_geo_feature_id,
+    -- src.actor1_geo_feature_id,
  
     -- 행위자2(Actor2) 정보(지리 포함) 매핑
     src.actor2_code,
     src.actor2_name,
     -- src.actor2_country_code,
-    a2_iso.current_iso_code AS mp_actor2_country_iso,
-    a2_iso.name_eng AS mp_actor2_country_eng,  -- 행위자2 '소속' 국가명(영문)
-    a2_iso.name_kor AS mp_actor2_country_kor,  -- 행위자2 '소속' 국가명(국문)
+    a2_iso.current_iso_code AS mp_actor2_from_country_iso,
+    a2_iso.name_eng AS mp_actor2_from_country_eng,  -- 행위자2 '소속' 국가명(영문)
+    a2_iso.name_kor AS mp_actor2_from_country_kor,  -- 행위자2 '소속' 국가명(국문)
     -- src.actor2_known_group_code,
     a2_org.description AS mp_actor2_organization,
     a2_org.type AS mp_actor2_organization_type,
@@ -106,10 +101,10 @@ SELECT
     a2_fips.current_iso_code AS mp_actor2_geo_country_iso,
     a2_fips.name_eng AS mp_actor2_geo_country_eng,   -- 행위자2 행동 '위치' 국가명(영문)
     a2_fips.name_kor AS mp_actor2_geo_country_kor,   -- 행위자2 행동 '위치' 국가명(국문)
-    src.actor2_geo_adm1_code,
+    -- src.actor2_geo_adm1_code,
     src.actor2_geo_lat,
     src.actor2_geo_long,
-    src.actor2_geo_feature_id,
+    -- src.actor2_geo_feature_id,
 
     -- 이벤트 지리(Action_geo) 정보 매핑
     -- src.action_geo_type,
@@ -119,25 +114,20 @@ SELECT
     ac_fips.current_iso_code AS mp_action_geo_country_iso,
     ac_fips.name_eng AS mp_action_geo_country_eng,   -- 이벤트 발생 '위치' 국가명(영문)
     ac_fips.name_kor AS mp_action_geo_country_kor,   -- 이벤트 발생 '위치' 국가명(국문)
-    src.action_geo_adm1_code,
+    -- src.action_geo_adm1_code,
     src.action_geo_lat,
     src.action_geo_long,
-    src.action_geo_feature_id,
+    -- src.action_geo_feature_id,
 
     -- 데이터 관리용 정보
     src.date_added,
     src.source_url,
-    -- src.actor1_geo_centroid,
-    -- src.actor2_geo_centroid,
-    -- src.action_geo_centroid,
     src.processed_at,
     src.source_file
 
 FROM
     source_data AS src
 
-
--- 각 코드 필드를 해당하는 seed 테이블과 LEFT JOIN 합니다.
 -- 이벤트 정보
 LEFT JOIN event_root_codes AS evtr ON src.event_root_code = evtr.code
 LEFT JOIN event_detail_codes AS evtd ON src.event_code = evtd.code
@@ -146,7 +136,6 @@ LEFT JOIN quad_class_codes AS quad ON src.quad_class = quad.code
 LEFT JOIN geo_type_codes AS a1_geo ON src.actor1_geo_type = a1_geo.code
 LEFT JOIN geo_type_codes AS a2_geo ON src.actor2_geo_type = a2_geo.code
 LEFT JOIN geo_type_codes AS ac_geo ON src.action_geo_type = ac_geo.code
--- 국가 정보 JOIN (ISO 코드와 FIPS 코드를 구분하여 JOIN)
 -- 행위자 소속 국가(ISO 코드 기준)
 LEFT JOIN country_codes AS a1_iso ON src.actor1_country_code = a1_iso.iso_code
 LEFT JOIN country_codes AS a2_iso ON src.actor2_country_code = a2_iso.iso_code
@@ -154,10 +143,6 @@ LEFT JOIN country_codes AS a2_iso ON src.actor2_country_code = a2_iso.iso_code
 LEFT JOIN country_codes AS a1_fips ON src.actor1_geo_country_code = a1_fips.fips_code
 LEFT JOIN country_codes AS a2_fips ON src.actor2_geo_country_code = a2_fips.fips_code
 LEFT JOIN country_codes AS ac_fips ON src.action_geo_country_code = ac_fips.fips_code
--- 1단계 행정구역(ADM1)
--- LEFT JOIN adm_codes AS a1_adm ON src.actor1_geo_adm1_code = a1_adm.code
--- LEFT JOIN adm_codes AS a2_adm ON src.actor2_geo_adm1_code = a2_adm.code
--- LEFT JOIN adm_codes AS ac_adm ON src.action_geo_adm1_code = ac_adm.code
 -- Actor 정보
 LEFT JOIN role_codes AS a1_role ON src.actor1_type1_code = a1_role.code
 LEFT JOIN role_codes AS a2_role ON src.actor2_type1_code = a2_role.code
@@ -170,8 +155,6 @@ LEFT JOIN religion_codes AS a2_rel ON src.actor2_religion1_code = a2_rel.code
 
 {% if is_incremental() %}
 WHERE
-    -- 이 모델이 이미 데이터를 가지고 있다면,
-    -- 최신 날짜보다 더 새로운 데이터만 처리
-    src.processed_at > (SELECT MAX(processed_at) FROM {{ this }})
-
+    -- 이 모델이 이미 데이터를 가지고 있다면, 최신 날짜보다 더 새로운 데이터만 처리
+    src.processed_at > (SELECT MAX(src.processed_at) FROM {{ this }})
 {% endif %}
