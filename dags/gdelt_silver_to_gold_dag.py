@@ -28,6 +28,8 @@ with DAG(
         task_id="dbt_transformation",
         image=os.getenv("DBT_IMAGE", "juxpkr/geoevent-dbt:0.3"),
         command=[
+            "/bin/sh",
+            "-c",
             "if [ ! -d dbt_packages ]; then dbt deps; fi && if [ ! -f .seed_initialized ]; then dbt seed --full-refresh && touch .seed_initialized; fi && dbt build --target prod"
         ],
         network_mode="geoevent_data-network",  # docker-compose 네트워크
