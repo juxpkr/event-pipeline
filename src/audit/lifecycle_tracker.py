@@ -8,7 +8,6 @@ from datetime import datetime, timedelta
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
-from delta.tables import DeltaTable
 
 LIFECYCLE_PATH = "s3a://warehouse/audit/event_lifecycle"
 
@@ -76,23 +75,24 @@ class EventLifecycleTracker:
 
         current_time = datetime.now()
 
-        # Delta Table 로드
-        delta_table = DeltaTable.forPath(self.spark, self.lifecycle_path)
-
-        # 조인된 이벤트들 DataFrame 생성
-        joined_df = (
-            self.spark.createDataFrame(
-                [(event_id,) for event_id in joined_event_ids], ["global_event_id"]
-            )
-            .withColumn("detailed_joined_time", lit(current_time))
-            .withColumn("status", lit("JOINED"))
+        # 임시 뷰로 조인된 이벤트들 등록
+        joined_df = self.spark.createDataFrame(
+            [(event_id,) for event_id in joined_event_ids], ["global_event_id"]
         )
+        joined_df.createOrReplaceTempView("joined_events_temp")
 
-        # MERGE로 업데이트
-        delta_table.alias("lifecycle").merge(
-            joined_df.alias("joined"),
-            "lifecycle.global_event_id = joined.global_event_id",
-        ).whenMatched().updateAll().execute()
+        # SQL MERGE로 업데이트
+        merge_sql = f"""
+        MERGE INTO delta.`{self.lifecycle_path}` AS lifecycle
+        USING joined_events_temp AS joined
+        ON lifecycle.global_event_id = joined.global_event_id
+        WHEN MATCHED THEN
+        UPDATE SET
+            detailed_joined_time = '{current_time}',
+            status = 'JOINED'
+        """
+
+        self.spark.sql(merge_sql)
 
         updated_count = len(joined_event_ids)
         print(f"Marked {updated_count} events as JOINED in batch {batch_id}")
@@ -102,14 +102,26 @@ class EventLifecycleTracker:
         """24시간 이상 대기 중인 이벤트들을 EXPIRED로 변경"""
         cutoff_time = datetime.now() - timedelta(hours=hours_threshold)
 
-        delta_table = DeltaTable.forPath(self.spark, self.lifecycle_path)
+        # SQL UPDATE로 만료 처리
+        update_sql = f"""
+        UPDATE delta.`{self.lifecycle_path}`
+        SET status = 'EXPIRED'
+        WHERE status = 'WAITING'
+        AND bronze_arrival_time < '{cutoff_time}'
+        """
 
-        # 오래된 WAITING 이벤트들을 EXPIRED로 변경
-        expired_count = delta_table.update(
-            condition=col("status")
-            == "WAITING" & (col("bronze_arrival_time") < lit(cutoff_time)),
-            set={"status": lit("EXPIRED")},
-        )
+        # 업데이트 전 카운트 확인
+        count_sql = f"""
+        SELECT COUNT(*) as expired_count
+        FROM delta.`{self.lifecycle_path}`
+        WHERE status = 'WAITING'
+        AND bronze_arrival_time < '{cutoff_time}'
+        """
+
+        expired_count = self.spark.sql(count_sql).collect()[0]["expired_count"]
+
+        # 실제 업데이트 실행
+        self.spark.sql(update_sql)
 
         print(f"Expired {expired_count} events older than {hours_threshold} hours")
         return expired_count
