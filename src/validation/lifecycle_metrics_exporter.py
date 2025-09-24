@@ -27,11 +27,21 @@ class LifecycleMetricsExporter:
         try:
             metrics_payload = self._build_lifecycle_metrics(audit_results)
 
+            # Debug: payload 로깅
+            logger.info(f"Sending metrics to: {self.pushgateway_url}/metrics/job/{self.job_name}")
+            logger.info(f"Metrics payload (first 500 chars): {metrics_payload[:500]}")
+
             response = requests.post(
                 f"{self.pushgateway_url}/metrics/job/{self.job_name}",
                 data=metrics_payload,
                 headers={"Content-Type": "text/plain"},
             )
+
+            # Debug: 응답 상태 로깅
+            logger.info(f"Response status: {response.status_code}")
+            if response.status_code != 200:
+                logger.error(f"Response content: {response.text}")
+
             response.raise_for_status()
 
             logger.info(f"Lifecycle metrics exported to {self.pushgateway_url}")
