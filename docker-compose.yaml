@@ -425,9 +425,9 @@ services:
           - node.role == manager
       resources:
         limits:
-          memory: 12G
+          memory: 6G
         reservations:
-          memory: 8G
+          memory: 4G
 
     security_opt:
       - apparmor:unconfined
