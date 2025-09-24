@@ -10,13 +10,14 @@ from pathlib import Path
 project_root = Path(__file__).resolve().parents[2]
 sys.path.append(str(project_root))
 
-from src.utils.spark_builder import create_spark_session
+from src.utils.spark_builder import get_spark_session
 from src.audit.lifecycle_tracker import EventLifecycleTracker
 
 
 def main():
     """오래된 lifecycle 이벤트들 만료 처리"""
-    spark = create_spark_session("expire_lifecycle_events")
+    spark_master = "spark://spark-master:7077"
+    spark = get_spark_session("expire_lifecycle_events", spark_master)
 
     try:
         tracker = EventLifecycleTracker(spark)
