@@ -1,11 +1,9 @@
--- [Staging 테이블] : models/staging/stg_seed_mapping.sql
--- 코드성 데이터 매핑
+-- [Staging Layer] : models/staging/stg_seed_mapping.sql
+-- Version : 2.0
+-- GDELT events의 코드성 데이터 매핑
+-- View로 작동하므로, 증분 관련 코드를 제거함
 
--- 증분 모델 (Incremental Model) 설정
-{{ config(
-    materialized='incremental',
-    unique_key=['global_event_id']
-) }}
+{{ config(materialized='view')}}
 
 WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events') }}),
     event_root_codes AS (SELECT * FROM {{ ref('event_root_codes') }}),
@@ -152,9 +150,3 @@ LEFT JOIN ethnic_codes AS a1_eth ON src.actor1_ethnic_code = a1_eth.code
 LEFT JOIN ethnic_codes AS a2_eth ON src.actor2_ethnic_code = a2_eth.code
 LEFT JOIN religion_codes AS a1_rel ON src.actor1_religion1_code = a1_rel.code
 LEFT JOIN religion_codes AS a2_rel ON src.actor2_religion1_code = a2_rel.code
-
-{% if is_incremental() %}
-WHERE
-    -- 이 모델이 이미 데이터를 가지고 있다면, 최신 날짜보다 더 새로운 데이터만 처리
-    src.processed_at > (SELECT MAX(src.processed_at) FROM {{ this }})
-{% endif %}
