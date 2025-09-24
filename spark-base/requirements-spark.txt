@@ -2,3 +2,4 @@ pyspark==3.4.3
 delta-spark==2.4.0
 confluent-kafka
 psycopg2-binary
+prometheus_client==0.20.0
