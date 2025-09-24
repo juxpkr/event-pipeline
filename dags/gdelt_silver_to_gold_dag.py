@@ -73,17 +73,7 @@ with DAG(
         """,
     )
 
-    # Task 3: 4점 감사 시스템 실행
-    data_validation_task = SparkSubmitOperator(
-        task_id="data_integrity_check",
-        conn_id="spark_conn",
-        application="/opt/airflow/src/validation/data_validator.py",
-        conf={
-            # 검증 작업은 많은 리소스가 필요 없으므로, 작게 설정
-            "spark.cores.max": "2",
-            "spark.executor.memory": "2g",
-        },
-    )
+    # Note: 데이터 감사는 gdelt_lifecycle_audit_dag에서 처리됨 (마이그레이션 완료 1분 후)
 
     # 작업 순서 정의
     dbt_transformation >> migrate_to_postgres_task
