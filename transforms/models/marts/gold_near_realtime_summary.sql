@@ -19,11 +19,12 @@ WITH new_events AS (
 ),
 
 {% if is_incremental() %}
--- CTE 2: (증분 시에만 실행) Z-Score 계산에 필요한 과거 데이터 선택(최근 30일)
+-- CTE 2: (증분 시에만 실행) Z-Score 계산을 위해 과거 30일간 새로운 데이터 가져오기
 historical_for_zscore AS (
     SELECT global_event_id, goldstein_scale, avg_tone, event_date, processed_at
-    FROM {{ this }} -- 자기 자신(이미 만들어진 gold 테이블)을 참조
+    FROM {{ ref('stg_seed_mapping') }} -- 원본 staging 테이블에서 직접 가져오기
     WHERE event_date >= DATE_SUB((SELECT MAX(event_date) FROM new_events), 30)
+    AND processed_at <= (SELECT MAX(processed_at) FROM {{ this }}) -- 이미 처리된 데이터만
 ),
 
 -- CTE 3: (증분 시에만 실행) 신규 + 과거 데이터를 합쳐 Z-Score 계산용 데이터셋 생성
