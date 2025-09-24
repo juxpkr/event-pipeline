@@ -5,6 +5,7 @@ from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.providers.docker.operators.docker import DockerOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from docker.types import Mount
 
 with DAG(
@@ -74,7 +75,18 @@ with DAG(
         """,
     )
 
-    # Note: 데이터 감사는 gdelt_lifecycle_audit_dag에서 처리됨 (마이그레이션 완료 1분 후)
+    # Task 3: Lifecycle Audit 트리거 (마이그레이션 완료 직후)
+    trigger_lifecycle_audit = TriggerDagRunOperator(
+        task_id="trigger_lifecycle_audit",
+        trigger_dag_id="gdelt_lifecycle_audit",
+        wait_for_completion=False,
+        doc_md="""
+        Lifecycle Audit DAG 트리거
+        - Gold-Postgres 마이그레이션 완료 직후 감사 실행
+        - 시간차 문제 해결로 동기화 100% 보장
+        - Collection Rate, Join Yield, Sync Accuracy 검증
+        """,
+    )
 
     # 작업 순서 정의
-    dbt_transformation >> migrate_to_postgres_task
+    dbt_transformation >> migrate_to_postgres_task >> trigger_lifecycle_audit
