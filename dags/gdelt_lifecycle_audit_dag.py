@@ -27,8 +27,8 @@ with DAG(
         application="/opt/airflow/src/validation/lifecycle_auditor.py",
         application_args=["--hours-back", "24"],
         conf={
-            "spark.cores.max": "2",
-            "spark.executor.memory": "4g",
+            "spark.cores.max": "1",
+            "spark.executor.memory": "1g",
             "spark.executor.cores": "1",
         },
         env_vars={
@@ -43,8 +43,8 @@ with DAG(
         conn_id="spark_conn",
         application="/opt/airflow/src/audit/expire_lifecycle_events.py",
         conf={
-            "spark.cores.max": "2",
-            "spark.executor.memory": "2g",
+            "spark.cores.max": "1",
+            "spark.executor.memory": "1g",
             "spark.executor.cores": "1",
         },
         env_vars={
