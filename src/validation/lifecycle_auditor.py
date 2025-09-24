@@ -267,19 +267,41 @@ class LifecycleAuditor:
                     "skipped": True,
                 }
 
-            # Gold 레코드 수
-            gold_count = self.spark.table("gold_prod.gold_dashboard_master").count()
+            # Gold 3개 테이블 레코드 수 합계
+            superset_count = self.spark.table("gold_prod.gold_superset_view").count()
+            daily_count = self.spark.table("gold_prod.gold_daily_detailed_events").count()
+            realtime_count = self.spark.table("gold_prod.gold_near_realtime_summary").count()
+            gold_count = superset_count + daily_count + realtime_count
 
-            # Postgres 레코드 수
-            postgres_df = (
+            # Postgres 3개 테이블 레코드 수 합계
+            postgres_superset = (
                 self.spark.read.format("jdbc")
                 .option("url", postgres_url)
-                .option("dbtable", "gold.gold_dashboard_master")
+                .option("dbtable", "gold.gold_superset_view")
                 .option("user", postgres_user)
                 .option("password", postgres_password)
                 .load()
-            )
-            postgres_count = postgres_df.count()
+            ).count()
+
+            postgres_daily = (
+                self.spark.read.format("jdbc")
+                .option("url", postgres_url)
+                .option("dbtable", "gold.gold_daily_detailed_events")
+                .option("user", postgres_user)
+                .option("password", postgres_password)
+                .load()
+            ).count()
+
+            postgres_realtime = (
+                self.spark.read.format("jdbc")
+                .option("url", postgres_url)
+                .option("dbtable", "gold.gold_near_realtime_summary")
+                .option("user", postgres_user)
+                .option("password", postgres_password)
+                .load()
+            ).count()
+
+            postgres_count = postgres_superset + postgres_daily + postgres_realtime
 
             sync_accuracy = 100.0 if gold_count == postgres_count else 0.0
 
