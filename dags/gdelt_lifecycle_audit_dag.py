@@ -14,7 +14,7 @@ with DAG(
     dag_id="gdelt_lifecycle_audit",
     start_date=pendulum.datetime(2024, 1, 1, tz="Asia/Seoul"),
     description="GDELT Event Lifecycle Audit System",
-    schedule="18,33,48,3 * * * *",  # 15분마다 실행 (18분, 33분, 48분, 03분)
+    schedule="19,34,49,4 * * * *",  # 15분마다 실행 (마이그레이션 후 1분 뒤)
     catchup=False,
     max_active_runs=1,
     tags=["gdelt", "audit", "monitoring"],
