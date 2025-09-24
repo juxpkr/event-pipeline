@@ -1,11 +1,9 @@
--- [Staging 테이블]: models/staging/stg_gkg_detailed_events.sql
+-- [Staging Layer] : models/staging/stg_gkg_detailed_events.sql
+-- Version : 2.0
 -- GKG 및 Mentions 상세 정보 정제
+-- View로 작동하므로, 증분 관련 코드를 제거함
 
--- 증분 모델 (Incremental Model) 설정
-{{ config(
-    materialized='incremental',
-    unique_key=['global_event_id']
-) }}
+{{ config(materialized='view')}}
 
 WITH source_data AS (
     SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events_detailed') }}
@@ -31,11 +29,3 @@ SELECT
 FROM
     source_data
 
-{% if is_incremental() %}
-    -- run_query 매크로를 사용해, 대상 테이블의 max(processed_at) 값을 먼저 조회해서 변수에 저장한다.
-  {% set max_processed_at = run_query("SELECT max(processed_at) FROM " ~ this).columns[0].values()[0] %}
-
-WHERE
-    -- 이 모델이 이미 데이터를 가지고 있다면, 최신 날짜보다 더 새로운 데이터만 처리
-    processed_at > '{{ max_processed_at }}'
-{% endif %}
