@@ -6,6 +6,7 @@ from datetime import datetime, timedelta
 from airflow import DAG
 from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.operators.python import PythonOperator
+import docker
 
 # DAG 기본 설정
 default_args = {
@@ -38,9 +39,17 @@ lifecycle_audit_task = DockerOperator(
     ],
     docker_url='unix://var/run/docker.sock',
     network_mode='event-pipeline_data-network',
-    volumes=[
-        '/var/run/docker.sock:/var/run/docker.sock',
-        'event-pipeline_shared-data:/opt/airflow'
+    mounts=[
+        docker.types.Mount(
+            target='/var/run/docker.sock',
+            source='/var/run/docker.sock',
+            type='bind'
+        ),
+        docker.types.Mount(
+            target='/opt/airflow',
+            source='event-pipeline_shared-data',
+            type='volume'
+        )
     ],
     environment={
         'SPARK_MASTER_URL': 'spark://spark-master:7077',
@@ -67,9 +76,17 @@ spark.stop()
     ],
     docker_url='unix://var/run/docker.sock',
     network_mode='event-pipeline_data-network',
-    volumes=[
-        '/var/run/docker.sock:/var/run/docker.sock',
-        'event-pipeline_shared-data:/opt/airflow'
+    mounts=[
+        docker.types.Mount(
+            target='/var/run/docker.sock',
+            source='/var/run/docker.sock',
+            type='bind'
+        ),
+        docker.types.Mount(
+            target='/opt/airflow',
+            source='event-pipeline_shared-data',
+            type='volume'
+        )
     ],
     environment={
         'SPARK_MASTER_URL': 'spark://spark-master:7077'
