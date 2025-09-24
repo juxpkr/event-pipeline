@@ -19,6 +19,7 @@ sys.path.append(str(project_root))
 
 from src.utils.spark_builder import get_spark_session
 from src.audit.lifecycle_tracker import EventLifecycleTracker
+from src.validation.lifecycle_metrics_exporter import export_lifecycle_audit_metrics
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO)
@@ -270,6 +271,13 @@ class LifecycleAuditor:
 
             status = "HEALTHY" if overall_health else "UNHEALTHY"
             logger.info(f"Overall Pipeline Status: {status}")
+
+            # Prometheus 메트릭 전송
+            try:
+                export_lifecycle_audit_metrics(self.audit_results)
+                logger.info("Metrics exported to Prometheus successfully")
+            except Exception as e:
+                logger.warning(f"Failed to export metrics to Prometheus: {e}")
 
             return self.audit_results
 
