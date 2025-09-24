@@ -571,7 +571,12 @@ services:
       - "9091:9091"
     networks:
       - data-network
-    restart: always
+    deploy:
+      restart_policy:
+        condition: any
+      placement:
+        constraints:
+          - node.labels.type == monitoring
 
 volumes:
   zookeeper-data:
