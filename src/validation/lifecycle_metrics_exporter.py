@@ -52,6 +52,7 @@ class LifecycleMetricsExporter:
     def _build_lifecycle_metrics(self, audit_results: Dict) -> str:
         """Prometheus 형식의 lifecycle 메트릭 생성"""
         lines = []
+        timestamp = int(time.time() * 1000)  # 밀리초 단위
 
         def add_metric(
             name: str,
@@ -68,7 +69,7 @@ class LifecycleMetricsExporter:
                 label_pairs = [f'{k}="{v}"' for k, v in labels.items()]
                 label_str = f"{{{','.join(label_pairs)}}}"
 
-            lines.append(f"{name}{label_str} {value}")
+            lines.append(f"{name}{label_str} {value} {timestamp}")
 
         # === 수집 정확성 메트릭 ===
         collection = audit_results.get("collection_accuracy", {})
