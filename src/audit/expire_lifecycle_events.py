@@ -22,8 +22,8 @@ def main():
     try:
         tracker = EventLifecycleTracker(spark)
 
-        # 48시간 이상 대기 중인 이벤트들을 만료 처리
-        expired_count = tracker.expire_old_waiting_events(hours_threshold=48)
+        # 24시간 이상 대기 중인 이벤트들을 만료 처리 (조인 시간 충분히 기다림)
+        expired_count = tracker.expire_old_waiting_events(hours_threshold=24)
 
         print(f"Successfully expired {expired_count} old events")
 
