@@ -26,6 +26,7 @@ with DAG(
         conn_id="spark_conn",
         application="/opt/airflow/src/validation/lifecycle_auditor.py",
         application_args=["--hours-back", "24"],
+        packages="org.postgresql:postgresql:42.5.0",
         conf={
             "spark.cores.max": "1",
             "spark.executor.memory": "1g",
@@ -34,6 +35,9 @@ with DAG(
         env_vars={
             "SPARK_MASTER_URL": "spark://spark-master:7077",
             "PROMETHEUS_PUSHGATEWAY_URL": "http://pushgateway:9091",
+            "POSTGRES_JDBC_URL": "jdbc:postgresql://postgres:5432/airflow",
+            "POSTGRES_USER": "airflow",
+            "POSTGRES_PASSWORD": "airflow",
         },
     )
 

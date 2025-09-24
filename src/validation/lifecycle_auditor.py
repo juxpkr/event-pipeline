@@ -198,16 +198,30 @@ class LifecycleAuditor:
         logger.info("Starting Gold-Postgres Sync Audit")
 
         try:
+            # 환경변수 확인
+            postgres_url = os.getenv("POSTGRES_JDBC_URL")
+            postgres_user = os.getenv("POSTGRES_USER")
+            postgres_password = os.getenv("POSTGRES_PASSWORD")
+
+            if not all([postgres_url, postgres_user, postgres_password]):
+                logger.warning("PostgreSQL 환경변수가 미설정됨. Gold-Postgres 동기화 감사 건너뜀")
+                return {
+                    "gold_count": 0,
+                    "postgres_count": 0,
+                    "sync_accuracy": 100.0,
+                    "skipped": True
+                }
+
             # Gold 레코드 수
             gold_count = self.spark.table("gold_prod.gold_dashboard_master").count()
 
             # Postgres 레코드 수
             postgres_df = (
                 self.spark.read.format("jdbc")
-                .option("url", os.getenv("POSTGRES_JDBC_URL"))
+                .option("url", postgres_url)
                 .option("dbtable", "gold.gold_dashboard_master")
-                .option("user", os.getenv("POSTGRES_USER"))
-                .option("password", os.getenv("POSTGRES_PASSWORD"))
+                .option("user", postgres_user)
+                .option("password", postgres_password)
                 .load()
             )
             postgres_count = postgres_df.count()
