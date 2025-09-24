@@ -40,6 +40,7 @@ with DAG(
         working_dir="/app",
         environment={
             "DBT_PROFILES_DIR": "/app",
+            "DBT_TARGET": "prod",
         },
         cpus=6,  # CPU 코어 6개 사용
         auto_remove="success",  # 실행 후 컨테이너 자동 삭제
