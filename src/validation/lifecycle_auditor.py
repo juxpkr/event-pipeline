@@ -32,6 +32,15 @@ class LifecycleAuditor:
         self.lifecycle_tracker = EventLifecycleTracker(spark)
         self.audit_results = {}
 
+        # lifecycle 테이블 존재 여부 확인 및 초기화
+        try:
+            self.spark.read.format("delta").load(self.lifecycle_tracker.lifecycle_path).limit(1).collect()
+            logger.info("Lifecycle table found, ready for audit")
+        except Exception:
+            logger.info("Lifecycle table not found, initializing...")
+            self.lifecycle_tracker.initialize_table()
+            logger.info("Lifecycle table initialized successfully")
+
     def audit_collection_accuracy(self, hours_back: int = 1) -> Dict:
         """감사 1: 수집 정확성 - GDELT 예상 파일 수 vs 실제 추적된 이벤트 수"""
         logger.info("Starting Collection Accuracy Audit")
