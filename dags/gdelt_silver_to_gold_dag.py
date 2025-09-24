@@ -30,7 +30,7 @@ with DAG(
         command=[
             "/bin/sh",
             "-c",
-            "if [ ! -d dbt_packages ]; then dbt deps; fi && dbt build --target prod --select marts",
+            "if [ ! -d dbt_packages ]; then dbt deps; fi && if [ ! -f .seed_initialized ]; then dbt seed --full-refresh && touch .seed_initialized; fi && dbt build --target prod",
         ],
         network_mode="geoevent_data-network",  # docker-compose 네트워크
         mounts=[
