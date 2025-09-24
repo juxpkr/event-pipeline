@@ -10,7 +10,7 @@ from typing import Dict
 from pathlib import Path
 
 from pyspark.sql import SparkSession
-from pyspark.sql.functions import *
+from pyspark.sql.functions import col, lit, desc, year, month, dayofmonth, hour
 
 # 프로젝트 루트 경로 추가
 project_root = Path(__file__).resolve().parents[2]
