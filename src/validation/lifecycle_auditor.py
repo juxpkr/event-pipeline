@@ -47,48 +47,55 @@ class LifecycleAuditor:
             self.lifecycle_tracker.initialize_table()
             logger.info("Lifecycle table initialized successfully")
 
-    def audit_collection_accuracy(self, hours_back: int = 1) -> Dict:
-        """감사 1: 수집 정확성 - GDELT 예상 파일 수 vs 실제 추적된 이벤트 수"""
-        logger.info("Starting Collection Accuracy Audit")
+    def audit_collection_accuracy(self, hours_back: int = 5) -> Dict:
+        """감사 1: 수집 정확성 - GDELT 예상 배치 수 vs 실제 수집된 배치 수 (5시간 기준)"""
+        logger.info(f"Starting Collection Accuracy Audit (UTC, {hours_back}h window)")
 
         try:
-            # GDELT 예상 파일 수 계산 (기존 로직 재사용)
+            # UTC 기준 시간 계산
             end_time = datetime.now(timezone.utc)
             start_time = end_time - timedelta(hours=hours_back)
 
-            # 15분 단위로 정렬
+            # 15분 단위로 정렬 (UTC 기준)
             minute_rounded = (start_time.minute // 15) * 15
             start_time = start_time.replace(
                 minute=minute_rounded, second=0, microsecond=0
             )
 
+            # GDELT는 15분마다 배치 발행 (확실한 팩트)
             expected_batches = int((end_time - start_time).total_seconds() / (15 * 60))
-            expected_files = expected_batches * 2  # events + gkg
 
-            # 실제 lifecycle에 기록된 이벤트 수
+            # 실제 수집된 배치 수 (서로 다른 batch_id 개수)
             lifecycle_df = self.spark.read.format("delta").load(
                 self.lifecycle_tracker.lifecycle_path
             )
+            actual_batches = lifecycle_df.filter(
+                col("bronze_arrival_time") >= lit(start_time)
+            ).select("batch_id").distinct().count()
+
+            # 실제 이벤트 수 (참고용)
             tracked_events = lifecycle_df.filter(
                 col("bronze_arrival_time") >= lit(start_time)
             ).count()
 
+            # 수집률 계산 (배치 기준)
             collection_rate = (
-                (tracked_events / (expected_files * 5000) * 100)
-                if expected_files > 0
-                else 0.0
+                (actual_batches / expected_batches * 100)
+                if expected_batches > 0
+                else 100.0
             )
 
             results = {
                 "expected_batches": expected_batches,
-                "expected_files": expected_files,
+                "actual_batches": actual_batches,
                 "tracked_events": tracked_events,
                 "collection_rate": round(collection_rate, 2),
             }
 
+            logger.info(f"Time window (UTC): {start_time} to {end_time}")
             logger.info(f"Expected GDELT batches: {expected_batches}")
-            logger.info(f"Expected files: {expected_files}")
-            logger.info(f"Tracked events: {tracked_events:,}")
+            logger.info(f"Actual collected batches: {actual_batches}")
+            logger.info(f"Total events in batches: {tracked_events:,}")
             logger.info(f"Collection rate: {collection_rate:.2f}%")
 
             self.audit_results["collection_accuracy"] = results
@@ -337,7 +344,7 @@ class LifecycleAuditor:
         try:
             # 4가지 핵심 감사 실행 (개별 try-catch)
             try:
-                self.audit_collection_accuracy(hours_back=1)
+                self.audit_collection_accuracy(hours_back=5)
             except Exception as e:
                 logger.error(f"Collection accuracy audit failed: {e}")
 
