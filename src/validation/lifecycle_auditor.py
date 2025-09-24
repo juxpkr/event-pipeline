@@ -5,7 +5,7 @@ Event Lifecycle Based Auditor
 import os
 import time
 import logging
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Dict
 from pathlib import Path
 
@@ -48,7 +48,7 @@ class LifecycleAuditor:
 
         try:
             # GDELT 예상 파일 수 계산 (기존 로직 재사용)
-            end_time = datetime.now()
+            end_time = datetime.now(timezone.utc)
             start_time = end_time - timedelta(hours=hours_back)
 
             # 15분 단위로 정렬
@@ -85,20 +85,41 @@ class LifecycleAuditor:
             logger.error(f"Collection Accuracy Audit Failed: {str(e)}")
             raise
 
-    def audit_join_yield(self, hours_back: int = 24, maturity_hours: int = 12) -> Dict:
+    def audit_join_yield(self, hours_back: int = 15, maturity_hours: int = 0) -> Dict:
         """감사 2: Join Yield - 성숙한 이벤트들의 조인 성공률"""
         logger.info(f"Starting Join Yield Audit (maturity: {maturity_hours}h)")
 
         try:
-            # 12-24시간 전 이벤트들 (조인이 완료됐을 것으로 예상)
-            end_cutoff = datetime.now() - timedelta(hours=maturity_hours)
-            start_cutoff = datetime.now() - timedelta(hours=hours_back)
-
             lifecycle_df = self.spark.read.format("delta").load(self.lifecycle_tracker.lifecycle_path)
+
+            # 데이터가 있으면 원래 로직, 없으면 전체 데이터로 분석
+            total_count = lifecycle_df.count()
+            if total_count == 0:
+                logger.warning("No lifecycle data found, returning empty results")
+                return {
+                    "total_mature_events": 0,
+                    "waiting_events": 0,
+                    "joined_events": 0,
+                    "expired_events": 0,
+                    "join_yield": 0.0
+                }
+
+            # 데이터 있으면 시간 범위 적용, 없으면 전체 데이터 사용
+            end_cutoff = datetime.now(timezone.utc) - timedelta(hours=maturity_hours)
+            start_cutoff = datetime.now(timezone.utc) - timedelta(hours=hours_back)
+
+            # 지정된 시간 범위에 데이터가 있는지 확인
             mature_events = lifecycle_df.filter(
                 (col("bronze_arrival_time") >= lit(start_cutoff)) &
                 (col("bronze_arrival_time") <= lit(end_cutoff))
             )
+            mature_count = mature_events.count()
+
+            # 시간 범위 내 데이터가 없으면 최신 데이터 일부만 사용
+            if mature_count == 0:
+                logger.warning(f"No data in {maturity_hours}-{hours_back}h range, using latest available data")
+                # 최신 1000개 레코드만 가져와서 분석 (성능 고려)
+                mature_events = lifecycle_df.orderBy(col("bronze_arrival_time").desc()).limit(1000)
 
             # 상태별 집계
             status_counts = mature_events.groupBy("status").count().collect()
@@ -148,7 +169,7 @@ class LifecycleAuditor:
         logger.info(f"Starting Data Loss Detection (threshold: {hours_threshold}h)")
 
         try:
-            cutoff_time = datetime.now() - timedelta(hours=hours_threshold)
+            cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours_threshold)
 
             lifecycle_df = self.spark.read.format("delta").load(self.lifecycle_tracker.lifecycle_path)
 
@@ -249,7 +270,7 @@ class LifecycleAuditor:
             logger.error(f"Gold-Postgres Sync Audit Failed: {str(e)}")
             raise
 
-    def run_full_lifecycle_audit(self, hours_back: int = 24) -> Dict:
+    def run_full_lifecycle_audit(self, hours_back: int = 15) -> Dict:
         """전체 lifecycle 기반 감사 실행"""
         start_time = time.time()
         logger.info("=== Starting Event Lifecycle Audit System ===")
@@ -258,8 +279,8 @@ class LifecycleAuditor:
         try:
             # 4가지 핵심 감사 실행
             self.audit_collection_accuracy(hours_back=1)  # 최근 1시간 수집률
-            self.audit_join_yield(hours_back=hours_back, maturity_hours=12)  # 12-24시간 조인율
-            self.audit_data_loss_detection(hours_threshold=24)  # 24시간+ 유실 탐지
+            self.audit_join_yield(hours_back=hours_back, maturity_hours=0)  # 최근 15시간 이벤트 조인율
+            self.audit_data_loss_detection(hours_threshold=24)  # 24시간+ 유실 탐지 (조인 시간 여유)
             self.audit_gold_postgres_sync()  # Gold-Postgres 동기화
 
             audit_duration = time.time() - start_time
