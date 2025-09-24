@@ -4,6 +4,12 @@ Event Lifecycle Expiration Script
 """
 
 import sys
+from pathlib import Path
+
+# 프로젝트 루트 경로 추가
+project_root = Path(__file__).resolve().parents[2]
+sys.path.append(str(project_root))
+
 from src.utils.spark_builder import create_spark_session
 from src.audit.lifecycle_tracker import EventLifecycleTracker
 
