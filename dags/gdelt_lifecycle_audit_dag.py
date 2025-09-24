@@ -25,7 +25,7 @@ with DAG(
         task_id="run_lifecycle_audit",
         conn_id="spark_conn",
         application="/opt/airflow/src/validation/lifecycle_auditor.py",
-        application_args=["--hours-back", "24"],
+        application_args=["--hours-back", "15"],
         packages="org.postgresql:postgresql:42.5.0",
         conf={
             "spark.cores.max": "1",
