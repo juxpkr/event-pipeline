@@ -1,0 +1,290 @@
+"""
+Event Lifecycle Based Auditor
+실제 이벤트 생명주기를 기반으로 한 데이터 감사 시스템
+"""
+import os
+import time
+import logging
+from datetime import datetime, timedelta
+from typing import Dict
+from pathlib import Path
+
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import *
+
+# 프로젝트 루트 경로 추가
+project_root = Path(__file__).resolve().parents[2]
+import sys
+sys.path.append(str(project_root))
+
+from src.utils.spark_builder import get_spark_session
+from src.audit.lifecycle_tracker import EventLifecycleTracker
+
+# 로깅 설정
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+class LifecycleAuditor:
+    """Event Lifecycle 기반 데이터 감사 시스템"""
+
+    def __init__(self, spark: SparkSession):
+        self.spark = spark
+        self.lifecycle_tracker = EventLifecycleTracker(spark)
+        self.audit_results = {}
+
+    def audit_collection_accuracy(self, hours_back: int = 1) -> Dict:
+        """감사 1: 수집 정확성 - GDELT 예상 파일 수 vs 실제 추적된 이벤트 수"""
+        logger.info("Starting Collection Accuracy Audit")
+
+        try:
+            # GDELT 예상 파일 수 계산 (기존 로직 재사용)
+            end_time = datetime.now()
+            start_time = end_time - timedelta(hours=hours_back)
+
+            # 15분 단위로 정렬
+            minute_rounded = (start_time.minute // 15) * 15
+            start_time = start_time.replace(minute=minute_rounded, second=0, microsecond=0)
+
+            expected_batches = int((end_time - start_time).total_seconds() / (15 * 60))
+            expected_files = expected_batches * 2  # events + gkg
+
+            # 실제 lifecycle에 기록된 이벤트 수
+            lifecycle_df = self.spark.read.format("delta").load(self.lifecycle_tracker.lifecycle_path)
+            tracked_events = lifecycle_df.filter(
+                col("bronze_arrival_time") >= lit(start_time)
+            ).count()
+
+            collection_rate = (tracked_events / (expected_files * 5000) * 100) if expected_files > 0 else 0.0
+
+            results = {
+                "expected_batches": expected_batches,
+                "expected_files": expected_files,
+                "tracked_events": tracked_events,
+                "collection_rate": round(collection_rate, 2)
+            }
+
+            logger.info(f"Expected GDELT batches: {expected_batches}")
+            logger.info(f"Expected files: {expected_files}")
+            logger.info(f"Tracked events: {tracked_events:,}")
+            logger.info(f"Collection rate: {collection_rate:.2f}%")
+
+            self.audit_results["collection_accuracy"] = results
+            return results
+
+        except Exception as e:
+            logger.error(f"Collection Accuracy Audit Failed: {str(e)}")
+            raise
+
+    def audit_join_yield(self, hours_back: int = 24, maturity_hours: int = 12) -> Dict:
+        """감사 2: Join Yield - 성숙한 이벤트들의 조인 성공률"""
+        logger.info(f"Starting Join Yield Audit (maturity: {maturity_hours}h)")
+
+        try:
+            # 12-24시간 전 이벤트들 (조인이 완료됐을 것으로 예상)
+            end_cutoff = datetime.now() - timedelta(hours=maturity_hours)
+            start_cutoff = datetime.now() - timedelta(hours=hours_back)
+
+            lifecycle_df = self.spark.read.format("delta").load(self.lifecycle_tracker.lifecycle_path)
+            mature_events = lifecycle_df.filter(
+                (col("bronze_arrival_time") >= lit(start_cutoff)) &
+                (col("bronze_arrival_time") <= lit(end_cutoff))
+            )
+
+            # 상태별 집계
+            status_counts = mature_events.groupBy("status").count().collect()
+
+            waiting_count = 0
+            joined_count = 0
+            expired_count = 0
+
+            for row in status_counts:
+                if row["status"] == "WAITING":
+                    waiting_count = row["count"]
+                elif row["status"] == "JOINED":
+                    joined_count = row["count"]
+                elif row["status"] == "EXPIRED":
+                    expired_count = row["count"]
+
+            total_mature = waiting_count + joined_count + expired_count
+            completed_events = joined_count + expired_count
+
+            join_yield = (joined_count / completed_events * 100) if completed_events > 0 else 0.0
+
+            results = {
+                "total_mature_events": total_mature,
+                "waiting_events": waiting_count,
+                "joined_events": joined_count,
+                "expired_events": expired_count,
+                "join_yield": round(join_yield, 2)
+            }
+
+            logger.info(f"Mature events (12-24h ago): {total_mature:,}")
+            logger.info(f"Joined: {joined_count:,}, Expired: {expired_count:,}, Still waiting: {waiting_count:,}")
+            logger.info(f"Join Yield: {join_yield:.2f}%")
+
+            # 임계값 검증 (80% 미만 시 경고)
+            if join_yield < 80.0:
+                logger.warning(f"Join Yield ({join_yield:.2f}%) is below 80% threshold")
+
+            self.audit_results["join_yield"] = results
+            return results
+
+        except Exception as e:
+            logger.error(f"Join Yield Audit Failed: {str(e)}")
+            raise
+
+    def audit_data_loss_detection(self, hours_threshold: int = 24) -> Dict:
+        """감사 3: 데이터 유실 탐지 - 24시간 이상 대기 중인 이벤트"""
+        logger.info(f"Starting Data Loss Detection (threshold: {hours_threshold}h)")
+
+        try:
+            cutoff_time = datetime.now() - timedelta(hours=hours_threshold)
+
+            lifecycle_df = self.spark.read.format("delta").load(self.lifecycle_tracker.lifecycle_path)
+
+            # 24시간 이상 WAITING인 의심 이벤트들
+            suspicious_events = lifecycle_df.filter(
+                (col("status") == "WAITING") &
+                (col("bronze_arrival_time") < lit(cutoff_time))
+            )
+
+            suspicious_count = suspicious_events.count()
+
+            # 배치별 의심 이벤트 분포
+            suspicious_by_batch = suspicious_events.groupBy("batch_id").count().orderBy(desc("count"))
+            top_problematic_batches = suspicious_by_batch.take(5)
+
+            results = {
+                "suspicious_events": suspicious_count,
+                "threshold_hours": hours_threshold,
+                "top_problematic_batches": [
+                    {"batch_id": row["batch_id"], "count": row["count"]}
+                    for row in top_problematic_batches
+                ]
+            }
+
+            logger.info(f"Suspicious events (>{hours_threshold}h waiting): {suspicious_count:,}")
+
+            if suspicious_count > 0:
+                logger.warning("Top problematic batches:")
+                for batch in results["top_problematic_batches"]:
+                    logger.warning(f"  {batch['batch_id']}: {batch['count']} events")
+
+            # 유실 탐지 시 자동으로 EXPIRED 상태로 변경
+            if suspicious_count > 0:
+                expired_count = self.lifecycle_tracker.expire_old_waiting_events(hours_threshold)
+                results["auto_expired"] = expired_count
+                logger.info(f"Auto-expired {expired_count} old waiting events")
+
+            self.audit_results["data_loss_detection"] = results
+            return results
+
+        except Exception as e:
+            logger.error(f"Data Loss Detection Failed: {str(e)}")
+            raise
+
+    def audit_gold_postgres_sync(self) -> Dict:
+        """감사 4: Gold-Postgres 동기화 정확성 (기존 로직 유지)"""
+        logger.info("Starting Gold-Postgres Sync Audit")
+
+        try:
+            # Gold 레코드 수
+            gold_count = self.spark.table("gold_prod.gold_dashboard_master").count()
+
+            # Postgres 레코드 수
+            postgres_df = (
+                self.spark.read.format("jdbc")
+                .option("url", os.getenv("POSTGRES_JDBC_URL"))
+                .option("dbtable", "gold.gold_dashboard_master")
+                .option("user", os.getenv("POSTGRES_USER"))
+                .option("password", os.getenv("POSTGRES_PASSWORD"))
+                .load()
+            )
+            postgres_count = postgres_df.count()
+
+            sync_accuracy = 100.0 if gold_count == postgres_count else 0.0
+
+            results = {
+                "gold_count": gold_count,
+                "postgres_count": postgres_count,
+                "sync_accuracy": sync_accuracy
+            }
+
+            logger.info(f"Gold records: {gold_count:,}")
+            logger.info(f"Postgres records: {postgres_count:,}")
+            logger.info(f"Sync accuracy: {sync_accuracy:.1f}%")
+
+            # 100% 동기화 필수
+            if gold_count != postgres_count:
+                raise ValueError(f"CRITICAL: Gold ({gold_count:,}) != Postgres ({postgres_count:,})")
+
+            self.audit_results["gold_postgres_sync"] = results
+            return results
+
+        except Exception as e:
+            logger.error(f"Gold-Postgres Sync Audit Failed: {str(e)}")
+            raise
+
+    def run_full_lifecycle_audit(self, hours_back: int = 24) -> Dict:
+        """전체 lifecycle 기반 감사 실행"""
+        start_time = time.time()
+        logger.info("=== Starting Event Lifecycle Audit System ===")
+        logger.info(f"Audit window: Last {hours_back} hours")
+
+        try:
+            # 4가지 핵심 감사 실행
+            self.audit_collection_accuracy(hours_back=1)  # 최근 1시간 수집률
+            self.audit_join_yield(hours_back=hours_back, maturity_hours=12)  # 12-24시간 조인율
+            self.audit_data_loss_detection(hours_threshold=24)  # 24시간+ 유실 탐지
+            self.audit_gold_postgres_sync()  # Gold-Postgres 동기화
+
+            audit_duration = time.time() - start_time
+
+            # 전체 감사 결과 요약
+            logger.info("=== Lifecycle Audit Summary ===")
+            logger.info(f"Collection Rate: {self.audit_results['collection_accuracy']['collection_rate']:.1f}%")
+            logger.info(f"Join Yield (12-24h): {self.audit_results['join_yield']['join_yield']:.1f}%")
+            logger.info(f"Suspicious Events: {self.audit_results['data_loss_detection']['suspicious_events']:,}")
+            logger.info(f"Gold-Postgres Sync: {self.audit_results['gold_postgres_sync']['sync_accuracy']:.1f}%")
+            logger.info(f"Audit Duration: {audit_duration:.2f}s")
+
+            # 전체 상태 판정
+            overall_health = all([
+                self.audit_results['collection_accuracy']['collection_rate'] >= 70.0,
+                self.audit_results['join_yield']['join_yield'] >= 80.0,
+                self.audit_results['data_loss_detection']['suspicious_events'] == 0,
+                self.audit_results['gold_postgres_sync']['sync_accuracy'] == 100.0
+            ])
+
+            self.audit_results["overall_health"] = overall_health
+            self.audit_results["audit_duration"] = audit_duration
+
+            status = "HEALTHY" if overall_health else "UNHEALTHY"
+            logger.info(f"Overall Pipeline Status: {status}")
+
+            return self.audit_results
+
+        except Exception as e:
+            audit_duration = time.time() - start_time
+            logger.error(f"Lifecycle Audit FAILED: {str(e)}")
+            self.audit_results["overall_health"] = False
+            self.audit_results["audit_duration"] = audit_duration
+            raise
+
+
+def run_lifecycle_audit(hours_back: int = 24):
+    """메인 실행 함수"""
+    spark_master = os.getenv("SPARK_MASTER_URL", "spark://spark-master:7077")
+    spark = get_spark_session("Lifecycle_Auditor", spark_master)
+
+    try:
+        auditor = LifecycleAuditor(spark)
+        results = auditor.run_full_lifecycle_audit(hours_back)
+        return results
+
+    finally:
+        spark.stop()
+
+
+if __name__ == "__main__":
+    run_lifecycle_audit()
