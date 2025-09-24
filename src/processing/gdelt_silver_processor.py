@@ -17,6 +17,7 @@ sys.path.append("/opt/airflow")
 from src.utils.spark_builder import get_spark_session
 from src.utils.redis_client import redis_client
 from src.utils.schemas.gdelt_schemas import GDELTSchemas
+from src.audit.lifecycle_tracker import EventLifecycleTracker
 
 # Transformers
 from src.processing.transformers.events_transformer import transform_events_to_silver
@@ -175,7 +176,12 @@ def main():
     start_time_str = sys.argv[1]
     end_time_str = sys.argv[2]
 
+    # batch_id 생성 (시간 기반)
+    batch_id = f"batch_{start_time_str.replace(':', '').replace('-', '').replace(' ', '_')}"
+
     try:
+        # Lifecycle Tracker 초기화
+        lifecycle_tracker = EventLifecycleTracker(spark)
         # 1. Silver 스키마 생성
         logger.info("Creating silver schema...")
         spark.sql("CREATE SCHEMA IF NOT EXISTS silver LOCATION 's3a://warehouse/silver/'")
@@ -216,7 +222,7 @@ def main():
         )
         gkg_silver = transform_gkg_to_silver(gkg_df) if gkg_df else None
 
-        # 6. Events 단독 Silver 저장
+        # 6. Events 단독 Silver 저장 및 Lifecycle 추적
         if events_silver:
             write_to_delta_lake(
                 df=events_silver,
@@ -225,6 +231,11 @@ def main():
                 partition_col="processed_at",  # Hot: 실시간 대시보드용 (수집시간)
                 merge_key="global_event_id",  # Silver 스키마의 소문자 키
             )
+
+            # Bronze → Silver 처리 후 lifecycle 기록
+            tracked_count = lifecycle_tracker.track_bronze_arrival(events_silver, batch_id)
+            logger.info(f"Tracked {tracked_count} events in lifecycle")
+
             logger.info("Events Silver sample:")
             events_silver.select(
                 "global_event_id", "event_date", "actor1_country_code", "event_code"
@@ -250,6 +261,11 @@ def main():
                 partition_col="priority_date",  # 사건 시간 기준
                 merge_key="global_event_id",  # Silver 스키마의 소문자 키
             )
+
+            # 3-way join 성공 후 JOINED 상태 업데이트
+            joined_event_ids = final_silver_df.select("global_event_id").rdd.map(lambda row: row[0]).collect()
+            updated_count = lifecycle_tracker.mark_events_joined(joined_event_ids, batch_id)
+            logger.info(f"Marked {updated_count} events as JOINED in lifecycle")
 
             logger.info("Sample of Events detailed Silver data:")
             final_silver_df.show(5, vertical=True)
