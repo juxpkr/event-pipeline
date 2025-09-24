@@ -12,6 +12,7 @@ with DAG(
     start_date=pendulum.now(tz="Asia/Seoul"),
     schedule=None,  # 직접 실행하거나, 다른 DAG이 호출하도록 설정
     catchup=False,
+    max_active_runs=1,
     doc_md="""
     Silver Layer 데이터를 dbt로 변환하여 Gold Layer를 만들고,
     최종 결과를 PostgreSQL 데이터 마트로 이전합니다.
@@ -60,9 +61,9 @@ with DAG(
         packages="org.postgresql:postgresql:42.5.0",
         conf={
             "spark.executor.instances": "5",  # 5개의 작업팀을 투입
-            "spark.executor.memory": "8g",    # 각 팀은 8GB 메모리 사용
-            "spark.executor.cores": "2",     # 각 팀은 2인 1조로 구성 (총 5*2=10코어)
-            "spark.driver.memory": "4g"
+            "spark.executor.memory": "8g",  # 각 팀은 8GB 메모리 사용
+            "spark.executor.cores": "2",  # 각 팀은 2인 1조로 구성 (총 5*2=10코어)
+            "spark.driver.memory": "4g",
         },
         doc_md="""
         Gold Layer to PostgreSQL Migration
@@ -70,6 +71,18 @@ with DAG(
         - 테이블: gdelt_seed_mapping, gdelt_actors_parsed, gdelt_actors_description
         - 마이그레이션 검증 및 상태 리포팅 포함
         """,
+    )
+
+    # Task 3: 4점 감사 시스템 실행
+    data_validation_task = SparkSubmitOperator(
+        task_id="data_integrity_check",
+        conn_id="spark_conn",
+        application="/opt/airflow/src/validation/data_validator.py",
+        conf={
+            # 검증 작업은 많은 리소스가 필요 없으므로, 작게 설정
+            "spark.cores.max": "2",
+            "spark.executor.memory": "2g",
+        },
     )
 
     # 작업 순서 정의
