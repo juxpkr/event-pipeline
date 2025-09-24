@@ -146,7 +146,7 @@ class LifecycleAuditor:
                 "waiting_events": waiting_count,
                 "joined_events": joined_count,
                 "expired_events": expired_count,
-                "join_yield": round(join_yield, 2)
+                "join_yield": float(round(join_yield, 2))
             }
 
             logger.info(f"Mature events (12-24h ago): {total_mature:,}")
@@ -277,28 +277,43 @@ class LifecycleAuditor:
         logger.info(f"Audit window: Last {hours_back} hours")
 
         try:
-            # 4가지 핵심 감사 실행
-            self.audit_collection_accuracy(hours_back=1)  # 최근 1시간 수집률
-            self.audit_join_yield(hours_back=hours_back, maturity_hours=0)  # 최근 15시간 이벤트 조인율
-            self.audit_data_loss_detection(hours_threshold=24)  # 24시간+ 유실 탐지 (조인 시간 여유)
-            self.audit_gold_postgres_sync()  # Gold-Postgres 동기화
+            # 4가지 핵심 감사 실행 (개별 try-catch)
+            try:
+                self.audit_collection_accuracy(hours_back=1)
+            except Exception as e:
+                logger.error(f"Collection accuracy audit failed: {e}")
+
+            try:
+                self.audit_join_yield(hours_back=hours_back, maturity_hours=0)
+            except Exception as e:
+                logger.error(f"Join yield audit failed: {e}")
+
+            try:
+                self.audit_data_loss_detection(hours_threshold=24)
+            except Exception as e:
+                logger.error(f"Data loss detection failed: {e}")
+
+            try:
+                self.audit_gold_postgres_sync()
+            except Exception as e:
+                logger.error(f"Gold-Postgres sync audit failed: {e}")
 
             audit_duration = time.time() - start_time
 
             # 전체 감사 결과 요약
             logger.info("=== Lifecycle Audit Summary ===")
-            logger.info(f"Collection Rate: {self.audit_results['collection_accuracy']['collection_rate']:.1f}%")
-            logger.info(f"Join Yield (12-24h): {self.audit_results['join_yield']['join_yield']:.1f}%")
-            logger.info(f"Suspicious Events: {self.audit_results['data_loss_detection']['suspicious_events']:,}")
-            logger.info(f"Gold-Postgres Sync: {self.audit_results['gold_postgres_sync']['sync_accuracy']:.1f}%")
+            logger.info(f"Collection Rate: {self.audit_results.get('collection_accuracy', {}).get('collection_rate', 0):.1f}%")
+            logger.info(f"Join Yield: {self.audit_results.get('join_yield', {}).get('join_yield', 0):.1f}%")
+            logger.info(f"Suspicious Events: {self.audit_results.get('data_loss_detection', {}).get('suspicious_events', 0):,}")
+            logger.info(f"Gold-Postgres Sync: {self.audit_results.get('gold_postgres_sync', {}).get('sync_accuracy', 0):.1f}%")
             logger.info(f"Audit Duration: {audit_duration:.2f}s")
 
             # 전체 상태 판정
             overall_health = all([
-                self.audit_results['collection_accuracy']['collection_rate'] >= 70.0,
-                self.audit_results['join_yield']['join_yield'] >= 80.0,
-                self.audit_results['data_loss_detection']['suspicious_events'] == 0,
-                self.audit_results['gold_postgres_sync']['sync_accuracy'] == 100.0
+                self.audit_results.get('collection_accuracy', {}).get('collection_rate', 0) >= 70.0,
+                self.audit_results.get('join_yield', {}).get('join_yield', 0) >= 80.0,
+                self.audit_results.get('data_loss_detection', {}).get('suspicious_events', 1) == 0,
+                self.audit_results.get('gold_postgres_sync', {}).get('sync_accuracy', 0) == 100.0
             ])
 
             self.audit_results["overall_health"] = overall_health
