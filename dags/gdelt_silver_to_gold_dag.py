@@ -30,7 +30,7 @@ with DAG(
         command=[
             "/bin/sh",
             "-c",
-            "dbt build --target prod --select +gold_dashboard_master",
+            "[ ! -d dbt_packages ] && dbt deps || echo 'Packages already installed'; dbt build --target prod --select marts",
         ],
         network_mode="geoevent_data-network",  # docker-compose 네트워크
         mounts=[
