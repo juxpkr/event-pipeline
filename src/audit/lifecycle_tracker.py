@@ -4,7 +4,7 @@ Event Lifecycle Tracker
 """
 
 import os
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
@@ -45,7 +45,7 @@ class EventLifecycleTracker:
 
     def track_bronze_arrival(self, events_df: DataFrame, batch_id: str):
         """Bronze 도착 이벤트들을 lifecycle에 기록"""
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
 
         # 이벤트 ID 추출 및 메타데이터 생성
         lifecycle_records = (
@@ -73,7 +73,7 @@ class EventLifecycleTracker:
         if not joined_event_ids:
             return 0
 
-        current_time = datetime.now()
+        current_time = datetime.now(timezone.utc)
 
         # 임시 뷰로 조인된 이벤트들 등록
         joined_df = self.spark.createDataFrame(
@@ -100,7 +100,7 @@ class EventLifecycleTracker:
 
     def expire_old_waiting_events(self, hours_threshold: int = 24):
         """24시간 이상 대기 중인 이벤트들을 EXPIRED로 변경"""
-        cutoff_time = datetime.now() - timedelta(hours=hours_threshold)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours_threshold)
 
         # SQL UPDATE로 만료 처리
         update_sql = f"""
@@ -128,7 +128,7 @@ class EventLifecycleTracker:
 
     def get_lifecycle_stats(self, hours_back: int = 24) -> dict:
         """최근 N시간 lifecycle 통계 조회"""
-        cutoff_time = datetime.now() - timedelta(hours=hours_back)
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours_back)
 
         lifecycle_df = self.spark.read.format("delta").load(self.lifecycle_path)
         recent_events = lifecycle_df.filter(
