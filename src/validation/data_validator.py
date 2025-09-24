@@ -264,7 +264,6 @@ class PrometheusMetricsExporter:
     ) -> str:
         """Prometheus 메트릭 형식의 페이로드 생성"""
         lines = []
-        timestamp = int(time.time() * 1000)
 
         # Helper function to add metric
         def add_metric(
@@ -282,7 +281,7 @@ class PrometheusMetricsExporter:
                 label_pairs = [f'{k}="{v}"' for k, v in labels.items()]
                 label_str = f"{{{','.join(label_pairs)}}}"
 
-            lines.append(f"{name}{label_str} {value} {timestamp}")
+            lines.append(f"{name}{label_str} {value}")
 
         labels = {"time_window": time_window}
 
