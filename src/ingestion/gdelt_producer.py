@@ -17,6 +17,7 @@ from botocore.exceptions import ClientError
 from confluent_kafka import Producer
 from dotenv import load_dotenv
 from src.utils.kafka_producer import get_kafka_producer
+from src.validation.lifecycle_metrics_exporter import export_producer_collection_metrics
 from datetime import datetime, timedelta, timezone
 from typing import List, Dict, Tuple
 
@@ -172,7 +173,25 @@ def send_bronze_data_to_kafka(
             with z.open(csv_filename) as c:
                 # CSV 파일을 한 줄씩 읽어서 처리
                 # GDELT CSV는 탭으로 구분되어 있고, 헤더가 없음
-                reader = csv.reader(io.TextIOWrapper(c, "utf-8"), delimiter="\t")
+
+                # 여러 인코딩으로 fallback 시도
+                encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252', 'iso-8859-1']
+                reader = None
+                for encoding in encodings:
+                    try:
+                        c.seek(0)  # 파일 포인터를 처음으로 되돌림
+                        reader = csv.reader(io.TextIOWrapper(c, encoding), delimiter="\t")
+                        # 첫 줄 읽기 테스트
+                        next(reader)
+                        c.seek(0)  # 다시 처음으로 되돌림
+                        reader = csv.reader(io.TextIOWrapper(c, encoding), delimiter="\t")
+                        logger.info(f"Successfully opened {csv_filename} with {encoding} encoding")
+                        break
+                    except (UnicodeDecodeError, StopIteration):
+                        continue
+
+                if reader is None:
+                    raise UnicodeDecodeError("Failed to decode with any supported encoding")
 
                 record_count = 0
                 batch_records = []
@@ -343,10 +362,17 @@ def main():
                 processed_count = process_data_type(
                     data_type, gdelt_urls[data_type], producer, args.logical_date
                 )
-                total_stats[data_type] = processed_count
+                total_stats[data_type] = {
+                    "record_count": processed_count,
+                    "url_count": len(gdelt_urls[data_type])
+                }
             except Exception as e:
                 logger.error(f"!!! FAILED to process data type: {data_type}. Reason: {e}")
                 all_types_successful = False
+                total_stats[data_type] = {
+                    "record_count": 0,
+                    "url_count": len(gdelt_urls.get(data_type, []))
+                }
 
         # STEP 3: 모든 작업이 성공적으로 끝났을 때만 체크포인트를 업데이트한다.
         if all_types_successful:
@@ -364,13 +390,21 @@ def main():
         logger.info(f"{'='*50}")
 
         grand_total = 0
-        for data_type, count in total_stats.items():
+        for data_type, stats in total_stats.items():
+            record_count = stats.get('record_count', 0) if isinstance(stats, dict) else stats
             logger.info(
-                f"{data_type.upper()}: {count:,} records → {KAFKA_TOPICS[data_type]}"
+                f"{data_type.upper()}: {record_count:,} records → {KAFKA_TOPICS[data_type]}"
             )
-            grand_total += count
+            grand_total += record_count
 
         logger.info(f"GRAND TOTAL: {grand_total:,} records collected!")
+
+        # Producer 수집 통계를 Prometheus로 전송
+        try:
+            export_producer_collection_metrics(total_stats)
+            logger.info("Collection metrics exported to Prometheus successfully")
+        except Exception as e:
+            logger.warning(f"Failed to export collection metrics: {e}")
 
     except Exception as e:
         logger.error(f"An error occurred during producer execution: {e}", exc_info=True)

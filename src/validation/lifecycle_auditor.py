@@ -274,13 +274,13 @@ class LifecycleAuditor:
                     "skipped": True,
                 }
 
-            # Gold 3개 테이블 레코드 수 합계
+            # Gold 테이블 레코드 수 합계 (migration 대상 테이블만)
             superset_count = self.spark.table("gold_prod.gold_superset_view").count()
-            daily_count = self.spark.table("gold_prod.gold_daily_detailed_events").count()
+            # daily_count = self.spark.table("gold_prod.gold_daily_detailed_events").count()  # incremental 모델 제외
             realtime_count = self.spark.table("gold_prod.gold_near_realtime_summary").count()
-            gold_count = superset_count + daily_count + realtime_count
+            gold_count = superset_count + realtime_count
 
-            # Postgres 3개 테이블 레코드 수 합계
+            # Postgres 테이블 레코드 수 합계 (migration 대상 테이블만)
             postgres_superset = (
                 self.spark.read.format("jdbc")
                 .option("url", postgres_url)
@@ -290,14 +290,14 @@ class LifecycleAuditor:
                 .load()
             ).count()
 
-            postgres_daily = (
-                self.spark.read.format("jdbc")
-                .option("url", postgres_url)
-                .option("dbtable", "gold.gold_daily_detailed_events")
-                .option("user", postgres_user)
-                .option("password", postgres_password)
-                .load()
-            ).count()
+            # postgres_daily = (
+            #     self.spark.read.format("jdbc")
+            #     .option("url", postgres_url)
+            #     .option("dbtable", "gold.gold_daily_detailed_events")
+            #     .option("user", postgres_user)
+            #     .option("password", postgres_password)
+            #     .load()
+            # ).count()  # incremental 모델 제외
 
             postgres_realtime = (
                 self.spark.read.format("jdbc")
@@ -308,7 +308,7 @@ class LifecycleAuditor:
                 .load()
             ).count()
 
-            postgres_count = postgres_superset + postgres_daily + postgres_realtime
+            postgres_count = postgres_superset + postgres_realtime
 
             sync_accuracy = 100.0 if gold_count == postgres_count else 0.0
 

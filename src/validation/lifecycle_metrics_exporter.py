@@ -168,6 +168,52 @@ class LifecycleMetricsExporter:
         return "\n".join(lines) + "\n"
 
 
+def export_producer_collection_metrics(collection_stats: Dict):
+    """Producer 수집 통계를 Prometheus로 전송"""
+    try:
+        exporter = LifecycleMetricsExporter(job_name="gdelt_producer")
+
+        lines = []
+        current_time = time.time()
+
+        # 데이터 타입별 수집 레코드 수
+        for data_type, stats in collection_stats.items():
+            if isinstance(stats, dict) and 'record_count' in stats:
+                lines.append(f"# HELP gdelt_collection_records_{data_type} Number of records collected for {data_type}")
+                lines.append(f"# TYPE gdelt_collection_records_{data_type} gauge")
+                lines.append(f'gdelt_collection_records_{data_type}{{data_type="{data_type}"}} {stats["record_count"]}')
+
+                lines.append(f"# HELP gdelt_collection_urls_{data_type} Number of URLs processed for {data_type}")
+                lines.append(f"# TYPE gdelt_collection_urls_{data_type} gauge")
+                lines.append(f'gdelt_collection_urls_{data_type}{{data_type="{data_type}"}} {stats.get("url_count", 0)}')
+
+        # 전체 수집 통계
+        total_records = sum(stats.get('record_count', 0) for stats in collection_stats.values() if isinstance(stats, dict))
+        lines.append(f"# HELP gdelt_collection_total_records Total number of records collected")
+        lines.append(f"# TYPE gdelt_collection_total_records gauge")
+        lines.append(f"gdelt_collection_total_records {total_records}")
+
+        lines.append(f"# HELP gdelt_collection_timestamp Timestamp of last collection")
+        lines.append(f"# TYPE gdelt_collection_timestamp gauge")
+        lines.append(f"gdelt_collection_timestamp {current_time}")
+
+        metrics_payload = "\n".join(lines) + "\n"
+
+        response = requests.post(
+            f"{exporter.pushgateway_url}/metrics/job/{exporter.job_name}",
+            data=metrics_payload,
+            headers={"Content-Type": "text/plain"},
+        )
+        response.raise_for_status()
+
+        logger.info(f"Producer collection metrics exported to Prometheus")
+        return True
+
+    except Exception as e:
+        logger.error(f"Failed to export producer metrics: {e}")
+        return False
+
+
 def export_lifecycle_audit_metrics(audit_results: Dict):
     """Lifecycle 감사 결과 메트릭 전송 (독립 실행용)"""
     try:
