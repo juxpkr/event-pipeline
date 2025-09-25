@@ -2,10 +2,7 @@
 -- Version : 1.0
 -- 역할: Superset 연결용 통합 테이블
 
--- 증분 모델 (Incremental Model) 설정
-{{ config(
-    materialized='view'
-) }}
+{{ config(materialized='view') }}
 
 WITH realtime_summary AS (
     -- 1. 15분마다 업데이트되는 일일/국가별 KPI 요약 테이블

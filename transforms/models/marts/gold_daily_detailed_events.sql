@@ -62,6 +62,12 @@ SELECT
         ELSE '중립'
     END AS event_type,
 
+    (
+        -0.5 * IFNULL(goldstein_scale, 0) +
+        -0.3 * IFNULL(avg_tone, 0) +
+        0.2 * LN(IFNULL(num_articles, 1))   -- num_articles가 0 또는 NULL일 경우를 대비해 1로 처리
+    ) AS risk_score_detailed,
+
     actor1_name || '이(가) ' || actor2_name || '에게 ' || mp_event_info || '을(를) 했습니다.' AS simple_story,
     mp_actor1_from_country_kor || '의 ' || actor1_name || '이(가) ' || mp_actor2_from_country_kor || '의 ' || actor2_name || '와(과) '
     || mp_action_geo_country_kor || ' ' || action_geo_fullname || '에서 ' || mp_event_info || ' 관련 논의를 했습니다. '
@@ -77,6 +83,13 @@ SELECT
 
 FROM analytics_calculations
 
+-- {% if is_incremental() %}
+-- WHERE processed_at > (SELECT MAX(processed_at) FROM {{ this }})
+-- {% endif %}
+
 {% if is_incremental() %}
-WHERE processed_at > (SELECT MAX(processed_at) FROM {{ this }})
+-- run_query 매크로를 사용해, 대상 테이블의 max(processed_at) 값을 먼저 조회해서 변수에 저장한다.
+{% set max_processed_at = run_query("SELECT max(processed_at) FROM " ~ this).columns[0].values()[0] %}
+-- 이 모델이 이미 데이터를 가지고 있다면, 최신 날짜보다 더 새로운 데이터만 처리
+WHERE processed_at > '{{ max_processed_at }}'
 {% endif %}

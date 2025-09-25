@@ -13,16 +13,24 @@ WITH new_events AS (
     SELECT *
     FROM {{ ref('stg_seed_mapping') }}
 
+    -- {% if is_incremental() %}
+    -- WHERE processed_at > (SELECT MAX(processed_at) FROM {{ this }})
+    -- {% endif %}
+
     {% if is_incremental() %}
-    WHERE processed_at > (SELECT MAX(processed_at) FROM {{ this }})
+    -- run_query 매크로를 사용해, 대상 테이블의 max(processed_at) 값을 먼저 조회해서 변수에 저장한다.
+    {% set max_processed_at = run_query("SELECT max(processed_at) FROM " ~ this).columns[0].values()[0] %}
+    -- 이 모델이 이미 데이터를 가지고 있다면, 최신 날짜보다 더 새로운 데이터만 처리
+    WHERE processed_at > '{{ max_processed_at }}'
     {% endif %}
+
 ),
 
 {% if is_incremental() %}
 -- CTE 2: (증분 시에만 실행) Z-Score 계산에 필요한 과거 데이터 선택(최근 30일)
 historical_for_zscore AS (
     SELECT global_event_id, goldstein_scale, avg_tone, event_date, processed_at
-    FROM {{ this }} -- 자기 자신(이미 만들어진 gold 테이블)을 참조
+    FROM {{ this }}   -- 자기 자신(이미 만들어진 gold 테이블)을 참조
     WHERE event_date >= DATE_SUB((SELECT MAX(event_date) FROM new_events), 30)
 ),
 
@@ -54,23 +62,57 @@ final_events_to_aggregate AS (
     LEFT JOIN z_score_calculation AS z_scores ON events.global_event_id = z_scores.global_event_id
 ),
 
--- CTE 6: 일별 특정 국가에서 가장 빈번하게 발생한 이벤트 카테고리를 찾습니다.
-most_frequent_event_per_day AS (
+-- CTE 6: 먼저 일일/국가별/카테고리별 이벤트 카운트를 집계합니다.
+event_counts_per_day AS (
     SELECT
         event_date,
         mp_action_geo_country_iso,
-        mp_event_categories
-    FROM (
-        SELECT
-            event_date,
-            mp_action_geo_country_iso,
-            mp_event_categories,
-            ROW_NUMBER() OVER (PARTITION BY event_date, mp_action_geo_country_iso ORDER BY COUNT(*) DESC) as rn
-        FROM final_events_to_aggregate
-        WHERE mp_action_geo_country_iso IS NOT NULL AND mp_event_categories IS NOT NULL
-        GROUP BY 1, 2, 3
-    )
-    WHERE rn = 1
+        mp_event_categories,
+        COUNT(*) as category_count
+    FROM final_events_to_aggregate
+    WHERE mp_action_geo_country_iso IS NOT NULL AND mp_event_categories IS NOT NULL
+    GROUP BY 1, 2, 3
+),
+
+-- CTE 7: 집계된 카운트를 기준으로 순위를 매깁니다.
+ranked_events_per_day AS (
+    SELECT
+        event_date,
+        mp_action_geo_country_iso,
+        mp_event_categories,
+        ROW_NUMBER() OVER (PARTITION BY event_date, mp_action_geo_country_iso ORDER BY category_count DESC) as rn
+    FROM event_counts_per_day
+),
+
+-- CTE 8: 기본 집계 수행
+aggregated_summary AS (
+    SELECT
+        event_date,
+        mp_action_geo_country_iso,
+        mp_action_geo_country_eng,
+        mp_action_geo_country_kor,
+        COUNT(*) AS event_count,
+        AVG(goldstein_scale) AS avg_goldstein_scale,
+        AVG(avg_tone) AS avg_tone,
+        SUM(num_mentions) AS total_mentions,
+        SUM(num_sources) AS total_sources,
+        SUM(num_articles) AS total_articles,
+        COUNT(CASE WHEN quad_class IN (1, 2) THEN 1 END) AS count_cooperation_event,
+        COUNT(CASE WHEN quad_class IN (3, 4) THEN 1 END) AS count_conflict_event,
+        COUNT(CASE WHEN (goldstein_zscore > 2 OR tone_zscore < -2 OR tone_zscore > 2) THEN 1 END) AS count_anomaly_event,
+        (
+            -0.5 * IFNULL(AVG(goldstein_scale), 0) +
+            -0.3 * IFNULL(AVG(avg_tone), 0) +
+            0.2 * LN(COUNT(*))
+        ) AS risk_score_daily,
+        MAX(processed_at) AS processed_at
+    FROM final_events_to_aggregate
+    WHERE mp_action_geo_country_iso IS NOT NULL
+    GROUP BY
+        event_date,
+        mp_action_geo_country_iso,
+        mp_action_geo_country_eng,
+        mp_action_geo_country_kor
 )
 
 -- 최종 SELECT: 새로 들어온 데이터만 그룹화하고 집계한 후, 가장 빈번한 이벤트 정보를 조인합니다.
@@ -91,7 +133,7 @@ SELECT
     agg.count_cooperation_event,
     agg.count_conflict_event,
     agg.count_anomaly_event,
-    agg.risk_score,
+    agg.risk_score_daily,
     agg.processed_at,
 
     -- 가장 빈번한 이벤트 카테고리를 활용한 최종 톤 요약 스토리
@@ -101,35 +143,9 @@ SELECT
         ELSE agg.mp_action_geo_country_kor || '에서는 "' || freq.mp_event_categories || '" 관련 중립적인 분위기의 이벤트가 주로 발생했습니다.'
     END AS daily_tone_summary
 
-FROM (
-    -- CTE 7: 기본 집계 수행
-    SELECT
-        event_date,
-        mp_action_geo_country_iso,
-        mp_action_geo_country_eng,
-        mp_action_geo_country_kor,
-        COUNT(*) AS event_count,
-        AVG(goldstein_scale) AS avg_goldstein_scale,
-        AVG(avg_tone) AS avg_tone,
-        SUM(num_mentions) AS total_mentions,
-        SUM(num_sources) AS total_sources,
-        SUM(num_articles) AS total_articles,
-        COUNT(CASE WHEN quad_class IN (1, 2) THEN 1 END) AS count_cooperation_event,
-        COUNT(CASE WHEN quad_class IN (3, 4) THEN 1 END) AS count_conflict_event,
-        COUNT(CASE WHEN (goldstein_zscore > 2 OR tone_zscore < -2 OR tone_zscore > 2) THEN 1 END) AS count_anomaly_event,
-        (
-            -0.5 * IFNULL(AVG(goldstein_scale), 0) +
-            -0.3 * IFNULL(AVG(avg_tone), 0) +
-            0.2 * LN(COUNT(*))
-        ) AS risk_score,
-        MAX(processed_at) AS processed_at
-    FROM final_events_to_aggregate
-    WHERE mp_action_geo_country_iso IS NOT NULL
-    GROUP BY
-        event_date,
-        mp_action_geo_country_iso,
-        mp_action_geo_country_eng,
-        mp_action_geo_country_kor
-) AS agg
-LEFT JOIN most_frequent_event_per_day AS freq
+FROM aggregated_summary AS agg
+
+LEFT JOIN (
+    SELECT * FROM ranked_events_per_day WHERE rn = 1
+) AS freq
     ON agg.event_date = freq.event_date AND agg.mp_action_geo_country_iso = freq.mp_action_geo_country_iso
