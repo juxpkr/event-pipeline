@@ -48,10 +48,10 @@ def calculate_join_yield(
     # 성숙한 이벤트 필터링
     end_cutoff = datetime.now(timezone.utc) - timedelta(hours=maturity_hours)
     start_cutoff = datetime.now(timezone.utc) - timedelta(hours=hours_back)
+    maturity_cutoff = datetime.now(timezone.utc) - timedelta(hours=15)
 
     mature_events = lifecycle_df.filter(
-        (col("audit.bronze_arrival_time") >= lit(start_cutoff))
-        & (col("audit.bronze_arrival_time") <= lit(end_cutoff))
+        col("audit.bronze_arrival_time") <= lit(maturity_cutoff)
     )
 
     # agg로 상태별 집계 - collect() 없이
@@ -61,9 +61,14 @@ def calculate_join_yield(
         spark_sum(when(col("status") == "WAITING", 1).otherwise(0)).alias(
             "waiting_count"
         ),
-        spark_sum(when(col("status").isin(["SILVER_COMPLETE", "GOLD_COMPLETE", "POSTGRES_COMPLETE"]), 1).otherwise(0)).alias(
-            "joined_count"
-        ),
+        spark_sum(
+            when(
+                col("status").isin(
+                    ["SILVER_COMPLETE", "GOLD_COMPLETE", "POSTGRES_COMPLETE"]
+                ),
+                1,
+            ).otherwise(0)
+        ).alias("joined_count"),
         spark_sum(when(col("status") == "EXPIRED", 1).otherwise(0)).alias(
             "expired_count"
         ),
@@ -77,7 +82,15 @@ def calculate_join_yield(
     expired_count = status_stats["expired_count"] or 0
     total_mature = status_stats["total_count"] or 0
 
-    join_yield = (joined_count / total_mature * 100) if total_mature > 0 else 0.0
+    # 분모를 결과가 나온 이벤트들로만 한정
+    completed_events_count = joined_count + expired_count
+
+    # 실패 건수가 0일 때는 100% 성공으로 간주
+    join_yield = (
+        (joined_count / completed_events_count * 100)
+        if completed_events_count > 0
+        else 100.0
+    )
 
     return {
         "total_mature_events": total_mature,
@@ -271,7 +284,9 @@ class LifecycleAuditor:
         try:
             # 1. 먼저 오래된 WAITING 이벤트들을 EXPIRED로 정리 (청소부 역할)
             logger.info("Cleaning up expired events...")
-            expired_count = self.lifecycle_tracker.expire_old_waiting_events(hours_threshold=15)
+            expired_count = self.lifecycle_tracker.expire_old_waiting_events(
+                hours_threshold=15
+            )
             if expired_count > 0:
                 logger.info(f"Expired {expired_count} old waiting events")
                 # 데이터가 변경되었으므로 캐시 새로고침
