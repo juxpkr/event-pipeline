@@ -32,11 +32,11 @@ class GDELTGoldMigrator:
         self.postgres_config = self._get_postgres_config()
         # 마이그레이션할 테이블 정의
         self.migration_tables = {
-            "gold_prod.gold_daily_detailed_events": {
-                "postgres_table": "gold_daily_detailed_events",
-                "postgres_schema": "gold",
-                "description": "일별 상세 이벤트 집계 테이블",
-            },
+            # "gold_prod.gold_daily_detailed_events": {
+            #     "postgres_table": "gold_daily_detailed_events",
+            #     "postgres_schema": "gold",
+            #     "description": "일별 상세 이벤트 집계 테이블 - incremental 모델이므로 migration 제외",
+            # },
             "gold_prod.gold_near_realtime_summary": {
                 "postgres_table": "gold_near_realtime_summary",
                 "postgres_schema": "gold",
