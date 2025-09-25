@@ -24,10 +24,77 @@ with DAG(
     # Airflow 워커 컨테이너 내부에 있는 dbt 프로젝트 경로를 변수로 지정
     dbt_project_host_path = f"{os.getenv('PROJECT_ROOT', '/opt/airflow')}/transforms"
 
+    def mark_processing_complete(context):
+        """태스크 성공을 기록하는 Python 함수"""
+        from src.utils.spark_builder import get_spark_session
+        from src.audit.lifecycle_tracker import EventLifecycleTracker
+
+        task_id = context["task_instance_key_str"]
+        print(f"Task {task_id} has completed.")
+
+        spark = get_spark_session("Gold_Complete_Callback", "spark://spark-master:7077")
+        try:
+            lifecycle_tracker = EventLifecycleTracker(spark)
+
+            # Silver 완료 상태인 이벤트들을 Gold 완료로 마킹
+            lifecycle_df = spark.read.format("delta").load(
+                lifecycle_tracker.lifecycle_path
+            )
+            silver_complete_events = (
+                lifecycle_df.filter(lifecycle_df["status"] == "SILVER_COMPLETE")
+                .select("global_event_id")
+                .rdd.map(lambda row: row[0])
+                .collect()
+            )
+
+            if silver_complete_events:
+                lifecycle_tracker.mark_gold_processing_complete(
+                    silver_complete_events, f"gold_{context['ds']}"
+                )
+                print(
+                    f"Marked {len(silver_complete_events)} events as Gold processing complete"
+                )
+        finally:
+            spark.stop()
+
+    def mark_postgres_complete(context):
+        """Postgres 마이그레이션 완료를 기록하는 Python 함수"""
+        from src.utils.spark_builder import get_spark_session
+        from src.audit.lifecycle_tracker import EventLifecycleTracker
+
+        task_id = context["task_instance_key_str"]
+        print(f"Task {task_id} has completed.")
+
+        spark = get_spark_session("Postgres_Complete_Callback", "spark://spark-master:7077")
+        try:
+            lifecycle_tracker = EventLifecycleTracker(spark)
+
+            # Gold 완료 상태인 이벤트들을 Postgres 완료로 마킹
+            lifecycle_df = spark.read.format("delta").load(
+                lifecycle_tracker.lifecycle_path
+            )
+            gold_complete_events = (
+                lifecycle_df.filter(lifecycle_df["status"] == "GOLD_COMPLETE")
+                .select("global_event_id")
+                .rdd.map(lambda row: row[0])
+                .collect()
+            )
+
+            if gold_complete_events:
+                lifecycle_tracker.mark_postgres_migration_complete(
+                    gold_complete_events, f"postgres_{context['ds']}"
+                )
+                print(
+                    f"Marked {len(gold_complete_events)} events as Postgres migration complete"
+                )
+        finally:
+            spark.stop()
+
     # Task 1: dbt Transformation (Silver → Gold)
     dbt_transformation = DockerOperator(
         task_id="dbt_transformation",
         image=os.getenv("DBT_IMAGE", "juxpkr/geoevent-dbt:0.3"),
+        on_success_callback=mark_processing_complete,  # 태스크 성공 직후 호출
         command=[
             "/bin/sh",
             "-c",
@@ -61,13 +128,14 @@ with DAG(
         """,
     )
 
-    # 2단계: Gold -> Postgres 마이그레이션
+    # Task 2: Gold -> Postgres 마이그레이션
     # SparkSubmitOperator로 리소스 설정과 통일성 확보
     migrate_to_postgres_task = SparkSubmitOperator(
         task_id="migrate_gold_to_postgres",
         conn_id="spark_conn",
         application="/opt/airflow/src/processing/migration/gdelt_gold_to_postgres.py",
         packages="org.postgresql:postgresql:42.5.0",
+        on_success_callback=mark_postgres_complete,  # Postgres 마이그레이션 완료 직후 호출
         conf={
             "spark.executor.instances": "5",  # 5개의 작업팀을 투입
             "spark.executor.memory": "8g",  # 각 팀은 8GB 메모리 사용
@@ -96,4 +164,4 @@ with DAG(
     )
 
     # 작업 순서 정의
-    dbt_transformation >> migrate_to_postgres_task >> trigger_lifecycle_audit
+    (dbt_transformation >> migrate_to_postgres_task >> trigger_lifecycle_audit)
