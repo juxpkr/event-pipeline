@@ -5,7 +5,7 @@
 -- 가변 길이 Actor 코드를 처리하기 위해 직접 매칭(Direct Match) 로직 추가
 -- View로 작동하므로, 증분 관련 코드를 제거함
 
-{{ config(materialized='view')}}
+{{ config(materialized='view') }}
 
 -- 1. CTE: 필요한 모든 Seed 테이블을 하나의 '통합 코드 사전'으로 합치고 우선순위를 부여합니다.
 WITH all_codes_with_type AS (

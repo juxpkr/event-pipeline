@@ -178,7 +178,9 @@ def main():
     try:
         # 1. Silver 스키마 생성
         logger.info("Creating silver schema...")
-        spark.sql("CREATE SCHEMA IF NOT EXISTS silver LOCATION 's3a://warehouse/silver/'")
+        spark.sql(
+            "CREATE SCHEMA IF NOT EXISTS silver LOCATION 's3a://warehouse/silver/'"
+        )
 
         # 2. Silver 테이블 설정
         logger.info("Setting up Silver tables...")

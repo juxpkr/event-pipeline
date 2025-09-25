@@ -68,7 +68,8 @@ def perform_three_way_join(
 
         final_joined_df = events_mentions_joined.join(
             gkg_renamed,
-            events_mentions_joined["mention_identifier"] == gkg_renamed["document_identifier"],
+            events_mentions_joined["mention_identifier"]
+            == gkg_renamed["document_identifier"],
             how="left",
         ).drop(
             gkg_renamed["extras"],

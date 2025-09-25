@@ -3,7 +3,7 @@
 -- GKG 및 Mentions 상세 정보 정제
 -- View로 작동하므로, 증분 관련 코드를 제거함
 
-{{ config(materialized='view')}}
+{{ config(materialized='view') }}
 
 WITH source_data AS (
     SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events_detailed') }}
