@@ -41,20 +41,4 @@ with DAG(
         },
     )
 
-    # 올드 이벤트 자동 만료
-    expire_old_events_task = SparkSubmitOperator(
-        task_id="expire_old_events",
-        conn_id="spark_conn",
-        application="/opt/airflow/src/audit/expire_lifecycle_events.py",
-        conf={
-            "spark.cores.max": "1",
-            "spark.executor.memory": "1g",
-            "spark.executor.cores": "1",
-        },
-        env_vars={
-            "SPARK_MASTER_URL": "spark://spark-master:7077",
-        },
-    )
-
-    # 태스크 의존성
-    lifecycle_audit_task >> expire_old_events_task
+    # 태스크는 단독 실행 (expire 로직은 lifecycle_audit 내부에서 자동 처리)
