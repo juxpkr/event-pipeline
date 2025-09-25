@@ -28,7 +28,7 @@ SELECT
     summary.mp_action_geo_country_iso AS action_country_iso,
     summary.mp_action_geo_country_eng AS action_country_eng,
     summary.mp_action_geo_country_kor AS action_country_kor,
-    summary.risk_score,
+    summary.risk_score_daily,
     summary.event_count,
     summary.avg_goldstein_scale,
     summary.avg_tone,
@@ -41,7 +41,7 @@ SELECT
     stories.representative_simple_story,
     stories.representative_headline_story,
     
-    summary.processed_at AS updated_at
+    summary.processed_at
 
 FROM realtime_summary AS summary
 LEFT JOIN representative_stories AS stories

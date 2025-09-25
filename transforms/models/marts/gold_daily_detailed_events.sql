@@ -69,12 +69,17 @@ SELECT
     ) AS risk_score_detailed,
 
     actor1_name || '이(가) ' || actor2_name || '에게 ' || mp_event_info || '을(를) 했습니다.' AS simple_story,
+    actor1_info || '(' || actor1_name || ')' || '이(가) ' || actor2_info || '(' || actor2_name || ')' || '에게 ' || mp_event_info || '을(를) 했습니다.' AS simple_story_v2,
+
     mp_actor1_from_country_kor || '의 ' || actor1_name || '이(가) ' || mp_actor2_from_country_kor || '의 ' || actor2_name || '와(과) '
-    || mp_action_geo_country_kor || ' ' || action_geo_fullname || '에서 ' || mp_event_info || ' 관련 논의를 했습니다. '
+    || mp_action_geo_country_kor || '에서 ' || mp_event_info || ' 관련 논의를 했습니다.'
     || '(주요 인물: ' || COALESCE(v2_persons, '정보 없음') || ', 관련 기관: ' || COALESCE(v2_organizations, '정보 없음') 
     || ', 주요 테마: ' || COALESCE(v2_enhanced_themes, '정보 없음') || ')' AS rich_story,
+
     mp_action_geo_country_kor || '에서 ' || actor1_name || '와(과) ' || actor2_name || ' 간 ' || mp_event_categories || ' 발생' AS headline_story,
+
     mp_event_categories || ' (' || mp_quad_class || ')' AS event_summary,
+    
     CASE
         WHEN avg_tone > 2.5 THEN '긍정적 분위기 속에서, '
         WHEN avg_tone < -2.5 THEN '부정적 분위기 속에서, '
