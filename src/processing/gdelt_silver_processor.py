@@ -264,10 +264,15 @@ def main():
                 merge_key="global_event_id",  # Silver 스키마의 소문자 키
             )
 
-            # 3-way join 성공 후 JOINED 상태 업데이트
-            joined_event_ids = final_silver_df.select("global_event_id").rdd.map(lambda row: row[0]).collect()
-            updated_count = lifecycle_tracker.mark_events_joined(joined_event_ids, batch_id)
-            logger.info(f"Marked {updated_count} events as JOINED in lifecycle")
+            # Silver 처리 완료 시점 기록
+            final_event_ids = final_silver_df.select("global_event_id").rdd.map(lambda row: row[0]).collect()
+            lifecycle_tracker.mark_silver_processing_complete(final_event_ids, batch_id)
+
+            # 실제 GKG 조인 성공률 로깅
+            actually_joined_count = final_silver_df.filter(F.col("gkg_record_id").isNotNull()).count()
+            total_events = final_silver_df.count()
+            actual_join_rate = (actually_joined_count / total_events * 100) if total_events > 0 else 0
+            logger.info(f"Silver processing complete: {total_events} events processed, {actually_joined_count} with GKG ({actual_join_rate:.1f}% join rate)")
 
             logger.info("Sample of Events detailed Silver data:")
             final_silver_df.show(5, vertical=True)

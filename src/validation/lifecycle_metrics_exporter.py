@@ -72,46 +72,49 @@ class LifecycleMetricsExporter:
 
             lines.append(f"{name}{label_str} {value}")
 
-        # === 수집 정확성 메트릭 ===
-        collection = audit_results.get("collection_accuracy", {})
-        add_metric(
-            "gdelt_collection_rate",
-            collection.get("collection_rate", 0),
-            help_text="GDELT data collection rate percentage",
-        )
-        add_metric(
-            "gdelt_expected_batches",
-            collection.get("expected_batches", 0),
-            help_text="Expected number of GDELT batches",
-        )
-        add_metric(
-            "gdelt_tracked_events",
-            collection.get("tracked_events", 0),
-            help_text="Number of events tracked in lifecycle",
-        )
-
-        # === 조인 성공률 메트릭 ===
+        # === 1. 데이터 무결성 & 품질 메트릭 ===
         join_yield = audit_results.get("join_yield", {})
         add_metric(
-            "gdelt_join_yield",
-            join_yield.get("join_yield", 0),
-            help_text="Event join success rate for mature events (percentage)",
+            "gdelt_pipeline_events",
+            join_yield.get("waiting_events", 0),
+            labels={"status": "waiting"},
+            help_text="Number of events waiting for join (Input Rate)",
         )
-
-        # === 데이터 유실 탐지 메트릭 ===
-        data_loss = audit_results.get("data_loss_detection", {})
         add_metric(
-            "gdelt_suspicious_events",
-            data_loss.get("suspicious_events", 0),
-            help_text="Number of suspicious events (waiting >24h)",
+            "gdelt_pipeline_events",
+            join_yield.get("joined_events", 0),
+            labels={"status": "joined"},
+            help_text="Number of events successfully joined (Output Rate)",
+        )
+        add_metric(
+            "gdelt_pipeline_events",
+            join_yield.get("expired_events", 0),
+            labels={"status": "expired"},
+            help_text="Number of events that expired without joining (Expiration Rate)",
+        )
+        add_metric(
+            "gdelt_join_yield_percentage",
+            join_yield.get("join_yield", 0),
+            help_text="Join success rate percentage",
         )
 
-        # === Gold-Postgres 동기화 메트릭 ===
         sync = audit_results.get("gold_postgres_sync", {})
         add_metric(
-            "gdelt_gold_postgres_sync",
+            "gdelt_gold_postgres_sync_accuracy",
             sync.get("sync_accuracy", 0),
             help_text="Gold to Postgres synchronization accuracy (percentage)",
+        )
+        add_metric(
+            "gdelt_layer_records",
+            sync.get("gold_count", 0),
+            labels={"layer": "gold"},
+            help_text="Number of records in Gold layer",
+        )
+        add_metric(
+            "gdelt_layer_records",
+            sync.get("postgres_count", 0),
+            labels={"layer": "postgres"},
+            help_text="Number of records in Postgres layer",
         )
 
         # === 전체 파이프라인 상태 ===
@@ -127,6 +130,33 @@ class LifecycleMetricsExporter:
             "gdelt_audit_duration_seconds",
             audit_duration,
             help_text="Duration of lifecycle audit in seconds",
+        )
+
+        # === 2. 파이프라인 속도 메트릭 ===
+        durations = audit_results.get("stage_durations", {})
+        add_metric(
+            "gdelt_pipeline_duration_hours",
+            durations.get("avg_e2e_duration_hours", 0),
+            labels={"stage": "e2e"},
+            help_text="Average pipeline duration by stage in hours",
+        )
+        add_metric(
+            "gdelt_pipeline_duration_hours",
+            durations.get("avg_silver_duration_hours", 0),
+            labels={"stage": "silver"},
+            help_text="Average Silver processing duration in hours",
+        )
+        add_metric(
+            "gdelt_pipeline_duration_hours",
+            durations.get("avg_gold_duration_hours", 0),
+            labels={"stage": "gold"},
+            help_text="Average Gold processing duration in hours",
+        )
+        add_metric(
+            "gdelt_pipeline_duration_hours",
+            durations.get("avg_postgres_duration_hours", 0),
+            labels={"stage": "postgres"},
+            help_text="Average Postgres migration duration in hours",
         )
 
         # === 실시간 현황 메트릭 ===
