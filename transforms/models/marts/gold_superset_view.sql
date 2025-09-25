@@ -28,7 +28,7 @@ SELECT
     summary.mp_action_geo_country_iso AS action_country_iso,
     summary.mp_action_geo_country_eng AS action_country_eng,
     summary.mp_action_geo_country_kor AS action_country_kor,
-    summary.risk_score,
+    summary.risk_score_daily,
     summary.event_count,
     summary.avg_goldstein_scale,
     summary.avg_tone,
