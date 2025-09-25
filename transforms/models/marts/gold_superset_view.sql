@@ -41,7 +41,7 @@ SELECT
     stories.representative_simple_story,
     stories.representative_headline_story,
     
-    summary.processed_at AS updated_at
+    summary.processed_at
 
 FROM realtime_summary AS summary
 LEFT JOIN representative_stories AS stories
