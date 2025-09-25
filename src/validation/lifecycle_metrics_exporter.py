@@ -78,19 +78,17 @@ class LifecycleMetricsExporter:
             "gdelt_pipeline_events",
             join_yield.get("waiting_events", 0),
             labels={"status": "waiting"},
-            help_text="Number of events waiting for join (Input Rate)",
+            help_text="Number of events by status in pipeline",
         )
         add_metric(
             "gdelt_pipeline_events",
             join_yield.get("joined_events", 0),
             labels={"status": "joined"},
-            help_text="Number of events successfully joined (Output Rate)",
         )
         add_metric(
             "gdelt_pipeline_events",
             join_yield.get("expired_events", 0),
             labels={"status": "expired"},
-            help_text="Number of events that expired without joining (Expiration Rate)",
         )
         add_metric(
             "gdelt_join_yield_percentage",
@@ -108,13 +106,12 @@ class LifecycleMetricsExporter:
             "gdelt_layer_records",
             sync.get("gold_count", 0),
             labels={"layer": "gold"},
-            help_text="Number of records in Gold layer",
+            help_text="Number of records by layer",
         )
         add_metric(
             "gdelt_layer_records",
             sync.get("postgres_count", 0),
             labels={"layer": "postgres"},
-            help_text="Number of records in Postgres layer",
         )
 
         # === 전체 파이프라인 상태 ===
@@ -144,19 +141,16 @@ class LifecycleMetricsExporter:
             "gdelt_pipeline_duration_hours",
             durations.get("avg_silver_duration_hours", 0),
             labels={"stage": "silver"},
-            help_text="Average Silver processing duration in hours",
         )
         add_metric(
             "gdelt_pipeline_duration_hours",
             durations.get("avg_gold_duration_hours", 0),
             labels={"stage": "gold"},
-            help_text="Average Gold processing duration in hours",
         )
         add_metric(
             "gdelt_pipeline_duration_hours",
             durations.get("avg_postgres_duration_hours", 0),
             labels={"stage": "postgres"},
-            help_text="Average Postgres migration duration in hours",
         )
 
         # === 실시간 현황 메트릭 ===
