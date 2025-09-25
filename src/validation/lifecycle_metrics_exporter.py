@@ -28,7 +28,9 @@ class LifecycleMetricsExporter:
             metrics_payload = self._build_lifecycle_metrics(audit_results)
 
             # Debug: payload 로깅
-            logger.info(f"Sending metrics to: {self.pushgateway_url}/metrics/job/{self.job_name}")
+            logger.info(
+                f"Sending metrics to: {self.pushgateway_url}/metrics/job/{self.job_name}"
+            )
             logger.info(f"Metrics payload (first 500 chars): {metrics_payload[:500]}")
 
             response = requests.post(
@@ -95,21 +97,6 @@ class LifecycleMetricsExporter:
             join_yield.get("join_yield", 0),
             help_text="Event join success rate for mature events (percentage)",
         )
-        add_metric(
-            "gdelt_mature_events_total",
-            join_yield.get("total_mature_events", 0),
-            help_text="Total mature events (12-24h old)",
-        )
-        add_metric(
-            "gdelt_joined_events",
-            join_yield.get("joined_events", 0),
-            help_text="Number of successfully joined events",
-        )
-        add_metric(
-            "gdelt_waiting_events",
-            join_yield.get("waiting_events", 0),
-            help_text="Number of events still waiting for join",
-        )
 
         # === 데이터 유실 탐지 메트릭 ===
         data_loss = audit_results.get("data_loss_detection", {})
@@ -118,11 +105,6 @@ class LifecycleMetricsExporter:
             data_loss.get("suspicious_events", 0),
             help_text="Number of suspicious events (waiting >24h)",
         )
-        add_metric(
-            "gdelt_auto_expired_events",
-            data_loss.get("auto_expired", 0),
-            help_text="Number of auto-expired old events",
-        )
 
         # === Gold-Postgres 동기화 메트릭 ===
         sync = audit_results.get("gold_postgres_sync", {})
@@ -130,16 +112,6 @@ class LifecycleMetricsExporter:
             "gdelt_gold_postgres_sync",
             sync.get("sync_accuracy", 0),
             help_text="Gold to Postgres synchronization accuracy (percentage)",
-        )
-        add_metric(
-            "gdelt_gold_records",
-            sync.get("gold_count", 0),
-            help_text="Number of records in Gold layer",
-        )
-        add_metric(
-            "gdelt_postgres_records",
-            sync.get("postgres_count", 0),
-            help_text="Number of records in Postgres",
         )
 
         # === 전체 파이프라인 상태 ===
@@ -178,18 +150,32 @@ def export_producer_collection_metrics(collection_stats: Dict):
 
         # 데이터 타입별 수집 레코드 수
         for data_type, stats in collection_stats.items():
-            if isinstance(stats, dict) and 'record_count' in stats:
-                lines.append(f"# HELP gdelt_collection_records_{data_type} Number of records collected for {data_type}")
+            if isinstance(stats, dict) and "record_count" in stats:
+                lines.append(
+                    f"# HELP gdelt_collection_records_{data_type} Number of records collected for {data_type}"
+                )
                 lines.append(f"# TYPE gdelt_collection_records_{data_type} gauge")
-                lines.append(f'gdelt_collection_records_{data_type}{{data_type="{data_type}"}} {stats["record_count"]}')
+                lines.append(
+                    f'gdelt_collection_records_{data_type}{{data_type="{data_type}"}} {stats["record_count"]}'
+                )
 
-                lines.append(f"# HELP gdelt_collection_urls_{data_type} Number of URLs processed for {data_type}")
+                lines.append(
+                    f"# HELP gdelt_collection_urls_{data_type} Number of URLs processed for {data_type}"
+                )
                 lines.append(f"# TYPE gdelt_collection_urls_{data_type} gauge")
-                lines.append(f'gdelt_collection_urls_{data_type}{{data_type="{data_type}"}} {stats.get("url_count", 0)}')
+                lines.append(
+                    f'gdelt_collection_urls_{data_type}{{data_type="{data_type}"}} {stats.get("url_count", 0)}'
+                )
 
         # 전체 수집 통계
-        total_records = sum(stats.get('record_count', 0) for stats in collection_stats.values() if isinstance(stats, dict))
-        lines.append(f"# HELP gdelt_collection_total_records Total number of records collected")
+        total_records = sum(
+            stats.get("record_count", 0)
+            for stats in collection_stats.values()
+            if isinstance(stats, dict)
+        )
+        lines.append(
+            f"# HELP gdelt_collection_total_records Total number of records collected"
+        )
         lines.append(f"# TYPE gdelt_collection_total_records gauge")
         lines.append(f"gdelt_collection_total_records {total_records}")
 
