@@ -173,24 +173,19 @@ def send_bronze_data_to_kafka(
                 # CSV 파일을 한 줄씩 읽어서 처리
                 # GDELT CSV는 탭으로 구분되어 있고, 헤더가 없음
 
-                # 여러 인코딩으로 fallback 시도
-                encodings = ['utf-8', 'utf-8-sig', 'latin-1', 'cp1252', 'iso-8859-1']
+                # UTF-8 -> latin-1 -> UTF-8 에러무시 순서로 시도
                 reader = None
-                for encoding in encodings:
+                try:
+                    reader = csv.reader(io.TextIOWrapper(c, "utf-8"), delimiter="\t")
+                except UnicodeDecodeError:
                     try:
-                        c.seek(0)  # 파일 포인터를 처음으로 되돌림
-                        reader = csv.reader(io.TextIOWrapper(c, encoding), delimiter="\t")
-                        # 첫 줄 읽기 테스트
-                        next(reader)
-                        c.seek(0)  # 다시 처음으로 되돌림
-                        reader = csv.reader(io.TextIOWrapper(c, encoding), delimiter="\t")
-                        logger.info(f"Successfully opened {csv_filename} with {encoding} encoding")
-                        break
-                    except (UnicodeDecodeError, StopIteration):
-                        continue
-
-                if reader is None:
-                    raise UnicodeDecodeError("Failed to decode with any supported encoding")
+                        c.seek(0)
+                        reader = csv.reader(io.TextIOWrapper(c, "latin-1"), delimiter="\t")
+                        logger.info(f"Using latin-1 encoding for {csv_filename}")
+                    except UnicodeDecodeError:
+                        c.seek(0)
+                        reader = csv.reader(io.TextIOWrapper(c, "utf-8", errors='ignore'), delimiter="\t")
+                        logger.warning(f"Using UTF-8 with error ignore for {csv_filename}")
 
                 record_count = 0
                 batch_records = []
