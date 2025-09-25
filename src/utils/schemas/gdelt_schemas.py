@@ -316,8 +316,6 @@ class GDELTSchemas:
         )
 
 
-
-
 # 유틸리티 함수들
 def get_column_mapping(data_type: str) -> Dict[int, str]:
     """

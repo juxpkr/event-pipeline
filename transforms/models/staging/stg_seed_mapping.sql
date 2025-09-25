@@ -3,7 +3,7 @@
 -- GDELT events의 코드성 데이터 매핑
 -- View로 작동하므로, 증분 관련 코드를 제거함
 
-{{ config(materialized='view')}}
+{{ config(materialized='view') }}
 
 WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events') }}),
     event_root_codes AS (SELECT * FROM {{ ref('event_root_codes') }}),
