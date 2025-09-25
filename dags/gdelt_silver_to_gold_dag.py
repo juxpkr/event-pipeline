@@ -31,7 +31,14 @@ with DAG(
         command=[
             "/bin/sh",
             "-c",
-            "if [ ! -f /app/.seed_initialized ]; then dbt seed --full-refresh && touch /app/.seed_initialized; else dbt seed; fi && dbt build --target prod"
+            # 1. Seed 초기화 로직
+            "if [ ! -f /app/.seed_initialized ]; then dbt seed --full-refresh && touch /app/.seed_initialized; else dbt seed; fi && "
+            # 2. dbt 모델 초기화 로직 추가
+            "if [ ! -f /app/.dbt_initialized ]; then "
+            "    dbt build --target prod --full-refresh && touch /app/.dbt_initialized; "
+            "else "
+            "    dbt build --target prod; "
+            "fi",
         ],
         network_mode="geoevent_data-network",  # docker-compose 네트워크
         mounts=[
