@@ -16,6 +16,7 @@ sys.path.append(str(project_root))
 
 from src.utils.spark_builder import get_spark_session
 from pyspark.sql import SparkSession, DataFrame
+from src.audit.lifecycle_tracker import EventLifecycleTracker
 
 # 로깅 설정
 logging.basicConfig(
@@ -338,6 +339,14 @@ def main():
             sys.exit(1)
 
         logger.info("All migrations completed successfully")
+
+        # Lifecycle tracking: GOLD_COMPLETE 상태의 이벤트들을 POSTGRES_COMPLETE로 업데이트
+        try:
+            lifecycle_tracker = EventLifecycleTracker(spark)
+            updated_count = lifecycle_tracker.bulk_update_status("GOLD_COMPLETE", "POSTGRES_COMPLETE")
+            logger.info(f"Updated {updated_count} events to POSTGRES_COMPLETE status")
+        except Exception as e:
+            logger.warning(f"Failed to update lifecycle status: {e}")
 
     except Exception as e:
         logger.error(f"Critical error in migration pipeline: {e}", exc_info=True)
