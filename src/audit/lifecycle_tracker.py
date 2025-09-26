@@ -6,6 +6,7 @@ Event Lifecycle Tracker
 import os
 from datetime import datetime, timedelta, timezone
 from pyspark.sql import SparkSession, DataFrame
+from delta.tables import DeltaTable
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
@@ -25,13 +26,27 @@ class EventLifecycleTracker:
             [
                 StructField("global_event_id", StringType(), False),
                 StructField("event_type", StringType(), False),  # EVENT, GKG
-                StructField("audit", StructType([
-                    StructField("bronze_arrival_time", TimestampType(), False),
-                    StructField("silver_processing_end_time", TimestampType(), True),
-                    StructField("gold_processing_end_time", TimestampType(), True),
-                    StructField("postgres_migration_end_time", TimestampType(), True)
-                ]), False),
-                StructField("status", StringType(), False),  # WAITING, SILVER_COMPLETE, GOLD_COMPLETE, POSTGRES_COMPLETE
+                StructField(
+                    "audit",
+                    StructType(
+                        [
+                            StructField("bronze_arrival_time", TimestampType(), False),
+                            StructField(
+                                "silver_processing_end_time", TimestampType(), True
+                            ),
+                            StructField(
+                                "gold_processing_end_time", TimestampType(), True
+                            ),
+                            StructField(
+                                "postgres_migration_end_time", TimestampType(), True
+                            ),
+                        ]
+                    ),
+                    False,
+                ),
+                StructField(
+                    "status", StringType(), False
+                ),  # WAITING, SILVER_COMPLETE, GOLD_COMPLETE, POSTGRES_COMPLETE
                 StructField("batch_id", StringType(), False),
                 StructField("year", IntegerType(), False),
                 StructField("month", IntegerType(), False),
@@ -48,23 +63,29 @@ class EventLifecycleTracker:
 
         print(f"Event lifecycle table initialized at {self.lifecycle_path}")
 
-    def track_bronze_arrival(self, events_df: DataFrame, batch_id: str, event_type: str):
-        """Bronze 도착 이벤트들을 lifecycle에 기록"""
+    def track_bronze_arrival(
+        self, events_df: DataFrame, batch_id: str, event_type: str
+    ):
+        """Bronze 도착 이벤트들을 lifecycle에 기록 (DeltaTable.merge() 사용)"""
         current_time = datetime.now(timezone.utc)
-
-        # audit 구조체 생성
-        from pyspark.sql.functions import struct
+        from pyspark.sql.functions import struct, lit, year, month, dayofmonth, hour
+        from pyspark.sql.types import TimestampType
 
         lifecycle_records = (
             events_df.select("global_event_id")
             .distinct()
-            .withColumn("event_type", lit(event_type))  # EVENT 또는 GKG
-            .withColumn("audit", struct(
-                lit(current_time).alias("bronze_arrival_time"),
-                lit(None).cast(TimestampType()).alias("silver_processing_end_time"),
-                lit(None).cast(TimestampType()).alias("gold_processing_end_time"),
-                lit(None).cast(TimestampType()).alias("postgres_migration_end_time")
-            ))
+            .withColumn("event_type", lit(event_type))
+            .withColumn(
+                "audit",
+                struct(
+                    lit(current_time).alias("bronze_arrival_time"),
+                    lit(None).cast(TimestampType()).alias("silver_processing_end_time"),
+                    lit(None).cast(TimestampType()).alias("gold_processing_end_time"),
+                    lit(None)
+                    .cast(TimestampType())
+                    .alias("postgres_migration_end_time"),
+                ),
+            )
             .withColumn("status", lit("WAITING"))
             .withColumn("batch_id", lit(batch_id))
             .withColumn("year", year(lit(current_time)))
@@ -73,20 +94,17 @@ class EventLifecycleTracker:
             .withColumn("hour", hour(lit(current_time)))
         )
 
-        # Delta Lake에 UPSERT (SQL 방식)
-        lifecycle_records.createOrReplaceTempView("temp_new_events")
+        if not DeltaTable.isDeltaTable(self.spark, self.lifecycle_path):
+            self.initialize_table()
 
-        upsert_sql = f"""
-        INSERT INTO delta.`{self.lifecycle_path}`
-        SELECT * FROM temp_new_events
-        WHERE NOT EXISTS (
-            SELECT 1 FROM delta.`{self.lifecycle_path}` existing
-            WHERE existing.global_event_id = temp_new_events.global_event_id
-            AND existing.event_type = temp_new_events.event_type
-        )
-        """
+        lifecycle_delta_table = DeltaTable.forPath(self.spark, self.lifecycle_path)
 
-        self.spark.sql(upsert_sql)
+        # DataFrame API 스타일로 MERGE 실행
+        lifecycle_delta_table.alias("target").merge(
+            source=lifecycle_records.alias("source"),
+            condition="target.global_event_id = source.global_event_id AND target.event_type = source.event_type",
+        ).whenNotMatchedInsertAll().execute()
+
         tracked_count = lifecycle_records.count()
         print(f"Tracked {tracked_count} events in batch {batch_id}")
         return tracked_count
