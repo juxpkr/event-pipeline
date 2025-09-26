@@ -113,7 +113,7 @@ class EventLifecycleTracker:
         merge_sql = f"""
         MERGE INTO delta.`{self.lifecycle_path}` AS lifecycle
         USING silver_completed_events_temp AS events
-        ON lifecycle.global_event_id = events.global_event_id
+        ON lifecycle.global_event_id = events.global_event_id AND lifecycle.event_type = 'EVENT'
         WHEN MATCHED THEN
         UPDATE SET
             audit.silver_processing_end_time = '{current_time}',
@@ -138,7 +138,7 @@ class EventLifecycleTracker:
         merge_sql = f"""
         MERGE INTO delta.`{self.lifecycle_path}` AS lifecycle
         USING gold_complete_events_temp AS events
-        ON lifecycle.global_event_id = events.global_event_id
+        ON lifecycle.global_event_id = events.global_event_id AND lifecycle.event_type = 'EVENT'
         WHEN MATCHED THEN
         UPDATE SET
             audit.gold_processing_end_time = '{current_time}',
@@ -163,7 +163,7 @@ class EventLifecycleTracker:
         merge_sql = f"""
         MERGE INTO delta.`{self.lifecycle_path}` AS lifecycle
         USING postgres_complete_events_temp AS events
-        ON lifecycle.global_event_id = events.global_event_id
+        ON lifecycle.global_event_id = events.global_event_id AND lifecycle.event_type = 'EVENT'
         WHEN MATCHED THEN
         UPDATE SET
             audit.postgres_migration_end_time = '{current_time}',
@@ -173,15 +173,37 @@ class EventLifecycleTracker:
         self.spark.sql(merge_sql)
         return len(event_ids)
 
+    def bulk_update_status(self, from_status: str, to_status: str):
+        """특정 상태의 모든 EVENT 타입 이벤트를 다른 상태로 업데이트"""
+        current_time = datetime.now(timezone.utc)
+
+        update_sql = f"""
+        UPDATE delta.`{self.lifecycle_path}`
+        SET status = '{to_status}',
+            audit.postgres_migration_end_time = '{current_time}'
+        WHERE status = '{from_status}' AND event_type = 'EVENT'
+        """
+
+        self.spark.sql(update_sql)
+
+        # 업데이트된 레코드 수 반환
+        count_sql = f"""
+        SELECT COUNT(*) as count FROM delta.`{self.lifecycle_path}`
+        WHERE status = '{to_status}' AND event_type = 'EVENT'
+        """
+        result = self.spark.sql(count_sql).collect()[0]
+        return result["count"]
+
     def expire_old_waiting_events(self, hours_threshold: int = 24):
         """24시간 이상 대기 중인 이벤트들을 EXPIRED로 변경"""
         cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours_threshold)
 
-        # SQL UPDATE로 만료 처리
+        # SQL UPDATE로 만료 처리 (EVENT 타입만)
         update_sql = f"""
         UPDATE delta.`{self.lifecycle_path}`
         SET status = 'EXPIRED'
         WHERE status = 'WAITING'
+        AND event_type = 'EVENT'
         AND audit.bronze_arrival_time < '{cutoff_time}'
         """
 
@@ -190,6 +212,7 @@ class EventLifecycleTracker:
         SELECT COUNT(*) as expired_count
         FROM delta.`{self.lifecycle_path}`
         WHERE status = 'WAITING'
+        AND event_type = 'EVENT'
         AND audit.bronze_arrival_time < '{cutoff_time}'
         """
 
