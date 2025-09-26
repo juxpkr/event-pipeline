@@ -24,6 +24,7 @@ class EventLifecycleTracker:
         schema = StructType(
             [
                 StructField("global_event_id", StringType(), False),
+                StructField("event_type", StringType(), False),  # EVENT, GKG
                 StructField("audit", StructType([
                     StructField("bronze_arrival_time", TimestampType(), False),
                     StructField("silver_processing_end_time", TimestampType(), True),
@@ -47,7 +48,7 @@ class EventLifecycleTracker:
 
         print(f"Event lifecycle table initialized at {self.lifecycle_path}")
 
-    def track_bronze_arrival(self, events_df: DataFrame, batch_id: str):
+    def track_bronze_arrival(self, events_df: DataFrame, batch_id: str, event_type: str):
         """Bronze 도착 이벤트들을 lifecycle에 기록"""
         current_time = datetime.now(timezone.utc)
 
@@ -57,6 +58,7 @@ class EventLifecycleTracker:
         lifecycle_records = (
             events_df.select("global_event_id")
             .distinct()
+            .withColumn("event_type", lit(event_type))  # EVENT 또는 GKG
             .withColumn("audit", struct(
                 lit(current_time).alias("bronze_arrival_time"),
                 lit(None).cast(TimestampType()).alias("silver_processing_end_time"),

@@ -52,7 +52,8 @@ def calculate_join_yield(
     maturity_cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
 
     mature_events = lifecycle_df.filter(
-        col("audit.bronze_arrival_time") <= lit(maturity_cutoff)
+        (col("audit.bronze_arrival_time") <= lit(maturity_cutoff)) &
+        (col("event_type") == "EVENT")  # EVENT 타입만 필터링 (GKG 제외)
     )
 
     # agg로 상태별 집계 - collect() 없이

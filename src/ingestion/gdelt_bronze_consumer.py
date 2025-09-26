@@ -151,8 +151,11 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
             )
 
             # Lifecycle tracking: WAITING 상태로 이벤트 등록
-            tracked_count = lifecycle_tracker.track_bronze_arrival(df_validated, f"{data_type}_batch")
-            logger.info(f"[{data_type.upper()}] Tracked {tracked_count} events as WAITING")
+            # lifecycle_tracker가 기대하는 global_event_id 컬럼명으로 변경
+            df_for_lifecycle = df_validated.withColumnRenamed(merge_key_name, "global_event_id")
+            event_type = "EVENT" if data_type in ["events", "mentions"] else "GKG"
+            tracked_count = lifecycle_tracker.track_bronze_arrival(df_for_lifecycle, f"{data_type}_batch", event_type)
+            logger.info(f"[{data_type.upper()}] Tracked {tracked_count} events as WAITING with type {event_type}")
 
     # 3. writeStream 실행
     query = (
