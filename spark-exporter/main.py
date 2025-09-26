@@ -61,6 +61,7 @@ def add_label_to_jmx(jmx_text, source_name):
 
 def scrape_jmx_in_background():
     """백그라운드 스레드에서 주기적으로 JMX 메트릭을 스크랩하여 캐시에 저장한다."""
+    time.sleep(10)
     while True:
         try:
             driver_jmx_url = "http://spark-master:8090/metrics"
