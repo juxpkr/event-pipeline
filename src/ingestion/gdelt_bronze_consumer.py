@@ -108,7 +108,7 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
         .option("kafka.bootstrap.servers", kafka_bootstrap_servers)
         .option("subscribe", kafka_topic)
         .option("startingOffsets", "earliest")
-        .option("failOnDataLoss", "false")
+        .option("failOnDataLoss", "true")
         .load()
     )
 

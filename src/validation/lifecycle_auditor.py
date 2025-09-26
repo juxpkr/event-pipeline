@@ -20,7 +20,7 @@ import sys
 sys.path.append(str(project_root))
 
 from src.utils.spark_builder import get_spark_session
-from src.audit.lifecycle_tracker import EventLifecycleTracker
+from src.audit.lifecycle_updater import EventLifecycleUpdater
 from src.validation.lifecycle_metrics_exporter import export_lifecycle_audit_metrics
 
 # 로깅 설정
@@ -124,7 +124,9 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
             SUM(CASE WHEN table_name = 'gold_superset_view' THEN cnt ELSE 0 END) as superset_count,
             SUM(CASE WHEN table_name = 'gold_near_realtime_summary' THEN cnt ELSE 0 END) as realtime_count,
             SUM(CASE WHEN table_name = 'gold_daily_actor_network' THEN cnt ELSE 0 END) as actor_count,
-            SUM(CASE WHEN table_name = 'gold_daily_events_category' THEN cnt ELSE 0 END) as category_count
+            SUM(CASE WHEN table_name = 'gold_chart_events_category' THEN cnt ELSE 0 END) as category_count
+            SUM(CASE WHEN table_name = 'gold_chart_weekday_event_ratio' THEN cnt ELSE 0 END) as event_ratio_count
+            SUM(CASE WHEN table_name = 'gold_chart_events_count_avgtone' THEN cnt ELSE 0 END) as events_count_avgtone_count
         FROM (
             SELECT 'gold_superset_view' as table_name, COUNT(*) as cnt FROM gold_prod.gold_superset_view
             UNION ALL
@@ -132,7 +134,11 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
             UNION ALL
             SELECT 'gold_daily_actor_network' as table_name, COUNT(*) as cnt FROM gold_prod.gold_daily_actor_network
             UNION ALL
-            SELECT 'gold_daily_events_category' as table_name, COUNT(*) as cnt FROM gold_prod.gold_daily_events_category
+            SELECT 'gold_chart_events_category' as table_name, COUNT(*) as cnt FROM gold_prod.gold_chart_events_category
+            UNION ALL
+            SELECT 'gold_chart_weekday_event_ratio' as table_name, COUNT(*) as cnt FROM gold_prod.gold_chart_weekday_event_ratio
+            UNION ALL
+            SELECT 'gold_chart_events_count_avgtone' as table_name, COUNT(*) as cnt FROM gold_prod.gold_chart_events_count_avgtone
         )
     """
     ).collect()[0]
@@ -142,6 +148,8 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
         + (gold_counts["realtime_count"] or 0)
         + (gold_counts["actor_count"] or 0)
         + (gold_counts["category_count"] or 0)
+        + (gold_counts["event_ratio_count"] or 0)
+        + (gold_counts["events_count_avgtone_count"] or 0)
     )
 
     # Postgres도 동일하게 4개 테이블 체크
@@ -178,7 +186,25 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
     postgres_category = (
         spark.read.format("jdbc")
         .option("url", postgres_url)
-        .option("dbtable", "gold.gold_daily_events_category")
+        .option("dbtable", "gold.gold_chart_events_category")
+        .option("user", postgres_user)
+        .option("password", postgres_password)
+        .load()
+        .count()
+    )
+    postgres_event_ratio_count = (
+        spark.read.format("jdbc")
+        .option("url", postgres_url)
+        .option("dbtable", "gold.gold_chart_weekday_event_ratio")
+        .option("user", postgres_user)
+        .option("password", postgres_password)
+        .load()
+        .count()
+    )
+    postgres_events_count_avgtone_count = (
+        spark.read.format("jdbc")
+        .option("url", postgres_url)
+        .option("dbtable", "gold.gold_chart_events_count_avgtone")
         .option("user", postgres_user)
         .option("password", postgres_password)
         .load()
@@ -186,7 +212,12 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
     )
 
     postgres_count = (
-        postgres_superset + postgres_realtime + postgres_actor + postgres_category
+        postgres_superset
+        + postgres_realtime
+        + postgres_actor
+        + postgres_category
+        + postgres_event_ratio_count
+        + postgres_events_count_avgtone_count
     )
     sync_accuracy = 100.0 if gold_count == postgres_count else 0.0
 
@@ -288,26 +319,30 @@ class LifecycleAuditor:
 
     def __init__(self, spark: SparkSession):
         self.spark = spark
-        self.lifecycle_tracker = EventLifecycleTracker(spark)
+        self.lifecycle_updater = EventLifecycleUpdater(spark)
         self.audit_results = {}
 
         # lifecycle 테이블 존재 여부 확인 및 초기화
         try:
             self.spark.read.format("delta").load(
-                self.lifecycle_tracker.lifecycle_path
+                self.lifecycle_updater.lifecycle_path
             ).limit(1).collect()
             logger.info("Lifecycle table found, ready for audit")
         except Exception:
-            logger.info("Lifecycle table not found, initializing...")
-            self.lifecycle_tracker.initialize_table()
-            logger.info("Lifecycle table initialized successfully")
+            logger.info("Lifecycle table not found, will be created by consolidator")
 
         # 데이터를 딱 한 번만 읽어서 메모리에 캐시
-        self.lifecycle_df = (
-            self.spark.read.format("delta")
-            .load(self.lifecycle_tracker.lifecycle_path)
-            .cache()
-        )
+        try:
+            self.lifecycle_df = (
+                self.spark.read.format("delta")
+                .load(self.lifecycle_updater.lifecycle_path)
+                .cache()
+            )
+        except:
+            # Main 테이블이 없으면 빈 DataFrame으로 초기화
+            from pyspark.sql.types import StructType
+
+            self.lifecycle_df = self.spark.createDataFrame([], StructType([]))
         logger.info("Lifecycle data cached in memory")
 
     def run_full_lifecycle_audit(self, hours_back: int = 15) -> Dict:
@@ -319,7 +354,7 @@ class LifecycleAuditor:
         try:
             # 1. 먼저 오래된 WAITING 이벤트들을 EXPIRED로 정리 (청소부 역할)
             logger.info("Cleaning up expired events...")
-            expired_count = self.lifecycle_tracker.expire_old_waiting_events(
+            expired_count = self.lifecycle_updater.expire_old_waiting_events(
                 hours_threshold=15
             )
             if expired_count > 0:
@@ -328,7 +363,7 @@ class LifecycleAuditor:
                 self.lifecycle_df.unpersist()
                 self.lifecycle_df = (
                     self.spark.read.format("delta")
-                    .load(self.lifecycle_tracker.lifecycle_path)
+                    .load(self.lifecycle_updater.lifecycle_path)
                     .cache()
                 )
 

@@ -17,7 +17,7 @@ sys.path.append("/opt/airflow")
 from src.utils.spark_builder import get_spark_session
 from src.utils.redis_client import redis_client
 from src.utils.schemas.gdelt_schemas import GDELTSchemas
-from src.audit.lifecycle_tracker import EventLifecycleTracker
+from src.audit.lifecycle_updater import EventLifecycleUpdater
 
 # Transformers
 from src.processing.transformers.events_transformer import transform_events_to_silver
@@ -181,7 +181,7 @@ def main():
 
     try:
         # Lifecycle Tracker 초기화
-        lifecycle_tracker = EventLifecycleTracker(spark)
+        lifecycle_updater = EventLifecycleUpdater(spark)
         # 1. Silver 스키마 생성
         logger.info("Creating silver schema...")
         spark.sql(
@@ -263,7 +263,7 @@ def main():
 
             # Silver 처리 완료 시점 기록
             final_event_ids = final_silver_df.select("global_event_id").rdd.map(lambda row: row[0]).collect()
-            lifecycle_tracker.mark_silver_processing_complete(final_event_ids, batch_id)
+            lifecycle_updater.mark_silver_processing_complete(final_event_ids, batch_id)
 
             # 실제 GKG 조인 성공률 로깅
             actually_joined_count = final_silver_df.filter(F.col("gkg_record_id").isNotNull()).count()

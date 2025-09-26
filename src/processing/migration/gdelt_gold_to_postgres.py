@@ -16,7 +16,7 @@ sys.path.append(str(project_root))
 
 from src.utils.spark_builder import get_spark_session
 from pyspark.sql import SparkSession, DataFrame
-from src.audit.lifecycle_tracker import EventLifecycleTracker
+from src.audit.lifecycle_updater import EventLifecycleUpdater
 
 # 로깅 설정
 logging.basicConfig(
@@ -53,10 +53,20 @@ class GDELTGoldMigrator:
                 "postgres_schema": "gold",
                 "description": "일별 국가간 연결망 분석 테이블",
             },
-            "gold_prod.gold_daily_events_category": {
-                "postgres_table": "gold_daily_events_category",
+            "gold_prod.gold_chart_events_category": {
+                "postgres_table": "gold_chart_events_category",
                 "postgres_schema": "gold",
-                "description": "일별 카테고리별 이벤트 집계 테이블",
+                "description": "차트용 카테고리별 이벤트 집계 테이블",
+            },
+            "gold_prod.gold_chart_weekday_event_ratio": {
+                "postgres_table": "gold_chart_weekday_event_ratio",
+                "postgres_schema": "gold",
+                "description": "지난 2년 vs 이번 달 요일별 이벤트 발생률 비교 차트용 테이블",
+            },
+            "gold_prod.gold_chart_events_count_avgtone": {
+                "postgres_table": "gold_chart_events_count_avgtone",
+                "postgres_schema": "gold",
+                "description": "전체 기간 이벤트 수 및 평균 톤 추이 차트용 테이블 (꺾은선 + 막대차트)",
             },
         }
 
@@ -342,8 +352,10 @@ def main():
 
         # Lifecycle tracking: GOLD_COMPLETE 상태의 이벤트들을 POSTGRES_COMPLETE로 업데이트
         try:
-            lifecycle_tracker = EventLifecycleTracker(spark)
-            updated_count = lifecycle_tracker.bulk_update_status("GOLD_COMPLETE", "POSTGRES_COMPLETE")
+            lifecycle_updater = EventLifecycleUpdater(spark)
+            updated_count = lifecycle_updater.bulk_update_status(
+                "GOLD_COMPLETE", "POSTGRES_COMPLETE"
+            )
             logger.info(f"Updated {updated_count} events to POSTGRES_COMPLETE status")
         except Exception as e:
             logger.warning(f"Failed to update lifecycle status: {e}")
