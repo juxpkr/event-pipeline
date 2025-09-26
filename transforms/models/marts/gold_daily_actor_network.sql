@@ -70,7 +70,7 @@ daily_aggregates AS (
     GROUP BY 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
 ),
 
--- [신규] CTE 3: TOPN 로직 구현 - 날짜별로 이벤트 수가 많은 상위 100개의 경로에 순위를 매김
+-- CTE 3: TOPN 로직 구현 - 날짜별로 이벤트 수가 많은 상위 100개의 경로에 순위를 매김
 ranked_daily_routes AS (
     SELECT
         *,
@@ -95,7 +95,7 @@ SELECT
     avg_tone,
     processed_at,
     
-    -- [신규] DAX의 ADDCOLUMNS 로직 구현
+    -- DAX의 ADDCOLUMNS 로직 구현
     -- 1. Location 컬럼 (루트맵 시각화를 위한 좌표 텍스트)
     '[' || format_string('%.6f', actor1_geo_lat) || '|' || format_string('%.6f', actor1_geo_long) || '] ' || 
     '[' || format_string('%.6f', actor2_geo_lat) || '|' || format_string('%.6f', actor2_geo_long) || ']' AS location_text,
