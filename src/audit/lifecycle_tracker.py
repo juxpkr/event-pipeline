@@ -60,7 +60,7 @@ class EventLifecycleTracker:
         # 더미 데이터로 테이블 구조 생성
         dummy_data = self.spark.createDataFrame([], schema)
         dummy_data.write.format("delta").mode("overwrite").partitionBy(
-            "year", "month", "day", "hour"
+            "year", "month", "day", "hour", "event_type"
         ).save(self.lifecycle_path)
 
         print(f"Event lifecycle table initialized at {self.lifecycle_path}")
