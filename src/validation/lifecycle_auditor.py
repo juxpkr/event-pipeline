@@ -124,8 +124,8 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
             SUM(CASE WHEN table_name = 'gold_superset_view' THEN cnt ELSE 0 END) as superset_count,
             SUM(CASE WHEN table_name = 'gold_near_realtime_summary' THEN cnt ELSE 0 END) as realtime_count,
             SUM(CASE WHEN table_name = 'gold_daily_actor_network' THEN cnt ELSE 0 END) as actor_count,
-            SUM(CASE WHEN table_name = 'gold_chart_events_category' THEN cnt ELSE 0 END) as category_count
-            SUM(CASE WHEN table_name = 'gold_chart_weekday_event_ratio' THEN cnt ELSE 0 END) as event_ratio_count
+            SUM(CASE WHEN table_name = 'gold_chart_events_category' THEN cnt ELSE 0 END) as category_count,
+            SUM(CASE WHEN table_name = 'gold_chart_weekday_event_ratio' THEN cnt ELSE 0 END) as event_ratio_count,
             SUM(CASE WHEN table_name = 'gold_chart_events_count_avgtone' THEN cnt ELSE 0 END) as events_count_avgtone_count
         FROM (
             SELECT 'gold_superset_view' as table_name, COUNT(*) as cnt FROM gold_prod.gold_superset_view
