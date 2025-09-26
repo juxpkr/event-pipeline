@@ -49,7 +49,7 @@ def calculate_join_yield(
     end_cutoff = datetime.now(timezone.utc) - timedelta(hours=maturity_hours)
     start_cutoff = datetime.now(timezone.utc) - timedelta(hours=hours_back)
     # maturity_cutoff = datetime.now(timezone.utc) - timedelta(hours=15)
-    maturity_cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
+    maturity_cutoff = datetime.now(timezone.utc) - timedelta(minutes=10)
 
     # 모든 이벤트 타입 포함 - 파이프라인 전체 건강도 측정
     mature_events = lifecycle_df.filter(
