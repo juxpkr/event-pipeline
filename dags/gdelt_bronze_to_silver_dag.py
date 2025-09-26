@@ -53,7 +53,7 @@ with DAG(
     bronze_consumer = SparkSubmitOperator(
         task_id="bronze_consumer",
         conn_id=SPARK_CONN_ID,
-        packages="io.delta:delta-core_2.12:2.4.0"
+        packages="io.delta:delta-core_2.12:2.4.0",
         application="/opt/airflow/src/ingestion/gdelt_bronze_consumer.py",
         conf={
             "spark.cores.max": "4",
