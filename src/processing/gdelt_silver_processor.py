@@ -224,7 +224,12 @@ def main():
         )
         gkg_silver = transform_gkg_to_silver(gkg_df) if gkg_df else None
 
-        # 6. Events 단독 Silver 저장 및 Lifecycle 추적
+        # 5.1. Bronze 도착 즉시 lifecycle에 WAITING 상태로 기록
+        if events_silver:
+            tracked_count = lifecycle_tracker.track_bronze_arrival(events_silver, batch_id)
+            logger.info(f"Tracked {tracked_count} events as WAITING in lifecycle")
+
+        # 6. Events 단독 Silver 저장
         if events_silver:
             write_to_delta_lake(
                 df=events_silver,
@@ -233,10 +238,6 @@ def main():
                 partition_col="processed_at",  # Hot: 실시간 대시보드용 (수집시간)
                 merge_key="global_event_id",  # Silver 스키마의 소문자 키
             )
-
-            # Bronze → Silver 처리 후 lifecycle 기록
-            tracked_count = lifecycle_tracker.track_bronze_arrival(events_silver, batch_id)
-            logger.info(f"Tracked {tracked_count} events in lifecycle")
 
             logger.info("Events Silver sample:")
             events_silver.select(
