@@ -111,7 +111,7 @@ class GDELTGoldMigrator:
         """PostgreSQL 연결 설정 반환"""
         # Docker Swarm vs Compose 환경별 기본 호스트명 결정
         is_swarm = os.getenv("DOCKER_SWARM_MODE", "false").lower() == "true"
-        default_postgres_host = "geoevent_postgres" if is_swarm else "postgres"
+        default_postgres_host = "postgres" if is_swarm else "postgres"
 
         postgres_host = os.getenv("POSTGRES_HOST", default_postgres_host)
         postgres_port = os.getenv("POSTGRES_PORT", "5432")
