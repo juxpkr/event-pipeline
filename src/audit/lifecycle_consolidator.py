@@ -1,4 +1,7 @@
 import logging
+import os
+import sys
+from pathlib import Path
 from delta.tables import DeltaTable
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
@@ -9,6 +12,12 @@ from pyspark.sql.types import (
     TimestampType,
     IntegerType,
 )
+
+# 프로젝트 루트 경로 추가
+project_root = Path(__file__).resolve().parents[2]
+sys.path.append(str(project_root))
+
+from src.utils.spark_builder import get_spark_session
 
 # ==============================================================================
 # 1. 설정 (Setup)
@@ -46,17 +55,6 @@ LIFECYCLE_SCHEMA = StructType(
 # ==============================================================================
 # 2. 헬퍼 함수 (Helper Functions)
 # ==============================================================================
-def get_spark_session(app_name: str) -> SparkSession:
-    """공용 스파크 세션 빌더"""
-    return (
-        SparkSession.builder.appName(app_name)
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config(
-            "spark.sql.catalog.spark_catalog",
-            "org.apache.spark.sql.delta.catalog.DeltaCatalog",
-        )
-        .getOrCreate()
-    )
 
 
 def load_staging_table_safely(spark: SparkSession, path: str):
@@ -99,7 +97,8 @@ def main():
     """
     Staging lifecycle 테이블들을 Main lifecycle 테이블로 통합하는 Spark 배치 잡
     """
-    spark = get_spark_session("Lifecycle_Consolidator")
+    spark_master = os.getenv("SPARK_MASTER_URL", "spark://spark-master:7077")
+    spark = get_spark_session("Lifecycle_Consolidator", spark_master)
     logger.info("Lifecycle Consolidation Spark Job started.")
 
     main_path = "s3a://warehouse/audit/lifecycle"
