@@ -534,7 +534,7 @@ services:
           - node.labels.type == monitoring
 
   spark-custom-exporter:
-    image: juxpkr/geoevent-spark-custom-exporter:2.2
+    image: juxpkr/geoevent-spark-exporter:2.2
     networks:
       - data-network
     ports:
