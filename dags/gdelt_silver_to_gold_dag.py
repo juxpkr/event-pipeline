@@ -27,18 +27,18 @@ with DAG(
     def mark_processing_complete(context):
         """태스크 성공을 기록하는 Python 함수"""
         from src.utils.spark_builder import get_spark_session
-        from src.audit.lifecycle_tracker import EventLifecycleTracker
+        from src.audit.lifecycle_updater import EventLifecycleUpdater
 
         task_id = context["task_instance_key_str"]
         print(f"Task {task_id} has completed.")
 
         spark = get_spark_session("Gold_Complete_Callback", "spark://spark-master:7077")
         try:
-            lifecycle_tracker = EventLifecycleTracker(spark)
+            lifecycle_updater = EventLifecycleUpdater(spark)
 
             # Silver 완료 상태인 이벤트들을 Gold 완료로 마킹
             lifecycle_df = spark.read.format("delta").load(
-                lifecycle_tracker.lifecycle_path
+                lifecycle_updater.lifecycle_path
             )
             silver_complete_events = (
                 lifecycle_df.filter(lifecycle_df["status"] == "SILVER_COMPLETE")
@@ -48,7 +48,7 @@ with DAG(
             )
 
             if silver_complete_events:
-                lifecycle_tracker.mark_gold_processing_complete(
+                lifecycle_updater.mark_gold_processing_complete(
                     silver_complete_events, f"gold_{context['ds']}"
                 )
                 print(
@@ -60,7 +60,7 @@ with DAG(
     def mark_postgres_complete(context):
         """Postgres 마이그레이션 완료를 기록하는 Python 함수"""
         from src.utils.spark_builder import get_spark_session
-        from src.audit.lifecycle_tracker import EventLifecycleTracker
+        from src.audit.lifecycle_updater import EventLifecycleUpdater
 
         task_id = context["task_instance_key_str"]
         print(f"Task {task_id} has completed.")
@@ -69,11 +69,11 @@ with DAG(
             "Postgres_Complete_Callback", "spark://spark-master:7077"
         )
         try:
-            lifecycle_tracker = EventLifecycleTracker(spark)
+            lifecycle_updater = EventLifecycleUpdater(spark)
 
             # Gold 완료 상태인 이벤트들을 Postgres 완료로 마킹
             lifecycle_df = spark.read.format("delta").load(
-                lifecycle_tracker.lifecycle_path
+                lifecycle_updater.lifecycle_path
             )
             gold_complete_events = (
                 lifecycle_df.filter(lifecycle_df["status"] == "GOLD_COMPLETE")
@@ -83,7 +83,7 @@ with DAG(
             )
 
             if gold_complete_events:
-                lifecycle_tracker.mark_postgres_migration_complete(
+                lifecycle_updater.mark_postgres_migration_complete(
                     gold_complete_events, f"postgres_{context['ds']}"
                 )
                 print(
