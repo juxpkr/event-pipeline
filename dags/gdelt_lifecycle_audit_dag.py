@@ -24,6 +24,7 @@ with DAG(
     lifecycle_audit_task = SparkSubmitOperator(
         task_id="run_lifecycle_audit",
         conn_id="spark_conn",
+        packages="io.delta:delta-core_2.12:2.4.0",
         application="/opt/airflow/src/validation/lifecycle_auditor.py",
         application_args=["--hours-back", "15"],
         packages="org.postgresql:postgresql:42.5.0",
