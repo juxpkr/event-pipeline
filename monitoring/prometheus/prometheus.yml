@@ -32,3 +32,8 @@ scrape_configs:
       - targets: ['pushgateway:9091']
     scrape_interval: 30s
     honor_labels: true
+
+  # 카프카 컨슈머의 지연 상태
+  - job_name: 'kafka-lag'
+    static_configs:
+      - targets: ['kafka-lag-exporter:8000']

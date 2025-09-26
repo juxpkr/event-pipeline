@@ -77,6 +77,20 @@ services:
       placement:
         constraints:
           - node.labels.type == monitoring
+  kafka-lag-exporter:
+    image: seglo/kafka-lag-exporter:0.8.1
+    networks:
+      - data-network
+    ports:
+      - "9999:8000" # Grafana에서 볼 포트
+    environment:
+      # 어느 카프카 클러스터를 감시할지 알려주는 설정
+      KAFKA_LAG_EXPORTER_KAFKA_BROKERS: "kafka-broker-1:9092,kafka-broker-2:9092" # 브로커가 더 있다면 콤마로 추가
+      KAFKA_LAG_EXPORTER_ENABLE_LOGGING: "true"
+    deploy:
+      placement:
+        constraints:
+          - node.labels.type == monitoring
 
   kafka-setup:
     image: juxpkr/geoevent-kafka-setup:0.1
