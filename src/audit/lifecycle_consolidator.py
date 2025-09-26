@@ -104,7 +104,6 @@ def main():
 
         if record_count == 0:
             logger.info("No new data in staging tables to process. Job finished.")
-            spark.stop()
             return
 
         logger.info(f"Found {record_count} total records to merge from staging tables.")
