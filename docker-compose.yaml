@@ -534,7 +534,7 @@ services:
           - node.labels.type == monitoring
 
   spark-custom-exporter:
-    image: juxpkr/geoevent-spark-custom-exporter:0.1
+    image: juxpkr/geoevent-spark-custom-exporter:2.2
     networks:
       - data-network
     ports:
@@ -543,7 +543,6 @@ services:
       - ./.env
     volumes:
       - ./spark-exporter:/app
-      - ./scripts/wait-for-it.sh:/usr/local/bin/wait-for-it.sh
     environment:
       - SPARK_MASTER_URL=spark-master:8080
       - REDIS_HOST=redis
