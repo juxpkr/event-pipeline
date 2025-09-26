@@ -2,11 +2,50 @@ import logging
 from delta.tables import DeltaTable
 from pyspark.sql import SparkSession
 from pyspark.sql.functions import col
+from pyspark.sql.types import (
+    StructType,
+    StructField,
+    StringType,
+    TimestampType,
+    IntegerType,
+)
 
+# ==============================================================================
+# 1. 설정 (Setup)
+# ==============================================================================
 # 로거 설정
 logger = logging.getLogger(__name__)
 
+# Lifecycle 테이블의 스키마를 명시적으로 정의
+LIFECYCLE_SCHEMA = StructType(
+    [
+        StructField("global_event_id", StringType(), False),
+        StructField("event_type", StringType(), False),
+        StructField(
+            "audit",
+            StructType(
+                [
+                    StructField("bronze_arrival_time", TimestampType(), False),
+                    StructField("silver_processing_end_time", TimestampType(), True),
+                    StructField("gold_processing_end_time", TimestampType(), True),
+                    StructField("postgres_migration_end_time", TimestampType(), True),
+                ]
+            ),
+            False,
+        ),
+        StructField("status", StringType(), False),
+        StructField("batch_id", StringType(), False),
+        StructField("year", IntegerType(), False),
+        StructField("month", IntegerType(), False),
+        StructField("day", IntegerType(), False),
+        StructField("hour", IntegerType(), False),
+    ]
+)
 
+
+# ==============================================================================
+# 2. 헬퍼 함수 (Helper Functions)
+# ==============================================================================
 def get_spark_session(app_name: str) -> SparkSession:
     """공용 스파크 세션 빌더"""
     return (
@@ -20,6 +59,29 @@ def get_spark_session(app_name: str) -> SparkSession:
     )
 
 
+def load_staging_table_safely(spark: SparkSession, path: str):
+    """
+    Staging 테이블을 안전하게 읽어오는 함수.
+    테이블 경로가 없으면, 스키마를 지정하여 빈 데이터프레임을 생성.
+    """
+    try:
+        if DeltaTable.isDeltaTable(spark, path):
+            return spark.read.format("delta").load(path)
+        else:
+            logger.warning(
+                f"Staging path {path} does not exist or is not a Delta table. Creating an empty DataFrame."
+            )
+            return spark.createDataFrame([], LIFECYCLE_SCHEMA)
+    except Exception as e:
+        logger.error(
+            f"Unexpected error loading staging table at {path}: {e}", exc_info=True
+        )
+        return spark.createDataFrame([], LIFECYCLE_SCHEMA)
+
+
+# ==============================================================================
+# 3. 메인 로직 (Main Logic)
+# ==============================================================================
 def main():
     """
     Staging lifecycle 테이블들을 Main lifecycle 테이블로 통합하는 Spark 배치 잡
@@ -27,60 +89,31 @@ def main():
     spark = get_spark_session("Lifecycle_Consolidator")
     logger.info("Lifecycle Consolidation Spark Job started.")
 
-    # 경로 정의
-    main_path = "s3a://warehouse/audit/event_lifecycle"
+    main_path = "s3a://warehouse/audit/lifecycle"
     event_staging_path = "s3a://warehouse/audit/lifecycle_staging_event"
     gkg_staging_path = "s3a://warehouse/audit/lifecycle_staging_gkg"
+    source_df = None
 
     try:
-        # 1. 두 Staging 테이블 읽기 (테이블 존재 여부 확인)
-        logger.info(
-            f"Reading from staging tables: {event_staging_path}, {gkg_staging_path}"
-        )
+        events_df = load_staging_table_safely(spark, event_staging_path)
+        gkg_df = load_staging_table_safely(spark, gkg_staging_path)
 
-        # EVENT staging 테이블 읽기
-        if DeltaTable.isDeltaTable(spark, event_staging_path):
-            events_df = spark.read.format("delta").load(event_staging_path)
-        else:
-            logger.info("No EVENT staging data found")
-            events_df = spark.createDataFrame([], None)  # 빈 DataFrame
+        source_df = events_df.unionByName(gkg_df)
+        source_df.cache()
+        record_count = source_df.count()
 
-        # GKG staging 테이블 읽기
-        if DeltaTable.isDeltaTable(spark, gkg_staging_path):
-            gkg_df = spark.read.format("delta").load(gkg_staging_path)
-        else:
-            logger.info("No GKG staging data found")
-            gkg_df = spark.createDataFrame([], None)  # 빈 DataFrame
-
-        # 2. 하나의 데이터프레임으로 통합
-        if events_df.count() == 0 and gkg_df.count() == 0:
-            logger.info("No new data in staging tables. Job finished.")
+        if record_count == 0:
+            logger.info("No new data in staging tables to process. Job finished.")
             spark.stop()
             return
 
-        # 빈 DataFrame 필터링하여 union
-        dataframes_to_union = []
-        if events_df.count() > 0:
-            dataframes_to_union.append(events_df)
-        if gkg_df.count() > 0:
-            dataframes_to_union.append(gkg_df)
-
-        if len(dataframes_to_union) == 1:
-            source_df = dataframes_to_union[0]
-        else:
-            source_df = dataframes_to_union[0].unionByName(dataframes_to_union[1])
-        source_df.cache()
-        record_count = source_df.count()
         logger.info(f"Found {record_count} total records to merge from staging tables.")
 
-        # 3. Main Lifecycle 테이블에 MERGE
-        logger.info(f"Merging {record_count} records into main table: {main_path}")
-
-        # Main 테이블이 없으면 생성, 있으면 열기
         if not DeltaTable.isDeltaTable(spark, main_path):
             logger.info(
                 f"Main table not found at {main_path}. Creating it with the first batch."
             )
+            # [수정] partitionBy에 'hour' 추가
             source_df.write.format("delta").partitionBy(
                 "year", "month", "day", "hour", "event_type"
             ).save(main_path)
@@ -93,30 +126,26 @@ def main():
 
         logger.info("Merge operation completed successfully.")
 
-        # 4. Staging 테이블 데이터 정리 (성공 시에만)
         logger.info("Cleaning up staging tables...")
-
-        # EVENT staging 정리
-        if DeltaTable.isDeltaTable(spark, event_staging_path):
+        if not events_df.isEmpty():
             spark.sql(f"DELETE FROM delta.`{event_staging_path}`")
-            logger.info("EVENT staging table cleaned up")
-
-        # GKG staging 정리
-        if DeltaTable.isDeltaTable(spark, gkg_staging_path):
+            logger.info("EVENT staging table cleaned up.")
+        if not gkg_df.isEmpty():
             spark.sql(f"DELETE FROM delta.`{gkg_staging_path}`")
-            logger.info("GKG staging table cleaned up")
+            logger.info("GKG staging table cleaned up.")
 
     except Exception as e:
         logger.error(f"Lifecycle Consolidation FAILED: {str(e)}", exc_info=True)
         raise e
     finally:
-        try:
+        if source_df and not source_df.isEmpty():
             source_df.unpersist()
-        except:
-            pass  # source_df가 정의되지 않았을 수도 있음
         logger.info("Lifecycle Consolidation Spark Job finished.")
         spark.stop()
 
 
+# ==============================================================================
+# 4. 실행 (Execution)
+# ==============================================================================
 if __name__ == "__main__":
     main()
