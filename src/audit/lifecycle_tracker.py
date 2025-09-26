@@ -11,7 +11,9 @@ from delta.tables import DeltaTable
 from pyspark.sql.functions import *
 from pyspark.sql.types import *
 
+import logging
 
+logger = logging.getLogger(__name__)
 LIFECYCLE_PATH = "s3a://warehouse/audit/lifecycle"
 
 
