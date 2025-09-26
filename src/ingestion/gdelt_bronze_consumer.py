@@ -94,7 +94,7 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
     lifecycle_tracker = EventLifecycleTracker(spark)
 
     # MERGE를 시도하기 전에, 테이블이 존재하는지 먼저 확인하고, 없으면 생성
-    table_path = "s3a://warehouse/audit/event_lifecycle"
+    table_path = "s3a://warehouse/audit/lifecycle"
     try:
         spark.catalog.tableExists(f"delta.`{table_path}`")
         spark.read.format("delta").load(table_path).limit(1).collect()

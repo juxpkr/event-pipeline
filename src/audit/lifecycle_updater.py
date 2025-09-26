@@ -9,7 +9,7 @@ from pyspark.sql import SparkSession, DataFrame
 from pyspark.sql.functions import col, lit
 
 # Main lifecycle 테이블 경로 (consolidator가 생성하는 통합 테이블)
-MAIN_LIFECYCLE_PATH = "s3a://warehouse/audit/event_lifecycle"
+MAIN_LIFECYCLE_PATH = "s3a://warehouse/audit/lifecycle"
 
 
 class EventLifecycleUpdater:
