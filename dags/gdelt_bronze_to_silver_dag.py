@@ -66,6 +66,7 @@ with DAG(
     silver_processor = SparkSubmitOperator(
         task_id="silver_processor",
         conn_id=SPARK_CONN_ID,
+        packages="io.delta:delta-core_2.12:2.4.0",
         application="/opt/airflow/src/processing/gdelt_silver_processor.py",
         # Airflow의 작업 시간 구간을 Spark 코드의 인자로 전달
         application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
