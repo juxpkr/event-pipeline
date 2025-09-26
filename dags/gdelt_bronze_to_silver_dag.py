@@ -55,6 +55,7 @@ with DAG(
         conn_id=SPARK_CONN_ID,
         packages="io.delta:delta-core_2.12:2.4.0",
         application="/opt/airflow/src/ingestion/gdelt_bronze_consumer.py",
+        env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
         conf={
             "spark.cores.max": "4",
             "spark.executor.memory": "8g",
@@ -68,6 +69,7 @@ with DAG(
         conn_id=SPARK_CONN_ID,
         packages="io.delta:delta-core_2.12:2.4.0",
         application="/opt/airflow/src/processing/gdelt_silver_processor.py",
+        env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
         # Airflow의 작업 시간 구간을 Spark 코드의 인자로 전달
         application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
         conf={

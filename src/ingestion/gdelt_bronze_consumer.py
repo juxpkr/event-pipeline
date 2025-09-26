@@ -30,6 +30,7 @@ from pyspark.sql.types import (
 
 # utils에서 필요한 모듈 임포트
 from src.utils.spark_builder import get_spark_session
+from src.utils.redis_client import redis_client
 from src.processing.partitioning.gdelt_partition_writer import write_to_delta_lake
 from src.audit.lifecycle_tracker import EventLifecycleTracker
 
@@ -229,6 +230,9 @@ def main():
     """
     spark = get_spark_session("GDELT_Bronze_Consumer")
 
+    # Redis에 Spark Driver UI 정보 등록
+    redis_client.register_driver_ui(spark, "GDELT Bronze Consumer")
+
     # 스파크의 log4j 로거를 사용
     log4j = spark._jvm.org.apache.log4j
     logger = log4j.LogManager.getLogger("GDELT_BRONZE_CONSUMER")
@@ -281,6 +285,10 @@ def main():
         logger.error(f"!!! GDELT 3-Way Bronze Consumer FAILED: {e} !!!")
         raise e
     finally:
+        try:
+            redis_client.unregister_driver_ui(spark)
+        except:
+            pass
         logger.info("Spark session closed")
         spark.stop()
 
