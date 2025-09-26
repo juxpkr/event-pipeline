@@ -118,6 +118,7 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
         events/gkg만 lifecycle 추적하여 동시성 충돌을 회피.
         """
         logger.info(f"--- Starting Batch {epoch_id} for {data_type} ---")
+        record_count = 0
 
         try:
             # 빈 배치는 즉시 종료
@@ -127,7 +128,7 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
 
             # 후속 작업을 위해 캐싱
             df.cache()
-            record_count = df.count()
+            record_count = df.count()  # 여기서 실제 값으로 덮어 씌워짐
 
             logger.info(
                 f"Processing {record_count} records for '{data_type}' in batch {epoch_id}."
