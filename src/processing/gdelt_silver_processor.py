@@ -224,10 +224,6 @@ def main():
         )
         gkg_silver = transform_gkg_to_silver(gkg_df) if gkg_df else None
 
-        # 5.1. Bronze 도착 즉시 lifecycle에 WAITING 상태로 기록
-        if events_silver:
-            tracked_count = lifecycle_tracker.track_bronze_arrival(events_silver, batch_id)
-            logger.info(f"Tracked {tracked_count} events as WAITING in lifecycle")
 
         # 6. Events 단독 Silver 저장
         if events_silver:

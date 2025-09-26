@@ -164,22 +164,27 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
                     merge_key=merge_key_name,
                 )
 
-                df_for_lifecycle = df_validated.withColumnRenamed(
-                    merge_key_name, "global_event_id"
-                )
-                # event_type을 박제된 current_data_type으로 명확하게 사용
-                event_type_for_tracker = (
-                    "EVENT" if current_data_type in ["events", "mentions"] else "GKG"
-                )
+                # events와 gkg 데이터 타입일 때만 추적하도록 if문 추가
+                if current_data_type in ["events", "gkg"]:
+                    df_for_lifecycle = df_validated.withColumnRenamed(
+                        merge_key_name, "global_event_id"
+                    )
+                    event_type_for_tracker = (
+                        "EVENT" if current_data_type == "events" else "GKG"
+                    )
 
-                tracked_count = lifecycle_tracker.track_bronze_arrival(
-                    df_for_lifecycle,
-                    f"{current_data_type}_batch",
-                    event_type_for_tracker,
-                )
-                logger.info(
-                    f"[{current_data_type.upper()}] Tracked {tracked_count} events as WAITING with type {event_type_for_tracker}"
-                )
+                    tracked_count = lifecycle_tracker.track_bronze_arrival(
+                        df_for_lifecycle,
+                        f"{current_data_type}_batch",
+                        event_type_for_tracker,
+                    )
+                    logger.info(
+                        f"[{current_data_type.upper()}] Tracked {tracked_count} events as WAITING with type {event_type_for_tracker}"
+                    )
+                else:
+                    logger.info(
+                        f"[{current_data_type.upper()}] Lifecycle tracking is skipped for bridge data type."
+                    )
 
         return process_micro_batch
 
