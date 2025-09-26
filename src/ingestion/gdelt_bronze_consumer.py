@@ -112,71 +112,81 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
         .load()
     )
 
-    # 2. 각 배치에 적용할 함수 정의
-    def process_micro_batch(df: DataFrame, epoch_id: int):
-        logger.info(f"[{data_type.upper()}] Processing micro-batch {epoch_id}...")
-        if df.isEmpty():
-            logger.info(f"[{data_type.upper()}] Micro-batch is empty.")
-            return
+    # 함수 팩토리 패턴 적용
+    def create_batch_handler(current_data_type: str):
 
-        record_count = df.count()
-        logger.info(
-            f"[{data_type.upper()}] [PROCESS] Read {record_count:,} new records from Kafka."
-        )
+        # 이 함수는 current_data_type 값을 박제해서 가지고 있음
+        def process_micro_batch(df: DataFrame, epoch_id: int):
+            logger.info(
+                f"[{current_data_type.upper()}] Processing micro-batch {epoch_id}..."
+            )
+            if df.isEmpty():
+                logger.info(f"[{current_data_type.upper()}] Micro-batch is empty.")
+                return
 
-        config = DATA_TYPE_CONFIG[data_type]
-        merge_key_name = config["merge_key"]
-        pk_col_index = config["pk_index"]
-
-        parsed_df = df.select(
-            from_json(col("value").cast("string"), BRONZE_SCHEMA).alias("data")
-        ).select("data.*")
-
-        df_with_keys = parsed_df.withColumn(
-            merge_key_name, F.trim(col("bronze_data").getItem(pk_col_index))
-        ).withColumn(
-            "processed_at",
-            to_timestamp(col("extracted_time"), "yyyy-MM-dd HH:mm:ss"),
-        )
-
-        df_validated = df_with_keys.filter(
-            F.col(merge_key_name).isNotNull() & (F.col(merge_key_name) != "")
-        )
-
-        validated_count = df_validated.count()
-        dropped_count = record_count - validated_count
-        if dropped_count > 0:
-            logger.warn(
-                f"[{data_type.upper()}] [WARN] Dropped {dropped_count} records due to NULL/EMPTY key."
+            record_count = df.count()
+            logger.info(
+                f"[{current_data_type.upper()}] [PROCESS] Read {record_count:,} new records from Kafka."
             )
 
-        if validated_count > 0:
-            write_to_delta_lake(
-                df=df_validated,
-                delta_path=minio_path,
-                table_name=f"Bronze {data_type}",
-                partition_col="processed_at",
-                merge_key=merge_key_name,
+            config = DATA_TYPE_CONFIG[current_data_type]
+            merge_key_name = config["merge_key"]
+            pk_col_index = config["pk_index"]
+
+            parsed_df = df.select(
+                from_json(col("value").cast("string"), BRONZE_SCHEMA).alias("data")
+            ).select("data.*")
+
+            df_with_keys = parsed_df.withColumn(
+                merge_key_name, F.trim(col("bronze_data").getItem(pk_col_index))
+            ).withColumn(
+                "processed_at",
+                to_timestamp(col("extracted_time"), "yyyy-MM-dd HH:mm:ss"),
             )
 
-            # Lifecycle tracking: WAITING 상태로 이벤트 등록
-            # lifecycle_tracker가 기대하는 global_event_id 컬럼명으로 변경
-            df_for_lifecycle = df_validated.withColumnRenamed(merge_key_name, "global_event_id")
-            event_type = "EVENT" if data_type in ["events", "mentions"] else "GKG"
+            df_validated = df_with_keys.filter(
+                F.col(merge_key_name).isNotNull() & (F.col(merge_key_name) != "")
+            )
 
-            # process_micro_batch 내에서도 테이블 존재 확인
-            try:
-                spark.read.format("delta").load("s3a://warehouse/audit/event_lifecycle").limit(1).collect()
-            except:
-                logger.info(f"[{data_type.upper()}] Lifecycle table not found in micro-batch, initializing...")
-                lifecycle_tracker.initialize_table()
+            validated_count = df_validated.count()
+            dropped_count = record_count - validated_count
+            if dropped_count > 0:
+                logger.warn(
+                    f"[{current_data_type.upper()}] [WARN] Dropped {dropped_count} records due to NULL/EMPTY key."
+                )
 
-            tracked_count = lifecycle_tracker.track_bronze_arrival(df_for_lifecycle, f"{data_type}_batch", event_type)
-            logger.info(f"[{data_type.upper()}] Tracked {tracked_count} events as WAITING with type {event_type}")
+            if validated_count > 0:
+                write_to_delta_lake(
+                    df=df_validated,
+                    delta_path=minio_path,
+                    table_name=f"Bronze {current_data_type}",
+                    partition_col="processed_at",
+                    merge_key=merge_key_name,
+                )
 
-    # 3. writeStream 실행
+                df_for_lifecycle = df_validated.withColumnRenamed(
+                    merge_key_name, "global_event_id"
+                )
+                # event_type을 박제된 current_data_type으로 명확하게 사용
+                event_type_for_tracker = (
+                    "EVENT" if current_data_type in ["events", "mentions"] else "GKG"
+                )
+
+                tracked_count = lifecycle_tracker.track_bronze_arrival(
+                    df_for_lifecycle,
+                    f"{current_data_type}_batch",
+                    event_type_for_tracker,
+                )
+                logger.info(
+                    f"[{current_data_type.upper()}] Tracked {tracked_count} events as WAITING with type {event_type_for_tracker}"
+                )
+
+        return process_micro_batch
+
+    # 3. writeStream 실행 - 함수 팩토리로 생성된 핸들러 사용
+    batch_handler = create_batch_handler(data_type)
     query = (
-        kafka_df.writeStream.foreachBatch(process_micro_batch)
+        kafka_df.writeStream.foreachBatch(batch_handler)
         .option("checkpointLocation", checkpoint_path)
         .trigger(once=True)
         .start()
@@ -229,9 +239,7 @@ def main():
                 logger.error(f"!!! Error: {error_message} !!!")
 
                 # 실패가 감지되면, 아직 실행 중인 다른 모든 쿼리를 즉시 중단시킨다
-                logger.warn(
-                    "Stopping all other active queries to ensure atomicity..."
-                )
+                logger.warn("Stopping all other active queries to ensure atomicity...")
                 for q in queries:
                     if q.isActive:
                         q.stop()
