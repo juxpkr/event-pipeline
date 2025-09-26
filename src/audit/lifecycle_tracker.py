@@ -74,27 +74,17 @@ class EventLifecycleTracker:
         )
 
         # Delta Lake에 MERGE (동시성 충돌 방지)
+        # 테이블은 이미 존재한다고 가정하고 MERGE 실행
         lifecycle_records.createOrReplaceTempView("new_lifecycle_events")
 
-        try:
-            # 테이블 존재하면 MERGE
-            merge_sql = f"""
-            MERGE INTO delta.`{self.lifecycle_path}` AS target
-            USING new_lifecycle_events AS source
-            ON target.global_event_id = source.global_event_id AND target.event_type = source.event_type
-            WHEN MATCHED THEN UPDATE SET *
-            WHEN NOT MATCHED THEN INSERT *
-            """
-            self.spark.sql(merge_sql)
-        except Exception as e:
-            if "PATH_NOT_FOUND" in str(e):
-                # 테이블이 없으면 초기화하고 TempView 재생성 후 다시 MERGE
-                print(f"Lifecycle table not found, initializing...")
-                self.initialize_table()
-                lifecycle_records.createOrReplaceTempView("new_lifecycle_events")  # TempView 재생성
-                self.spark.sql(merge_sql)
-            else:
-                raise e
+        merge_sql = f"""
+        MERGE INTO delta.`{self.lifecycle_path}` AS target
+        USING new_lifecycle_events AS source
+        ON target.global_event_id = source.global_event_id AND target.event_type = source.event_type
+        WHEN MATCHED THEN UPDATE SET *
+        WHEN NOT MATCHED THEN INSERT *
+        """
+        self.spark.sql(merge_sql)
         tracked_count = lifecycle_records.count()
         print(f"Tracked {tracked_count} events in batch {batch_id}")
         return tracked_count
