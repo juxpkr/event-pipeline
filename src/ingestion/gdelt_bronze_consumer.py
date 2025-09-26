@@ -151,11 +151,8 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
             )
 
             # Lifecycle tracking: WAITING 상태로 이벤트 등록
-            event_ids = [row[merge_key_name] for row in df_validated.select(merge_key_name).collect()]
-            for event_id in event_ids:
-                lifecycle_tracker.track_event(event_id, "WAITING")
-
-            logger.info(f"[{data_type.upper()}] Tracked {len(event_ids)} events as WAITING")
+            tracked_count = lifecycle_tracker.track_bronze_arrival(df_validated, f"{data_type}_batch")
+            logger.info(f"[{data_type.upper()}] Tracked {tracked_count} events as WAITING")
 
     # 3. writeStream 실행
     query = (
