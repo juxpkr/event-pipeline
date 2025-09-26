@@ -1,6 +1,6 @@
 -- [Marts 테이블]: models/marts/gold_daily_events_category.sql
 -- Version: 1.0
--- 역할: 이벤트 타입(4대 분류) 및 카테고리별 이벤트 수를 모두 집계하는 통합 테이블
+-- 역할: 이벤트 타입(4대 분류) 및 카테고리별 이벤트 수를 모두 집계하는 테이블
 -- 실행 주기: 15분 증분
 
 {{ config(
