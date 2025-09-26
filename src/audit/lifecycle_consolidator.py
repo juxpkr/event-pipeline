@@ -82,6 +82,19 @@ def load_staging_table_safely(spark: SparkSession, path: str):
 # ==============================================================================
 # 3. 메인 로직 (Main Logic)
 # ==============================================================================
+def ensure_main_table_exists(spark: SparkSession, main_path: str):
+    """Main lifecycle 테이블이 없으면 빈 테이블로 생성"""
+    if not DeltaTable.isDeltaTable(spark, main_path):
+        logger.info(f"Main lifecycle table not found at {main_path}. Creating empty table...")
+        empty_df = spark.createDataFrame([], LIFECYCLE_SCHEMA)
+        empty_df.write.format("delta").partitionBy(
+            "year", "month", "day", "hour", "event_type"
+        ).save(main_path)
+        logger.info(f"Main lifecycle table created at {main_path}")
+    else:
+        logger.info(f"Main lifecycle table already exists at {main_path}")
+
+
 def main():
     """
     Staging lifecycle 테이블들을 Main lifecycle 테이블로 통합하는 Spark 배치 잡
@@ -95,6 +108,8 @@ def main():
     source_df = None
 
     try:
+        # 0. Main 테이블 먼저 생성/확인 (가장 중요!)
+        ensure_main_table_exists(spark, main_path)
         events_df = load_staging_table_safely(spark, event_staging_path)
         gkg_df = load_staging_table_safely(spark, gkg_staging_path)
 
@@ -108,20 +123,12 @@ def main():
 
         logger.info(f"Found {record_count} total records to merge from staging tables.")
 
-        if not DeltaTable.isDeltaTable(spark, main_path):
-            logger.info(
-                f"Main table not found at {main_path}. Creating it with the first batch."
-            )
-            # [수정] partitionBy에 'hour' 추가
-            source_df.write.format("delta").partitionBy(
-                "year", "month", "day", "hour", "event_type"
-            ).save(main_path)
-        else:
-            main_delta_table = DeltaTable.forPath(spark, main_path)
-            main_delta_table.alias("target").merge(
-                source=source_df.alias("source"),
-                condition="target.global_event_id = source.global_event_id AND target.event_type = source.event_type",
-            ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
+        # Main 테이블에 MERGE (이제 테이블이 존재한다고 확신)
+        main_delta_table = DeltaTable.forPath(spark, main_path)
+        main_delta_table.alias("target").merge(
+            source=source_df.alias("source"),
+            condition="target.global_event_id = source.global_event_id AND target.event_type = source.event_type",
+        ).whenMatchedUpdateAll().whenNotMatchedInsertAll().execute()
 
         logger.info("Merge operation completed successfully.")
 
