@@ -96,21 +96,35 @@ class EventLifecycleTracker:
             .withColumn("hour", hour(lit(current_time)))
         )
 
-        # [수정] event_type에 따라 저장 경로를 동적으로 결정
-        # event_type은 'EVENT' 또는 'GKG'
-        staging_path = f"{LIFECYCLE_PATH}_staging_{event_type.lower()}"
+        # event_type에 따라 저장 경로를 동적으로 결정
+        staging_path = f"s3a://warehouse/audit/lifecycle_staging_{event_type.lower()}"
 
-        # DeltaTable.forPath 대신 merge API를 사용하면 테이블이 없을 때 알아서 생성해줌
-        # (이 부분은 DeltaTable.createIfNotExists() 와 merge를 조합하는게 더 안정적일 수 있음)
+        try:
+            # Delta 테이블이 존재하는지 먼저 확인
+            if DeltaTable.isDeltaTable(self.spark, staging_path):
+                # 테이블이 존재하면, MERGE 수행
+                target_delta_table = DeltaTable.forPath(self.spark, staging_path)
+                target_delta_table.alias("target").merge(
+                    source=lifecycle_records.alias("source"),
+                    condition="target.global_event_id = source.global_event_id",
+                ).whenNotMatchedInsertAll().execute()
+            else:
+                # 테이블이 없으면, 이 배치의 데이터로 테이블을 '생성'
+                logger.info(
+                    f"Staging table not found at {staging_path}. Creating it for the first time."
+                )
+                lifecycle_records.write.format("delta").partitionBy(
+                    "year", "month", "day", "hour", "event_type"
+                ).save(staging_path)
 
-        target_delta_table = DeltaTable.forPath(self.spark, staging_path)
+            tracked_count = lifecycle_records.count()
+            logger.info(
+                f"Tracked {tracked_count} events in staging table: {staging_path}"
+            )
+            return tracked_count
 
-        target_delta_table.alias("target").merge(
-            source=lifecycle_records.alias("source"),
-            condition="target.global_event_id = source.global_event_id",  # event_type이 같으므로 조건에서 제외
-        ).whenNotMatchedInsertAll().execute()
-
-        tracked_count = lifecycle_records.count()
-        print(f"Tracked {tracked_count} events in batch {batch_id}")
-        return tracked_count
-
+        except Exception as e:
+            logger.error(
+                f"Failed to track bronze arrival for batch {batch_id} at {staging_path}. Error: {str(e)}"
+            )
+            raise e

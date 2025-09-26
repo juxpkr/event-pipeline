@@ -20,11 +20,33 @@ with DAG(
     tags=["gdelt", "audit", "monitoring"],
 ) as dag:
 
+    # Lifecycle Consolidation Task
+    consolidate_lifecycle = SparkSubmitOperator(
+        task_id="consolidate_lifecycle_data",
+        conn_id="spark_conn",
+        packages="io.delta:delta-core_2.12:2.4.0",
+        execution_timeout=timedelta(minutes=10),
+        application="/opt/airflow/src/audit/lifecycle_consolidator.py",
+        conf={
+            "spark.cores.max": "1",
+            "spark.executor.memory": "1g",
+            "spark.executor.cores": "1",
+        },
+        doc_md="""
+        Lifecycle Data Consolidation
+        - Read from staging tables: lifecycle_staging_event, lifecycle_staging_gkg
+        - Merge into main table: s3a://warehouse/audit/lifecycle
+        - Clean up processed staging data
+        - Maintain audit trail integrity
+        """,
+    )
+
     # Lifecycle Audit 실행
     lifecycle_audit_task = SparkSubmitOperator(
         task_id="run_lifecycle_audit",
         conn_id="spark_conn",
         packages="io.delta:delta-core_2.12:2.4.0",
+        execution_timeout=timedelta(minutes=10),
         application="/opt/airflow/src/validation/lifecycle_auditor.py",
         application_args=["--hours-back", "15"],
         conf={
@@ -41,4 +63,4 @@ with DAG(
         },
     )
 
-    # 태스크는 단독 실행 (expire 로직은 lifecycle_audit 내부에서 자동 처리)
+    consolidate_lifecycle >> lifecycle_audit_task
