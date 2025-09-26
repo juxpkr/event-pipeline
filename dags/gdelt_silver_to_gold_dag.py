@@ -65,7 +65,9 @@ with DAG(
         task_id = context["task_instance_key_str"]
         print(f"Task {task_id} has completed.")
 
-        spark = get_spark_session("Postgres_Complete_Callback", "spark://spark-master:7077")
+        spark = get_spark_session(
+            "Postgres_Complete_Callback", "spark://spark-master:7077"
+        )
         try:
             lifecycle_tracker = EventLifecycleTracker(spark)
 
@@ -134,7 +136,7 @@ with DAG(
         task_id="migrate_gold_to_postgres",
         conn_id="spark_conn",
         application="/opt/airflow/src/processing/migration/gdelt_gold_to_postgres.py",
-        packages="org.postgresql:postgresql:42.5.0",
+        packages="org.postgresql:postgresql:42.5.0,io.delta:delta-core_2.12:2.4.0",
         on_success_callback=mark_postgres_complete,  # Postgres 마이그레이션 완료 직후 호출
         conf={
             "spark.executor.instances": "5",  # 5개의 작업팀을 투입
