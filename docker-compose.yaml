@@ -583,6 +583,19 @@ services:
       placement:
         constraints:
           - node.labels.type == monitoring
+  dbt-watcher:
+    image: python:3.10-slim
+    working_dir: /app
+    networks:
+      - data-network
+    volumes:
+      - ./dbt-watcher:/app
+    environment:
+      - SPARK_MASTER_URL=http://spark-master:8080
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    command: >
+      sh -c "pip install requests redis && python dbt_spark_watcher.py"
 
 volumes:
   zookeeper-data:
