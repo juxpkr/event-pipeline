@@ -98,7 +98,7 @@ def respond_metrics():
         )
         r.ping()
 
-        master_api_url = f"{SPARK_MASTER_URL}/json/"
+        master_api_url = f"http://{SPARK_MASTER_URL}/json/"
         response = requests.get(master_api_url, timeout=5)
         response.raise_for_status()
         active_apps = response.json().get("activeapps", [])
