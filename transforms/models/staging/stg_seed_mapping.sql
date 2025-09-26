@@ -5,7 +5,7 @@
 
 {{ config(materialized='view') }}
 
-WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events') }}),
+WITH source_data AS (SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events') }} WHERE event_date >= '2023-09-01'),
     event_root_codes AS (SELECT * FROM {{ ref('event_root_codes') }}),
     event_detail_codes AS (SELECT * FROM {{ ref('event_detail_codes') }}),
     quad_class_codes AS (SELECT * FROM {{ ref('event_quad_class_codes') }}),

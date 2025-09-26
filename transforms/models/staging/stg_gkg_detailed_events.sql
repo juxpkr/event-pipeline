@@ -6,7 +6,7 @@
 {{ config(materialized='view') }}
 
 WITH source_data AS (
-    SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events_detailed') }}
+    SELECT * FROM {{ source('gdelt_silver_layer', 'gdelt_events_detailed') }} WHERE event_date >= '2023-09-01'
 )
 
 SELECT

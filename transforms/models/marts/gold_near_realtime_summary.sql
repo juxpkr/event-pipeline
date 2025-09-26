@@ -1,27 +1,20 @@
 -- [Marts 테이블]: models/marts/gold_near_realtime_summary.sql
 -- Version : 2.0
 -- 역할: 15분마다 업데이트되는 gdelt_events 데이터만을 사용하여, 대시보드의 핵심 KPI(Risk Score, 이벤트 수 등)를 빠르게 집계합니다. GKG & Mentions 정보는 포함하지 않습니다.
--- 실행 주기: Airflow에서 15분마다 dbt run --select gold_near_realtime_summary를 실행합니다.
+-- 실행 주기: 15분 증분
 
 {{ config(
     materialized='incremental',
     unique_key=['event_date', 'mp_action_geo_country_iso']
 ) }}
 
--- CTE 1: 새로 들어온 데이터만 선택
+-- CTE 1: 15분마다 새로 들어온 데이터만 선택
 WITH new_events AS (
     SELECT *
     FROM {{ ref('stg_seed_mapping') }}
 
-    -- {% if is_incremental() %}
-    -- -- run_query 매크로를 사용해, 대상 테이블의 max(processed_at) 값을 먼저 조회해서 변수에 저장한다.
-    -- {% set max_processed_at = run_query("SELECT max(processed_at) FROM " ~ this).columns[0].values()[0] %}
-    -- -- 이 모델이 이미 데이터를 가지고 있다면, 최신 날짜보다 더 새로운 데이터만 처리
-    -- WHERE processed_at > '{{ max_processed_at }}'
-    -- {% endif %}
-
     {% if is_incremental() %}
-    -- [수정] run_query 결과가 NULL일 경우를 대비한 안전장치를 추가합니다.
+    -- run_query 매크로를 사용해, 대상 테이블의 max(processed_at) 값을 먼저 조회해서 변수에 저장합니다.
     {% set max_query %}
         SELECT MAX(processed_at) FROM {{ this }}
     {% endset %}
@@ -30,7 +23,7 @@ WITH new_events AS (
     {% if execute and result.rows and result.rows[0][0] is not none %}
         {% set max_processed_at = result.rows[0][0] %}
     {% else %}
-        -- 만약 테이블이 비어있거나, 모든 값이 NULL이면 아주 오래된 날짜를 기본값으로 사용합니다.
+        -- 만약 테이블이 비어있거나, 모든 값이 NULL이면 프로젝트 시작 날짜를 기본값으로 사용합니다.
         {% set max_processed_at = '2023-09-01 00:00:00' %}
     {% endif %}
 
@@ -64,7 +57,7 @@ WITH new_events AS (
 --     FROM {% if is_incremental() %} unioned_for_zscore {% else %} new_events {% endif %}
 -- ),
 
--- [수정] CTE 2: Z-Score 계산을 'new_events' 범위 내에서만 수행하도록 단순화합니다.
+-- CTE 2: Z-Score 계산을 'new_events' 범위 내에서만 수행하도록 단순화합니다.
 z_score_calculation AS (
     SELECT
         global_event_id,

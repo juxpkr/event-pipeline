@@ -1,7 +1,7 @@
 -- [Marts 테이블]: models/marts/gold_daily_detailed_events.sql
 -- Version : 1.0
 -- 역할: Staging 모델들을 결합하고, 스토리 및 KPI 파생 컬럼을 생성하는 상세 이벤트 테이블
--- 실행 주기: Airflow에서 하루에 한 번 dbt run --select gold_daily_detailed_events를 실행합니다.
+-- 실행 주기: 1일 증분
 
 {{ config(
     materialized='incremental',
