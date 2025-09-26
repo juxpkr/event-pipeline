@@ -48,7 +48,8 @@ def calculate_join_yield(
     # 성숙한 이벤트 필터링
     end_cutoff = datetime.now(timezone.utc) - timedelta(hours=maturity_hours)
     start_cutoff = datetime.now(timezone.utc) - timedelta(hours=hours_back)
-    maturity_cutoff = datetime.now(timezone.utc) - timedelta(hours=15)
+    # maturity_cutoff = datetime.now(timezone.utc) - timedelta(hours=15)
+    maturity_cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
 
     mature_events = lifecycle_df.filter(
         col("audit.bronze_arrival_time") <= lit(maturity_cutoff)
@@ -115,31 +116,41 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
             "skipped": True,
         }
 
-    # agg로 집계 (collect 최소화)
+    # agg로 집계 (collect 최소화) - 4개 테이블 모두 체크
     gold_counts = spark.sql(
         """
         SELECT
             SUM(CASE WHEN table_name = 'gold_superset_view' THEN cnt ELSE 0 END) as superset_count,
-            SUM(CASE WHEN table_name = 'gold_near_realtime_summary' THEN cnt ELSE 0 END) as realtime_count
+            SUM(CASE WHEN table_name = 'gold_near_realtime_summary' THEN cnt ELSE 0 END) as realtime_count,
+            SUM(CASE WHEN table_name = 'gold_daily_actor_network' THEN cnt ELSE 0 END) as actor_count,
+            SUM(CASE WHEN table_name = 'gold_daily_events_category' THEN cnt ELSE 0 END) as category_count
         FROM (
             SELECT 'gold_superset_view' as table_name, COUNT(*) as cnt FROM gold_prod.gold_superset_view
             UNION ALL
             SELECT 'gold_near_realtime_summary' as table_name, COUNT(*) as cnt FROM gold_prod.gold_near_realtime_summary
+            UNION ALL
+            SELECT 'gold_daily_actor_network' as table_name, COUNT(*) as cnt FROM gold_prod.gold_daily_actor_network
+            UNION ALL
+            SELECT 'gold_daily_events_category' as table_name, COUNT(*) as cnt FROM gold_prod.gold_daily_events_category
         )
     """
     ).collect()[0]
 
-    gold_count = (gold_counts["superset_count"] or 0) + (
-        gold_counts["realtime_count"] or 0
+    gold_count = (
+        (gold_counts["superset_count"] or 0)
+        + (gold_counts["realtime_count"] or 0)
+        + (gold_counts["actor_count"] or 0)
+        + (gold_counts["category_count"] or 0)
     )
 
-    # Postgres도 동일하게
+    # Postgres도 동일하게 4개 테이블 체크
     postgres_superset = (
         spark.read.format("jdbc")
         .option("url", postgres_url)
         .option("dbtable", "gold.gold_superset_view")
         .option("user", postgres_user)
         .option("password", postgres_password)
+        .load()
         .count()
     )
 
@@ -149,10 +160,33 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
         .option("dbtable", "gold.gold_near_realtime_summary")
         .option("user", postgres_user)
         .option("password", postgres_password)
+        .load()
         .count()
     )
 
-    postgres_count = postgres_superset + postgres_realtime
+    postgres_actor = (
+        spark.read.format("jdbc")
+        .option("url", postgres_url)
+        .option("dbtable", "gold.gold_daily_actor_network")
+        .option("user", postgres_user)
+        .option("password", postgres_password)
+        .load()
+        .count()
+    )
+
+    postgres_category = (
+        spark.read.format("jdbc")
+        .option("url", postgres_url)
+        .option("dbtable", "gold.gold_daily_events_category")
+        .option("user", postgres_user)
+        .option("password", postgres_password)
+        .load()
+        .count()
+    )
+
+    postgres_count = (
+        postgres_superset + postgres_realtime + postgres_actor + postgres_category
+    )
     sync_accuracy = 100.0 if gold_count == postgres_count else 0.0
 
     return {
