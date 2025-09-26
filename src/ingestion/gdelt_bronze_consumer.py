@@ -112,24 +112,29 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
         .load()
     )
 
-    # 함수 팩토리 패턴 적용
-    def create_batch_handler(current_data_type: str):
+    def process_micro_batch(df: DataFrame, epoch_id: int):
+        """
+        Kafka에서 받은 마이크로 배치를 처리하고 Bronze에 저장.
+        events/gkg만 lifecycle 추적하여 동시성 충돌을 회피.
+        """
+        logger.info(f"--- Starting Batch {epoch_id} for {data_type} ---")
 
-        # 이 함수는 current_data_type 값을 박제해서 가지고 있음
-        def process_micro_batch(df: DataFrame, epoch_id: int):
-            logger.info(
-                f"[{current_data_type.upper()}] Processing micro-batch {epoch_id}..."
-            )
+        try:
+            # 빈 배치는 즉시 종료
             if df.isEmpty():
-                logger.info(f"[{current_data_type.upper()}] Micro-batch is empty.")
+                logger.info(f"Batch {epoch_id} is empty. Skipping.")
                 return
 
+            # 후속 작업을 위해 캐싱
+            df.cache()
             record_count = df.count()
+
             logger.info(
-                f"[{current_data_type.upper()}] [PROCESS] Read {record_count:,} new records from Kafka."
+                f"Processing {record_count} records for '{data_type}' in batch {epoch_id}."
             )
 
-            config = DATA_TYPE_CONFIG[current_data_type]
+            # Kafka 메시지 파싱
+            config = DATA_TYPE_CONFIG[data_type]
             merge_key_name = config["merge_key"]
             pk_col_index = config["pk_index"]
 
@@ -151,47 +156,63 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
             validated_count = df_validated.count()
             dropped_count = record_count - validated_count
             if dropped_count > 0:
-                logger.warn(
-                    f"[{current_data_type.upper()}] [WARN] Dropped {dropped_count} records due to NULL/EMPTY key."
-                )
+                logger.warn(f"Dropped {dropped_count} records due to NULL/EMPTY key.")
 
             if validated_count > 0:
+                # Bronze 저장
                 write_to_delta_lake(
                     df=df_validated,
                     delta_path=minio_path,
-                    table_name=f"Bronze {current_data_type}",
+                    table_name=f"Bronze {data_type}",
                     partition_col="processed_at",
                     merge_key=merge_key_name,
                 )
 
-                # events와 gkg 데이터 타입일 때만 추적하도록 if문 추가
-                if current_data_type in ["events", "gkg"]:
-                    df_for_lifecycle = df_validated.withColumnRenamed(
-                        merge_key_name, "global_event_id"
-                    )
-                    event_type_for_tracker = (
-                        "EVENT" if current_data_type == "events" else "GKG"
-                    )
+                # events와 gkg만 lifecycle 추적
+                if data_type in ["events", "gkg"]:
+                    try:
+                        df_for_lifecycle = df_validated.withColumnRenamed(
+                            merge_key_name, "global_event_id"
+                        )
+                        event_type_for_tracker = (
+                            "EVENT" if data_type == "events" else "GKG"
+                        )
 
-                    tracked_count = lifecycle_tracker.track_bronze_arrival(
-                        df_for_lifecycle,
-                        f"{current_data_type}_batch",
-                        event_type_for_tracker,
-                    )
-                    logger.info(
-                        f"[{current_data_type.upper()}] Tracked {tracked_count} events as WAITING with type {event_type_for_tracker}"
-                    )
+                        tracked_count = lifecycle_tracker.track_bronze_arrival(
+                            events_df=df_for_lifecycle,
+                            batch_id=f"{data_type}_batch_{epoch_id}",
+                            event_type=event_type_for_tracker,
+                        )
+                        logger.info(
+                            f"Successfully tracked {tracked_count} events in lifecycle for batch {epoch_id}."
+                        )
+                    except Exception as e:
+                        logger.error(
+                            f"LIFECYCLE TRACKING FAILED for batch {epoch_id}: {e}"
+                        )
+                        raise
                 else:
                     logger.info(
-                        f"[{current_data_type.upper()}] Lifecycle tracking is skipped for bridge data type."
+                        f"Skipping lifecycle tracking for '{data_type}' to prevent race conditions."
                     )
 
-        return process_micro_batch
+        except Exception as e:
+            logger.error(
+                f"!!! CRITICAL ERROR in batch {epoch_id} for {data_type}: {str(e)} !!!"
+            )
+            raise e
 
-    # 3. writeStream 실행 - 함수 팩토리로 생성된 핸들러 사용
-    batch_handler = create_batch_handler(data_type)
+        finally:
+            # 캐시 해제
+            df.unpersist()
+            # 이 배치가 몇 개의 레코드를 처리했는지 함께 로깅
+            logger.info(
+                f"--- Finished Batch {epoch_id} for {data_type}, Processed {record_count} records ---"
+            )
+
+    # writeStream 실행
     query = (
-        kafka_df.writeStream.foreachBatch(batch_handler)
+        kafka_df.writeStream.foreachBatch(process_micro_batch)
         .option("checkpointLocation", checkpoint_path)
         .trigger(once=True)
         .start()

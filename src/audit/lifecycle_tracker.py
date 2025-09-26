@@ -96,36 +96,23 @@ class EventLifecycleTracker:
             .withColumn("hour", hour(lit(current_time)))
         )
 
-        # 재시도 로직 추가
-        for attempt in range(3):  # 최대 3번 재시도
-            try:
-                if not DeltaTable.isDeltaTable(self.spark, self.lifecycle_path):
-                    self.initialize_table()
+        # 재시도 로직 제거. 실패 시 Spark Streaming이 재시도하도록 위임
+        try:
+            if not DeltaTable.isDeltaTable(self.spark, self.lifecycle_path):
+                self.initialize_table()
 
-                lifecycle_delta_table = DeltaTable.forPath(
-                    self.spark, self.lifecycle_path
-                )
+            lifecycle_delta_table = DeltaTable.forPath(self.spark, self.lifecycle_path)
 
-                lifecycle_delta_table.alias("target").merge(
-                    source=lifecycle_records.alias("source"),
-                    condition="target.global_event_id = source.global_event_id AND target.event_type = source.event_type",
-                ).whenNotMatchedInsertAll().execute()
+            lifecycle_delta_table.alias("target").merge(
+                source=lifecycle_records.alias("source"),
+                condition="target.global_event_id = source.global_event_id AND target.event_type = source.event_type",
+            ).whenNotMatchedInsertAll().execute()
 
-                print(f"MERGE successful for batch {batch_id} on attempt {attempt + 1}")
-                break  # 성공하면 루프 탈출
-
-            except Exception as e:
-                # ConcurrentAppendException일 때만 재시도
-                if "ConcurrentAppendException" in str(e) and attempt < 2:
-                    print(
-                        f"Race condition detected for batch {batch_id}. Retrying... ({attempt + 1}/3)"
-                    )
-                    time.sleep(5)  # 5초 대기 후 재시도
-                else:
-                    print(
-                        f"Failed to track bronze arrival for batch {batch_id} after {attempt + 1} attempts."
-                    )
-                    raise e  # 다른 에러거나, 3번 시도 모두 실패하면 에러 발생
+        except Exception as e:
+            print(
+                f"Failed to track bronze arrival for batch {batch_id}. Error: {str(e)}"
+            )
+            raise e  # 에러를 다시 던져서 Spark Streaming이 인지하도록 함
 
         tracked_count = lifecycle_records.count()
         print(f"Tracked {tracked_count} events in batch {batch_id}")
