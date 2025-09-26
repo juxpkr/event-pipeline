@@ -590,13 +590,18 @@ services:
       - data-network
     volumes:
       - ./dbt-watcher:/app
+      - ./scripts/wait-for-it.sh:/app/wait-for-it.sh
     environment:
       - SPARK_MASTER_URL=http://spark-master:8080
       - REDIS_HOST=redis
       - REDIS_PORT=6379
     command: >
-      sh -c "pip install requests redis && python dbt_spark_watcher.py"
-
+      sh -c "
+        chmod +x ./wait-for-it.sh &&
+        ./wait-for-it.sh spark-master:8080 -t 60 --
+        pip install requests redis &&
+        python dbt_spark_watcher.py
+      "
 volumes:
   zookeeper-data:
   zookeeper-log:
