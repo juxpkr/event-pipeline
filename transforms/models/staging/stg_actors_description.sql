@@ -23,9 +23,9 @@ WITH all_codes_with_type AS (
 -- 2. CTE: 원본 데이터에서 중복 없는 Actor 코드 목록을 추출합니다.
 source_actors AS (
     SELECT DISTINCT actor_code FROM (
-        SELECT actor1_code AS actor_code FROM {{ source('gdelt_silver_layer', 'gdelt_events') }} WHERE actor1_code IS NOT NULL
+        SELECT actor1_code AS actor_code FROM {{ source('gdelt_silver_layer', 'gdelt_events') }} WHERE actor1_code IS NOT NULL AND event_date >= '2023-09-01'
         UNION ALL
-        SELECT actor2_code AS actor_code FROM {{ source('gdelt_silver_layer', 'gdelt_events') }} WHERE actor2_code IS NOT NULL
+        SELECT actor2_code AS actor_code FROM {{ source('gdelt_silver_layer', 'gdelt_events') }} WHERE actor2_code IS NOT NULL AND event_date >= '2023-09-01'
     )
 ),
 
