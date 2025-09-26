@@ -88,9 +88,10 @@ class EventLifecycleTracker:
             self.spark.sql(merge_sql)
         except Exception as e:
             if "PATH_NOT_FOUND" in str(e):
-                # 테이블이 없으면 초기화하고 다시 MERGE
+                # 테이블이 없으면 초기화하고 TempView 재생성 후 다시 MERGE
                 print(f"Lifecycle table not found, initializing...")
                 self.initialize_table()
+                lifecycle_records.createOrReplaceTempView("new_lifecycle_events")  # TempView 재생성
                 self.spark.sql(merge_sql)
             else:
                 raise e

@@ -137,7 +137,7 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
         validated_count = df_validated.count()
         dropped_count = record_count - validated_count
         if dropped_count > 0:
-            logger.warning(
+            logger.warn(
                 f"[{data_type.upper()}] [WARN] Dropped {dropped_count} records due to NULL/EMPTY key."
             )
 
@@ -212,7 +212,7 @@ def main():
                 logger.error(f"!!! Error: {error_message} !!!")
 
                 # 실패가 감지되면, 아직 실행 중인 다른 모든 쿼리를 즉시 중단시킨다
-                logger.warning(
+                logger.warn(
                     "Stopping all other active queries to ensure atomicity..."
                 )
                 for q in queries:
