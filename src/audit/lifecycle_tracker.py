@@ -73,9 +73,18 @@ class EventLifecycleTracker:
             .withColumn("hour", hour(lit(current_time)))
         )
 
-        # Delta Lake에 APPEND
-        lifecycle_records.write.format("delta").mode("append").save(self.lifecycle_path)
+        # Delta Lake에 MERGE (동시성 충돌 방지)
+        lifecycle_records.createOrReplaceTempView("new_lifecycle_events")
 
+        merge_sql = f"""
+        MERGE INTO delta.`{self.lifecycle_path}` AS target
+        USING new_lifecycle_events AS source
+        ON target.global_event_id = source.global_event_id AND target.event_type = source.event_type
+        WHEN MATCHED THEN UPDATE SET *
+        WHEN NOT MATCHED THEN INSERT *
+        """
+
+        self.spark.sql(merge_sql)
         tracked_count = lifecycle_records.count()
         print(f"Tracked {tracked_count} events in batch {batch_id}")
         return tracked_count
