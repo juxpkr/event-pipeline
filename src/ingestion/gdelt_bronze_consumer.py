@@ -31,6 +31,7 @@ from pyspark.sql.types import (
 # utils에서 필요한 모듈 임포트
 from src.utils.spark_builder import get_spark_session
 from src.processing.partitioning.gdelt_partition_writer import write_to_delta_lake
+from src.audit.lifecycle_tracker import EventLifecycleTracker
 
 
 # --- 로깅 설정 ---
@@ -89,6 +90,9 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
     )
     kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 
+    # Lifecycle tracker 초기화
+    lifecycle_tracker = EventLifecycleTracker(spark)
+
     # 1. readStream으로 Kafka 데이터 읽기
     kafka_df = (
         spark.readStream.format("kafka")
@@ -145,6 +149,13 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
                 partition_col="processed_at",
                 merge_key=merge_key_name,
             )
+
+            # Lifecycle tracking: WAITING 상태로 이벤트 등록
+            event_ids = [row[merge_key_name] for row in df_validated.select(merge_key_name).collect()]
+            for event_id in event_ids:
+                lifecycle_tracker.track_event(event_id, "WAITING")
+
+            logger.info(f"[{data_type.upper()}] Tracked {len(event_ids)} events as WAITING")
 
     # 3. writeStream 실행
     query = (
