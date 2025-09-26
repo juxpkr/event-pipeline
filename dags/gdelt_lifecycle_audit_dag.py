@@ -27,7 +27,6 @@ with DAG(
         packages="io.delta:delta-core_2.12:2.4.0",
         application="/opt/airflow/src/validation/lifecycle_auditor.py",
         application_args=["--hours-back", "15"],
-        packages="org.postgresql:postgresql:42.5.0",
         conf={
             "spark.cores.max": "1",
             "spark.executor.memory": "1g",
