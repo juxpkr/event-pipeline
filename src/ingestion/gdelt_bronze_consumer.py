@@ -163,6 +163,14 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
             # lifecycle_tracker가 기대하는 global_event_id 컬럼명으로 변경
             df_for_lifecycle = df_validated.withColumnRenamed(merge_key_name, "global_event_id")
             event_type = "EVENT" if data_type in ["events", "mentions"] else "GKG"
+
+            # process_micro_batch 내에서도 테이블 존재 확인
+            try:
+                spark.read.format("delta").load("s3a://warehouse/audit/event_lifecycle").limit(1).collect()
+            except:
+                logger.info(f"[{data_type.upper()}] Lifecycle table not found in micro-batch, initializing...")
+                lifecycle_tracker.initialize_table()
+
             tracked_count = lifecycle_tracker.track_bronze_arrival(df_for_lifecycle, f"{data_type}_batch", event_type)
             logger.info(f"[{data_type.upper()}] Tracked {tracked_count} events as WAITING with type {event_type}")
 
