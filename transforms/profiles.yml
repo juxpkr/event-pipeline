@@ -21,6 +21,7 @@ analytics_dbt:
       connect_retries: 5
       connect_timeout: 60
       retry_all: true
+      threads: 4
 
     # =================================================================
     #  개발 환경
@@ -39,6 +40,7 @@ analytics_dbt:
       connect_retries: 5
       connect_timeout: 60
       retry_all: true
+      threads: 4
 
     # =================================================================
     # PostgreSQL 설정
