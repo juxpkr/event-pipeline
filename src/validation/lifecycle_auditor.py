@@ -51,18 +51,10 @@ def calculate_join_yield(
     # maturity_cutoff = datetime.now(timezone.utc) - timedelta(hours=15)
     maturity_cutoff = datetime.now(timezone.utc) - timedelta(hours=1)
 
-    # EVENT 타입만 필터링 (기존 데이터 호환성 고려)
-    try:
-        # 새 스키마: event_type 컬럼 있는 경우
-        mature_events = lifecycle_df.filter(
-            (col("audit.bronze_arrival_time") <= lit(maturity_cutoff)) &
-            (col("event_type") == "EVENT")
-        )
-    except:
-        # 기존 스키마: event_type 컬럼 없는 경우 - 모든 데이터를 EVENT로 간주
-        mature_events = lifecycle_df.filter(
-            col("audit.bronze_arrival_time") <= lit(maturity_cutoff)
-        )
+    # 모든 이벤트 타입 포함 - 파이프라인 전체 건강도 측정
+    mature_events = lifecycle_df.filter(
+        col("audit.bronze_arrival_time") <= lit(maturity_cutoff)
+    )
 
     # agg로 상태별 집계 - collect() 없이
     from pyspark.sql.functions import sum as spark_sum, when, count

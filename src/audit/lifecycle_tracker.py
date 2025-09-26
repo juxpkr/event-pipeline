@@ -146,7 +146,7 @@ class EventLifecycleTracker:
         merge_sql = f"""
         MERGE INTO delta.`{self.lifecycle_path}` AS lifecycle
         USING silver_completed_events_temp AS events
-        ON lifecycle.global_event_id = events.global_event_id AND lifecycle.event_type = 'EVENT'
+        ON lifecycle.global_event_id = events.global_event_id AND lifecycle.event_type IN ('EVENT', 'GKG')
         WHEN MATCHED THEN
         UPDATE SET
             audit.silver_processing_end_time = '{current_time}',
@@ -171,7 +171,7 @@ class EventLifecycleTracker:
         merge_sql = f"""
         MERGE INTO delta.`{self.lifecycle_path}` AS lifecycle
         USING gold_complete_events_temp AS events
-        ON lifecycle.global_event_id = events.global_event_id AND lifecycle.event_type = 'EVENT'
+        ON lifecycle.global_event_id = events.global_event_id AND lifecycle.event_type IN ('EVENT', 'GKG')
         WHEN MATCHED THEN
         UPDATE SET
             audit.gold_processing_end_time = '{current_time}',
@@ -196,7 +196,7 @@ class EventLifecycleTracker:
         merge_sql = f"""
         MERGE INTO delta.`{self.lifecycle_path}` AS lifecycle
         USING postgres_complete_events_temp AS events
-        ON lifecycle.global_event_id = events.global_event_id AND lifecycle.event_type = 'EVENT'
+        ON lifecycle.global_event_id = events.global_event_id AND lifecycle.event_type IN ('EVENT', 'GKG')
         WHEN MATCHED THEN
         UPDATE SET
             audit.postgres_migration_end_time = '{current_time}',
@@ -214,7 +214,7 @@ class EventLifecycleTracker:
         UPDATE delta.`{self.lifecycle_path}`
         SET status = '{to_status}',
             audit.postgres_migration_end_time = '{current_time}'
-        WHERE status = '{from_status}' AND event_type = 'EVENT'
+        WHERE status = '{from_status}' AND event_type IN ('EVENT', 'GKG')
         """
 
         self.spark.sql(update_sql)
@@ -222,7 +222,7 @@ class EventLifecycleTracker:
         # 업데이트된 레코드 수 반환
         count_sql = f"""
         SELECT COUNT(*) as count FROM delta.`{self.lifecycle_path}`
-        WHERE status = '{to_status}' AND event_type = 'EVENT'
+        WHERE status = '{to_status}' AND event_type IN ('EVENT', 'GKG')
         """
         result = self.spark.sql(count_sql).collect()[0]
         return result["count"]
@@ -236,7 +236,7 @@ class EventLifecycleTracker:
         UPDATE delta.`{self.lifecycle_path}`
         SET status = 'EXPIRED'
         WHERE status = 'WAITING'
-        AND event_type = 'EVENT'
+        AND event_type IN ('EVENT', 'GKG')
         AND audit.bronze_arrival_time < '{cutoff_time}'
         """
 
@@ -245,7 +245,7 @@ class EventLifecycleTracker:
         SELECT COUNT(*) as expired_count
         FROM delta.`{self.lifecycle_path}`
         WHERE status = 'WAITING'
-        AND event_type = 'EVENT'
+        AND event_type IN ('EVENT', 'GKG')
         AND audit.bronze_arrival_time < '{cutoff_time}'
         """
 
