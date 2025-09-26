@@ -47,6 +47,16 @@ class GDELTGoldMigrator:
                 "postgres_schema": "gold",
                 "description": "Superset 대시보드용 뷰 테이블",
             },
+            "gold_prod.gold_daily_actor_network": {
+                "postgres_table": "gold_daily_actor_network",
+                "postgres_schema": "gold",
+                "description": "일별 국가간 연결망 분석 테이블",
+            },
+            "gold_prod.gold_daily_events_category": {
+                "postgres_table": "gold_daily_events_category",
+                "postgres_schema": "gold",
+                "description": "일별 카테고리별 이벤트 집계 테이블",
+            },
         }
 
     def _ensure_postgres_schema_exists(self, schema_name: str):
