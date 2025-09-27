@@ -80,11 +80,11 @@ with DAG(
                 application_args=[hour_str],
                 env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
                 conf={
-                    "spark.cores.max": "6",
-                    "spark.executor.instances": "3",
-                    "spark.executor.memory": "4g",
+                    "spark.cores.max": "4",
+                    "spark.executor.instances": "2",
+                    "spark.executor.memory": "2g",
                     "spark.executor.cores": "2",
-                    "spark.driver.memory": "2g",
+                    "spark.driver.memory": "1g",
                 },
                 doc_md=f"""
                 ### {hour_str} 데이터 수집
@@ -103,11 +103,11 @@ with DAG(
                 application_args=[hour_str],
                 env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
                 conf={
-                    "spark.cores.max": "6",
-                    "spark.executor.instances": "4",
-                    "spark.executor.memory": "6g",
+                    "spark.cores.max": "4",
+                    "spark.executor.instances": "2",
+                    "spark.executor.memory": "3g",
                     "spark.executor.cores": "2",
-                    "spark.driver.memory": "3g",
+                    "spark.driver.memory": "1g",
                 },
                 doc_md=f"""
                 ### {hour_str} 데이터 처리
