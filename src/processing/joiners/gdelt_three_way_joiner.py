@@ -40,11 +40,10 @@ def perform_three_way_join(
             mentions_renamed,
             on=[
                 events_silver["global_event_id"] == mentions_renamed["global_event_id"],
-                # event_date를 기준으로, mention_time_date가 과거 15시간 범위 안에 있을 때만 조인
+                # GDELT 데이터 특성 고려: mentions가 events보다 늦게 보고됨 (평균 91시간)
                 mentions_renamed["mention_time_date"].between(
-                    F.col("event_date") - F.expr("INTERVAL 15 HOURS"),
-                    F.col("event_date")
-                    + F.expr("INTERVAL 1 HOURS"),  # 혹시 모를 미래 데이터도 1시간 여유
+                    F.col("event_date") - F.expr("INTERVAL 168 HOURS"),  # 7일 lookback
+                    F.col("event_date") + F.expr("INTERVAL 48 HOURS"),   # 2일 forward
                 ),
             ],
             how="left",
