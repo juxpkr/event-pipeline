@@ -43,7 +43,7 @@ def perform_three_way_join(
                 # GDELT 데이터 특성 고려: mentions가 events보다 늦게 보고됨 (평균 91시간)
                 mentions_renamed["mention_time_date"].between(
                     F.col("event_date") - F.expr("INTERVAL 168 HOURS"),  # 7일 lookback
-                    F.col("event_date") + F.expr("INTERVAL 48 HOURS"),   # 2일 forward
+                    F.col("event_date") + F.expr("INTERVAL 48 HOURS"),  # 2일 forward
                 ),
             ],
             how="left",
