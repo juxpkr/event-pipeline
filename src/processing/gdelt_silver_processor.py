@@ -7,7 +7,6 @@ Bronze Layer에서 수집된 원본 데이터를 정제하고, 가공하여 Gold
 import os
 import sys
 import logging
-import argparse
 from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
 from datetime import datetime, timezone
@@ -110,7 +109,7 @@ def setup_silver_table(
 
 
 def read_from_bronze_minio(
-    spark: SparkSession, start_time_str: str, end_time_str: str, bronze_base: str = "s3a://warehouse/bronze"
+    spark: SparkSession, start_time_str: str, end_time_str: str
 ) -> DataFrame:
     """
     MinIO Bronze Layer에서 각 데이터 타입별로 데이터를 읽고,
@@ -119,13 +118,11 @@ def read_from_bronze_minio(
     logger.info(
         f"Reading Bronze data from MinIO for period: {start_time_str} to {end_time_str}"
     )
-    logger.info(f"Using bronze base path: {bronze_base}")
-
-    # Bronze Layer 경로 설정 (동적)
+    # Bronze Layer 경로 설정
     bronze_paths = {
-        "events": f"{bronze_base}/gdelt_events",
-        "mentions": f"{bronze_base}/gdelt_mentions",
-        "gkg": f"{bronze_base}/gdelt_gkg",
+        "events": "s3a://warehouse/bronze/gdelt_events",
+        "mentions": "s3a://warehouse/bronze/gdelt_mentions",
+        "gkg": "s3a://warehouse/bronze/gdelt_gkg",
     }
 
     # 반환 타입을 딕셔너리로 변경 (기존: 통합 dataframe)
@@ -161,7 +158,7 @@ def read_from_bronze_minio(
     return dataframes
 
 
-def main(logical_date=None, input_path=None, output_path=None):
+def main():
     """메인 실행 함수"""
     logger.info("Starting GDELT 3-Way Silver Processor (Refactored)...")
 
@@ -170,19 +167,18 @@ def main(logical_date=None, input_path=None, output_path=None):
     )
     redis_client.register_driver_ui(spark, "GDELT 3Way Silver Processor")
 
-    # 기본 경로 설정
-    bronze_base = input_path if input_path else "s3a://warehouse/bronze"
-    silver_base = output_path if output_path else "s3a://warehouse/silver"
+    # Airflow가 넘겨준 인자를 sys.argv를 통해 받음
+    if len(sys.argv) != 3:
+        logger.error("Usage: spark-submit <script> <start_time> <end_time>")
+        sys.exit(1)
 
-    logger.info(f"Using Bronze base path: {bronze_base}")
-    logger.info(f"Using Silver base path: {silver_base}")
-
-    # 더미 시간 설정 (백필에서는 실제로 사용하지 않음)
-    start_time_str = logical_date if logical_date else "2024-01-01 00:00:00"
-    end_time_str = logical_date if logical_date else "2024-01-01 01:00:00"
+    start_time_str = sys.argv[1]
+    end_time_str = sys.argv[2]
 
     # batch_id 생성 (시간 기반)
-    batch_id = f"batch_{start_time_str.replace(':', '').replace('-', '').replace(' ', '_')}"
+    batch_id = (
+        f"batch_{start_time_str.replace(':', '').replace('-', '').replace(' ', '_')}"
+    )
 
     try:
         # Lifecycle Tracker 초기화
@@ -190,7 +186,7 @@ def main(logical_date=None, input_path=None, output_path=None):
         # 1. Silver 스키마 생성
         logger.info("Creating silver schema...")
         spark.sql(
-            f"CREATE SCHEMA IF NOT EXISTS silver LOCATION '{silver_base}/'"
+            "CREATE SCHEMA IF NOT EXISTS silver LOCATION 's3a://warehouse/silver/'"
         )
 
         # 2. Silver 테이블 설정
@@ -198,20 +194,20 @@ def main(logical_date=None, input_path=None, output_path=None):
         setup_silver_table(
             spark,
             "silver.gdelt_events",
-            f"{silver_base}/gdelt_events",
+            "s3a://warehouse/silver/gdelt_events",
             GDELTSchemas.get_silver_events_schema(),
             partition_keys=["year", "month", "day", "hour"],
         )
         setup_silver_table(
             spark,
             "silver.gdelt_events_detailed",
-            f"{silver_base}/gdelt_events_detailed",
+            "s3a://warehouse/silver/gdelt_events_detailed",
             GDELTSchemas.get_silver_events_detailed_schema(),
             partition_keys=["year", "month", "day", "hour"],
         )
 
         # 3. MinIO Bronze Layer에서 데이터 읽기 (Airflow가 준 시간 인자 전달)
-        bronze_dataframes = read_from_bronze_minio(spark, start_time_str, end_time_str, bronze_base)
+        bronze_dataframes = read_from_bronze_minio(spark, start_time_str, end_time_str)
 
         if not bronze_dataframes:
             logger.warning("No Bronze data found in MinIO. Exiting gracefully.")
@@ -229,12 +225,11 @@ def main(logical_date=None, input_path=None, output_path=None):
         )
         gkg_silver = transform_gkg_to_silver(gkg_df) if gkg_df else None
 
-
         # 6. Events 단독 Silver 저장
         if events_silver:
             write_to_delta_lake(
                 df=events_silver,
-                delta_path=f"{silver_base}/gdelt_events",
+                delta_path="s3a://warehouse/silver/gdelt_events",
                 table_name="Events",
                 partition_col="processed_at",  # Hot: 실시간 대시보드용 (수집시간)
                 merge_key="global_event_id",  # Silver 스키마의 소문자 키
@@ -260,21 +255,31 @@ def main(logical_date=None, input_path=None, output_path=None):
             # 10. Events detailed Silver 저장
             write_to_delta_lake(
                 df=final_silver_df,
-                delta_path=f"{silver_base}/gdelt_events_detailed",
+                delta_path="s3a://warehouse/silver/gdelt_events_detailed",
                 table_name="Events detailed GDELT",
                 partition_col="priority_date",  # 사건 시간 기준
                 merge_key="global_event_id",  # Silver 스키마의 소문자 키
             )
 
             # Silver 처리 완료 시점 기록
-            final_event_ids = final_silver_df.select("global_event_id").rdd.map(lambda row: row[0]).collect()
+            final_event_ids = (
+                final_silver_df.select("global_event_id")
+                .rdd.map(lambda row: row[0])
+                .collect()
+            )
             lifecycle_updater.mark_silver_processing_complete(final_event_ids, batch_id)
 
             # 실제 GKG 조인 성공률 로깅
-            actually_joined_count = final_silver_df.filter(F.col("gkg_record_id").isNotNull()).count()
+            actually_joined_count = final_silver_df.filter(
+                F.col("gkg_record_id").isNotNull()
+            ).count()
             total_events = final_silver_df.count()
-            actual_join_rate = (actually_joined_count / total_events * 100) if total_events > 0 else 0
-            logger.info(f"Silver processing complete: {total_events} events processed, {actually_joined_count} with GKG ({actual_join_rate:.1f}% join rate)")
+            actual_join_rate = (
+                (actually_joined_count / total_events * 100) if total_events > 0 else 0
+            )
+            logger.info(
+                f"Silver processing complete: {total_events} events processed, {actually_joined_count} with GKG ({actual_join_rate:.1f}% join rate)"
+            )
 
             logger.info("Sample of Events detailed Silver data:")
             final_silver_df.show(5, vertical=True)
@@ -294,10 +299,4 @@ def main(logical_date=None, input_path=None, output_path=None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--logical-date", required=True, help="Logical execution date")
-    parser.add_argument("--input-path", required=False, default="s3a://warehouse/bronze", help="Input Bronze base path")
-    parser.add_argument("--output-path", required=False, default="s3a://warehouse/silver", help="Output Silver base path")
-
-    args = parser.parse_args()
-    main(args.logical_date, args.input_path, args.output_path)
+    main()

@@ -89,14 +89,7 @@ with DAG(
             conn_id=SPARK_CONN_ID,
             packages="io.delta:delta-core_2.12:2.4.0",
             application=f"{PROJECT_ROOT}/src/ingestion/gdelt_bronze_consumer.py",
-            application_args=[
-                "--logical-date",
-                "{{ data_interval_start }}",
-                "--output-path",
-                "s3a://warehouse/bronze_backfill",
-                "--kafka-topic-suffix",
-                "backfill",
-            ],
+            application_args=["--logical-date", "{{ data_interval_start }}"],
             env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
             conf={
                 "spark.cores.max": "4",
@@ -120,14 +113,7 @@ with DAG(
             conn_id=SPARK_CONN_ID,
             packages="io.delta:delta-core_2.12:2.4.0",
             application=f"{PROJECT_ROOT}/src/processing/gdelt_silver_processor.py",
-            application_args=[
-                "--logical-date",
-                "{{ data_interval_start }}",
-                "--input-path",
-                "s3a://warehouse/bronze_backfill",
-                "--output-path",
-                "s3a://warehouse/silver_backfill",
-            ],
+            application_args=["--logical-date", "{{ data_interval_start }}"],
             env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
             conf={
                 "spark.cores.max": "4",

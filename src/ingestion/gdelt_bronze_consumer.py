@@ -12,7 +12,6 @@ import sys
 import time
 from pathlib import Path
 import logging
-import argparse
 
 # 프로젝트 루트를 Python path에 추가
 project_root = os.getenv("PROJECT_ROOT", str(Path(__file__).resolve().parents[2]))
@@ -225,31 +224,10 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
     return query
 
 
-def main(logical_date=None, output_path=None, kafka_topic_suffix=None):
+def main():
     """
     GDELT 3-Way Bronze Consumer 메인 함수 - 병렬로 스트림 처리
     """
-    # kafka-topic-suffix가 지정되면 KAFKA_TOPICS 동적 변경
-    global KAFKA_TOPICS, MINIO_PATHS
-    if kafka_topic_suffix:
-        logger.info(f"Using custom kafka topic suffix: {kafka_topic_suffix}")
-        KAFKA_TOPICS = {
-            "events": f"gdelt_events_{kafka_topic_suffix}",
-            "mentions": f"gdelt_mentions_{kafka_topic_suffix}",
-            "gkg": f"gdelt_gkg_{kafka_topic_suffix}",
-        }
-        logger.info(f"Updated KAFKA_TOPICS: {KAFKA_TOPICS}")
-
-    # output-path가 지정되면 MINIO_PATHS 동적 변경
-    if output_path:
-        logger.info(f"Using custom output path: {output_path}")
-        MINIO_PATHS = {
-            "events": f"{output_path}/gdelt_events",
-            "mentions": f"{output_path}/gdelt_mentions",
-            "gkg": f"{output_path}/gdelt_gkg",
-        }
-        logger.info(f"Updated MINIO_PATHS: {MINIO_PATHS}")
-
     spark = get_spark_session("GDELT_Bronze_Consumer")
 
     # Redis에 Spark Driver UI 정보 등록
@@ -316,16 +294,4 @@ def main(logical_date=None, output_path=None, kafka_topic_suffix=None):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--logical-date", required=True)
-    # output-path 인자 추가
-    parser.add_argument(
-        "--output-path", required=True, help="Output path for Bronze data"
-    )
-    # kafka-topic-suffix 인자 추가
-    parser.add_argument(
-        "--kafka-topic-suffix", default="bronze", help="Kafka topic suffix (bronze/backfill)"
-    )
-
-    args = parser.parse_args()
-    main(args.logical_date, args.output_path, args.kafka_topic_suffix)
+    main()
