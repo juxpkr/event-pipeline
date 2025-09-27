@@ -71,14 +71,16 @@ with DAG(
             # 1. 데이터 수집 (GDELT → 직접 Bronze)
             collect_task = SparkSubmitOperator(
                 task_id=f'collect_{date_str.replace("-", "_")}',
-                conn_id='spark_default',
+                conn_id='spark_conn',
                 packages="io.delta:delta-core_2.12:2.4.0",
                 application="/opt/airflow/src/processing/daily_gdelt_collector.py",
                 application_args=[date_str],
+                env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
                 conf={
-                    "spark.cores.max": "2",
+                    "spark.executor.instances": "2",
                     "spark.executor.memory": "4g",
                     "spark.executor.cores": "1",
+                    "spark.driver.memory": "2g",
                 },
                 doc_md=f"""
                 ### {date_str} 데이터 수집
@@ -91,14 +93,16 @@ with DAG(
             # 2. 데이터 처리 (Bronze → Silver)
             process_task = SparkSubmitOperator(
                 task_id=f'process_{date_str.replace("-", "_")}',
-                conn_id='spark_default',
+                conn_id='spark_conn',
                 packages="io.delta:delta-core_2.12:2.4.0",
                 application="/opt/airflow/src/processing/daily_gdelt_processor.py",
                 application_args=[date_str],
+                env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
                 conf={
-                    "spark.cores.max": "4",
+                    "spark.executor.instances": "3",
                     "spark.executor.memory": "6g",
                     "spark.executor.cores": "2",
+                    "spark.driver.memory": "4g",
                 },
                 doc_md=f"""
                 ### {date_str} 데이터 처리
