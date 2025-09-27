@@ -43,6 +43,7 @@ services:
       - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:29092
       - KAFKA_JMX_PORT=9999
       - KAFKA_JMX_HOSTNAME=kafka
+      - JMX_SERVER_HOSTNAME=10.0.0.4
     volumes:
       - ./config/kafka/entrypoint.sh:/entrypoint.sh:ro
     entrypoint: [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
@@ -70,7 +71,7 @@ services:
     networks:
       - data-network
     environment:
-      - JMX_HOST=kafka
+      - JMX_HOST=${JMX_SERVER_HOSTNAME}
       - JMX_PORT=9999
       - JMX_EXPORTER_CONFIG_FILE=/config.yml
     volumes:
