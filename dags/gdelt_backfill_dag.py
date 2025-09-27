@@ -9,6 +9,7 @@ from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.utils.task_group import TaskGroup
+from airflow.models.baseoperator import chain
 import os
 import pendulum
 
@@ -130,5 +131,5 @@ with DAG(
         )
         processor_tasks.append(processor_task)
 
-    # 각 배치별 순차 의존성 (배치 간에는 병렬)
-    producer_task >> consumer_task >> processor_task
+    # 각 배치별 순차 의존성
+    chain(producer_tasks, consumer_tasks, processor_tasks)
