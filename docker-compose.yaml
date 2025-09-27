@@ -101,7 +101,7 @@ services:
       - data-network
     environment:
       - KAFKA_BOOTSTRAP_SERVER=kafka:9092
-    command: [ "/bin/sh", "-c", "wait-for-it.sh kafka:9092 -t 60 -- sleep 15 && /etc/kafka-setup/setup-topics.sh" ]
+    command: [ "/bin/sh", "-c", "wait-for-it.sh kafka:9092 -t 60 -- sleep 15 && /etc/kafka-setup/setup-topics.sh && kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic gdelt_events_backfill --partitions 3 --replication-factor 1 && kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic gdelt_mentions_backfill --partitions 3 --replication-factor 1 && kafka-topics --bootstrap-server kafka:9092 --create --if-not-exists --topic gdelt_gkg_backfill --partitions 3 --replication-factor 1" ]
     deploy:
       restart_policy:
         condition: on-failure # <-- 실패 시에만 재시작

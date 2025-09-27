@@ -39,11 +39,11 @@ MINIO_ROOT_PASSWORD = os.getenv("MINIO_ROOT_PASSWORD")
 CHECKPOINT_BUCKET = "warehouse"
 CHECKPOINT_KEY = "checkpoints/producer/last_success_timestamp.txt"
 
-# 3가지 데이터 타입별 토픽
+# 3가지 데이터 타입별 토픽 (백필용)
 KAFKA_TOPICS = {
-    "events": os.getenv("KAFKA_TOPIC_GDELT_EVENTS", "gdelt_events_bronze"),
-    "mentions": os.getenv("KAFKA_TOPIC_GDELT_MENTIONS", "gdelt_mentions_bronze"),
-    "gkg": os.getenv("KAFKA_TOPIC_GDELT_GKG", "gdelt_gkg_bronze"),
+    "events": "gdelt_events_backfill",
+    "mentions": "gdelt_mentions_backfill",
+    "gkg": "gdelt_gkg_backfill",
 }
 
 # GDELT 데이터 타입별 파일 확장자
