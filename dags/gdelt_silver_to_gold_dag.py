@@ -96,6 +96,7 @@ with DAG(
     dbt_transformation = DockerOperator(
         task_id="dbt_transformation",
         image=os.getenv("DBT_IMAGE", "juxpkr/geoevent-dbt:0.3"),
+        mount_tmp_dir=False,
         on_success_callback=mark_processing_complete,  # 태스크 성공 직후 호출
         command=[
             "/bin/sh",
@@ -119,7 +120,7 @@ with DAG(
             "DBT_PROFILES_DIR": "/app",
             "DBT_TARGET": "prod",
         },
-        cpus=6,  # CPU 코어 6개 사용
+        cpus=4,
         auto_remove="success",  # 실행 후 컨테이너 자동 삭제
         doc_md="""
         dbt Gold Layer Transformation (DockerOperator)
@@ -139,9 +140,9 @@ with DAG(
         packages="org.postgresql:postgresql:42.5.0,io.delta:delta-core_2.12:2.4.0",
         on_success_callback=mark_postgres_complete,  # Postgres 마이그레이션 완료 직후 호출
         conf={
-            "spark.executor.instances": "5",  # 5개의 작업팀을 투입
-            "spark.executor.memory": "8g",  # 각 팀은 8GB 메모리 사용
-            "spark.executor.cores": "2",  # 각 팀은 2인 1조로 구성 (총 5*2=10코어)
+            "spark.executor.instances": "5",
+            "spark.executor.memory": "8g",
+            "spark.executor.cores": "2",
             "spark.driver.memory": "4g",
         },
         doc_md="""
