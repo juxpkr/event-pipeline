@@ -120,8 +120,8 @@ with DAG(
             },
             execution_timeout=timedelta(minutes=30),
             doc_md=f"""
-            Silver Processor ({hour_start})
-            - Bronze Layer에서 {hour_start} 데이터 읽어서 Silver Layer 변환
+            Silver Processor ({timestamp_start})
+            - Bronze Layer에서 {timestamp_start} 데이터 읽어서 Silver Layer 변환
             """,
         )
 
