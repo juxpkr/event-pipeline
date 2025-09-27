@@ -191,6 +191,11 @@ services:
       #- .:/app
       - ./spark-ivy-cache:/home/spark/.ivy2
       - spark-jars:/opt/spark/jars
+    environment:
+      # 동적 자원 할당
+      SPARK_DYNAMIC_cores_max: 8
+      SPARK_DYNAMIC_executor_memory: 4g
+      SPARK_DYNAMIC_executor_cores: 2
     env_file:
       - ./.env
       - ./config/spark/spark.env
