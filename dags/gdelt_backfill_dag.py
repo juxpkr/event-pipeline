@@ -130,9 +130,5 @@ with DAG(
         )
         processor_tasks.append(processor_task)
 
-    # 단계별 의존성 설정: 모든 Producer 완료 → 모든 Consumer 시작 → 모든 Processor 시작
-    for consumer_task in consumer_tasks:
-        consumer_task.set_upstream(producer_tasks)
-
-    for processor_task in processor_tasks:
-        processor_task.set_upstream(consumer_tasks)
+    # 각 배치별 순차 의존성 (배치 간에는 병렬)
+    producer_task >> consumer_task >> processor_task
