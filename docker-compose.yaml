@@ -448,9 +448,9 @@ services:
           - node.role == worker
       resources:
         limits:
-          memory: 16G
+          memory: 24G
         reservations:
-          memory: 8G
+          memory: 16G
 
     security_opt:
       - apparmor:unconfined
