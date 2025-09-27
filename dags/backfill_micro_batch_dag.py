@@ -13,7 +13,7 @@ from airflow.utils.task_group import TaskGroup
 # 백필 설정
 BACKFILL_START_DATE = datetime(2023, 8, 1)
 BACKFILL_END_DATE = datetime(2023, 9, 1)
-SEQUENTIAL_PROCESSING = True  # 순차 처리 설정
+SEQUENTIAL_PROCESSING = False  # 병렬 처리로 변경 (코어 여유 있음)
 
 def generate_hour_list():
     """백필할 시간 리스트 생성 (시간 단위)"""
@@ -30,7 +30,7 @@ with DAG(
     schedule=None,
     catchup=False,
     max_active_runs=1,
-    max_active_tasks=2,  # 동시 실행 Task 제한
+    max_active_tasks=8,  # 동시 실행 Task 제한 (코어 여유 있으니 증가)
     tags=['backfill', 'gdelt', 'micro-batch'],
     doc_md=f"""
     # GDELT 마이크로 배치 백필
@@ -78,10 +78,10 @@ with DAG(
                 application_args=[hour_str],
                 env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
                 conf={
-                    "spark.executor.instances": "1",
-                    "spark.executor.memory": "2g",
-                    "spark.executor.cores": "1",
-                    "spark.driver.memory": "1g",
+                    "spark.executor.instances": "3",
+                    "spark.executor.memory": "4g",
+                    "spark.executor.cores": "2",
+                    "spark.driver.memory": "2g",
                 },
                 doc_md=f"""
                 ### {hour_str} 데이터 수집
@@ -100,10 +100,10 @@ with DAG(
                 application_args=[hour_str],
                 env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
                 conf={
-                    "spark.executor.instances": "1",
-                    "spark.executor.memory": "3g",
-                    "spark.executor.cores": "1",
-                    "spark.driver.memory": "2g",
+                    "spark.executor.instances": "4",
+                    "spark.executor.memory": "6g",
+                    "spark.executor.cores": "2",
+                    "spark.driver.memory": "3g",
                 },
                 doc_md=f"""
                 ### {hour_str} 데이터 처리
