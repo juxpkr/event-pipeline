@@ -15,6 +15,7 @@ BACKFILL_START_DATE = datetime(2023, 8, 1)
 BACKFILL_END_DATE = datetime(2023, 9, 1)
 SEQUENTIAL_PROCESSING = False  # 병렬 처리로 변경 (코어 여유 있음)
 
+
 def generate_hour_list():
     """백필할 시간 리스트 생성 (시간 단위)"""
     hours = []
@@ -24,14 +25,15 @@ def generate_hour_list():
         current += timedelta(hours=1)
     return hours
 
+
 with DAG(
-    dag_id='gdelt_micro_batch_backfill',
+    dag_id="gdelt_micro_batch_backfill",
     start_date=pendulum.now(tz="Asia/Seoul"),
     schedule=None,
     catchup=False,
     max_active_runs=1,
     max_active_tasks=8,  # 동시 실행 Task 제한 (코어 여유 있으니 증가)
-    tags=['backfill', 'gdelt', 'micro-batch'],
+    tags=["backfill", "gdelt", "micro-batch"],
     doc_md=f"""
     # GDELT 마이크로 배치 백필
 
@@ -66,18 +68,19 @@ with DAG(
 
         with TaskGroup(
             group_id=f'hourly_{hour_str.replace("-", "_")}',
-            tooltip=f'Process GDELT data for {hour_str}'
+            tooltip=f"Process GDELT data for {hour_str}",
         ) as hourly_group:
 
             # 1. 데이터 수집 (GDELT → 직접 Bronze)
             collect_task = SparkSubmitOperator(
                 task_id=f'collect_{hour_str.replace("-", "_")}',
-                conn_id='spark_conn',
+                conn_id="spark_conn",
                 packages="io.delta:delta-core_2.12:2.4.0",
                 application="/opt/airflow/src/processing/hourly_gdelt_collector.py",
                 application_args=[hour_str],
                 env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
                 conf={
+                    "spark.cores.max": "6",
                     "spark.executor.instances": "3",
                     "spark.executor.memory": "4g",
                     "spark.executor.cores": "2",
@@ -88,18 +91,19 @@ with DAG(
                 - GDELT 서버에서 {hour_str} 시간치 데이터 다운로드 (4개 15분 배치)
                 - 직접 Bronze Layer에 저장 (Kafka 우회)
                 - Events, Mentions, GKG 모든 타입 처리
-                """
+                """,
             )
 
             # 2. 데이터 처리 (Bronze → Silver)
             process_task = SparkSubmitOperator(
                 task_id=f'process_{hour_str.replace("-", "_")}',
-                conn_id='spark_conn',
+                conn_id="spark_conn",
                 packages="io.delta:delta-core_2.12:2.4.0",
                 application="/opt/airflow/src/processing/hourly_gdelt_processor.py",
                 application_args=[hour_str],
                 env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
                 conf={
+                    "spark.cores.max": "6",
                     "spark.executor.instances": "4",
                     "spark.executor.memory": "6g",
                     "spark.executor.cores": "2",
@@ -110,7 +114,7 @@ with DAG(
                 - Bronze Layer에서 {hour_str} 데이터 읽기
                 - 3-Way 조인 (Events + Mentions + GKG)
                 - Silver Layer에 저장
-                """
+                """,
             )
 
             # Task 순서: 수집 → 처리
