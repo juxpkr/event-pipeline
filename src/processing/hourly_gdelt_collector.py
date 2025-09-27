@@ -131,7 +131,7 @@ def download_and_parse_gdelt(url: str, data_type: str, logical_hour: str) -> lis
         logger.error(f"Error processing {data_type} data from {url}: {e}", exc_info=True)
         return []
 
-def save_to_bronze(spark: SparkSession, records: list, data_type: str):
+def save_to_bronze(spark: SparkSession, records: list, data_type: str, logical_hour: str):
     """Bronze Layer에 저장 (기존 partition writer 사용)"""
     if not records:
         logger.warning(f"No records to save for {data_type}")
@@ -151,8 +151,10 @@ def save_to_bronze(spark: SparkSession, records: list, data_type: str):
 
     df = spark.createDataFrame(records, schema)
 
-    # processed_at 컬럼 추가 (현재 시간)
-    df = df.withColumn("processed_at", F.current_timestamp())
+    # processed_at 컬럼 추가 (백필 시간으로 설정)
+    hour_obj = datetime.strptime(logical_hour, "%Y-%m-%d-%H")
+    processed_timestamp = hour_obj.replace(tzinfo=timezone.utc)
+    df = df.withColumn("processed_at", F.lit(processed_timestamp))
 
     # Primary key 추출 (첫 번째 컬럼)
     if data_type == "gkg":
@@ -226,7 +228,7 @@ def collect_hourly_data(hour_str: str):
                         continue
 
                 # Bronze에 저장
-                save_to_bronze(spark, all_records, data_type)
+                save_to_bronze(spark, all_records, data_type, hour_str)
 
                 total_stats[data_type] = {
                     "record_count": len(all_records),
