@@ -88,7 +88,7 @@ with DAG(
 
             # Task 2: Bronze Consumer (기존 스크립트 재사용)
             consumer_task = SparkSubmitOperator(
-                task_id="gdelt_backfill_producer",
+                task_id="gdelt_bronze_consumer",
                 pool="spark_pool",
                 conn_id=SPARK_CONN_ID,
                 packages="io.delta:delta-core_2.12:2.4.0",
@@ -111,7 +111,7 @@ with DAG(
 
             # Task 3: Silver Processor (기존 스크립트 재사용)
             processor_task = SparkSubmitOperator(
-                task_id="gdelt_backfill_producer",
+                task_id="gdelt_silver_processor",
                 pool="spark_pool",
                 conn_id=SPARK_CONN_ID,
                 packages="io.delta:delta-core_2.12:2.4.0",
