@@ -41,6 +41,8 @@ services:
     environment:
       # 서버에서는 .env 파일의 KAFKA_EXTERNAL_HOST 변수값을 사용
       - KAFKA_ADVERTISED_LISTENERS=INTERNAL://kafka:9092,EXTERNAL://${KAFKA_EXTERNAL_HOST}:29092
+      - KAFKA_JMX_PORT=9999
+      - KAFKA_JMX_HOSTNAME=kafka
     volumes:
       - ./config/kafka/entrypoint.sh:/entrypoint.sh:ro
     entrypoint: [ "/usr/bin/tini", "--", "/entrypoint.sh" ]
