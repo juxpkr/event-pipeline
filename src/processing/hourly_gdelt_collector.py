@@ -24,6 +24,7 @@ from pyspark.sql import SparkSession, functions as F
 from pyspark.sql.types import *
 from src.utils.spark_builder import get_spark_session
 from src.utils.redis_client import redis_client
+from src.processing.partitioning.gdelt_partition_writer import write_to_delta_lake
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
@@ -106,6 +107,7 @@ def download_and_parse_gdelt(url: str, data_type: str, logical_hour: str) -> lis
                     try:
                         # bronze 데이터에 메타데이터 추가 (기존 Producer와 동일)
                         current_utc = datetime.now(timezone.utc)
+                        # 기존 Bronze 스키마와 호환 (processed_at 제외)
                         bronze_record = {
                             "data_type": data_type,
                             "bronze_data": row,  # 전체 컬럼을 리스트로
@@ -113,7 +115,6 @@ def download_and_parse_gdelt(url: str, data_type: str, logical_hour: str) -> lis
                             "source_file": csv_filename,
                             "extracted_time": logical_hour,
                             "producer_timestamp": current_utc.isoformat(),  # 중복 제거용 타임스탬프
-                            "processed_at": logical_hour,  # 백필 대상 시간
                             "source_url": url,
                             "total_columns": len(row),
                         }
@@ -131,12 +132,12 @@ def download_and_parse_gdelt(url: str, data_type: str, logical_hour: str) -> lis
         return []
 
 def save_to_bronze(spark: SparkSession, records: list, data_type: str):
-    """Bronze Layer에 저장"""
+    """Bronze Layer에 저장 (기존 partition writer 사용)"""
     if not records:
         logger.warning(f"No records to save for {data_type}")
         return
 
-    # DataFrame 생성
+    # 기존 Bronze 스키마 사용 (processed_at 없음)
     schema = StructType([
         StructField("data_type", StringType(), True),
         StructField("bronze_data", ArrayType(StringType()), True),
@@ -144,38 +145,30 @@ def save_to_bronze(spark: SparkSession, records: list, data_type: str):
         StructField("source_file", StringType(), True),
         StructField("extracted_time", StringType(), True),
         StructField("producer_timestamp", StringType(), True),
-        StructField("processed_at", StringType(), True),
         StructField("source_url", StringType(), True),
         StructField("total_columns", IntegerType(), True),
     ])
 
     df = spark.createDataFrame(records, schema)
 
-    # 파티션 컬럼 추가
-    df = df.withColumn("year", F.year(F.col("processed_at").cast("timestamp"))) \
-          .withColumn("month", F.month(F.col("processed_at").cast("timestamp"))) \
-          .withColumn("day", F.dayofmonth(F.col("processed_at").cast("timestamp"))) \
-          .withColumn("hour", F.hour(F.col("processed_at").cast("timestamp")))
-
     # Primary key 추출 (첫 번째 컬럼)
     if data_type == "gkg":
-        # GKG는 GKGRECORDID가 PK
+        merge_key = "GKGRECORDID"
         df = df.withColumn("GKGRECORDID", F.col("bronze_data")[0])
     else:
-        # Events/Mentions는 GLOBALEVENTID가 PK
+        merge_key = "GLOBALEVENTID"
         df = df.withColumn("GLOBALEVENTID", F.col("bronze_data")[0])
 
-    # Delta Lake에 저장
-    bronze_path = BRONZE_PATHS[data_type]
+    # 기존 partition writer 사용 (processed_at 자동 추가됨)
+    write_to_delta_lake(
+        df=df,
+        delta_path=BRONZE_PATHS[data_type],
+        table_name=f"Bronze {data_type}",
+        partition_col="processed_at",  # write_to_delta_lake가 자동 생성
+        merge_key=merge_key,
+    )
 
-    df.write \
-        .format("delta") \
-        .mode("append") \
-        .option("mergeSchema", "true") \
-        .partitionBy("year", "month", "day", "hour") \
-        .save(bronze_path)
-
-    logger.info(f"Saved {len(records)} {data_type} records to {bronze_path}")
+    logger.info(f"Saved {len(records)} {data_type} records to {BRONZE_PATHS[data_type]}")
 
 def collect_hourly_data(hour_str: str):
     """시간별 GDELT 데이터 수집 (기존 Producer 로직 완전 이식)"""
