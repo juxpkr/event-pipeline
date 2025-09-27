@@ -22,9 +22,12 @@ def generate_15min_list():
     timestamps = []
     current = BACKFILL_START_DATE
     while current < BACKFILL_END_DATE:
-        timestamps.append(current.strftime("%Y-%m-%dT%H:%M:%S"))
+        timestamps.append(current)  # 문자열 대신 datetime 객체로 추가
         current += timedelta(minutes=15)  # 15분씩 증가
-    return timestamps
+
+    # 중복을 차단하고, 정렬한 뒤, 마지막에 문자열로 변환
+    unique_timestamps = sorted(list(set(timestamps)))
+    return [dt.strftime("%Y-%m-%dT%H:%M:%S") for dt in unique_timestamps]
 
 
 with DAG(
