@@ -13,8 +13,8 @@ import os
 import pendulum
 
 # 백필 설정
-BACKFILL_START_DATE = datetime(2023, 8, 1)
-BACKFILL_END_DATE = datetime(2023, 8, 2)  # 일단 1일만 테스트
+BACKFILL_START_DATE = datetime(2023, 8, 20)
+BACKFILL_END_DATE = datetime(2023, 8, 27)  # 일주일 테스트
 
 
 def generate_15min_list():
@@ -33,7 +33,7 @@ with DAG(
     schedule=None,  # 수동 실행
     catchup=False,
     max_active_runs=1,
-    max_active_tasks=12,  # TaskGroup별 병렬 실행 허용
+    max_active_tasks=4,  # 메모리 절약을 위해 동시 실행 제한
     doc_md=f"""
     GDELT 백필 Pipeline (TaskGroup 병렬 최적화)
     - 목적: 과거 GDELT 데이터 백필 ({BACKFILL_START_DATE.strftime("%Y-%m-%d")} ~ {BACKFILL_END_DATE.strftime("%Y-%m-%d")})
@@ -66,7 +66,7 @@ with DAG(
 
             # Task 1: GDELT 백필 Producer → Kafka
             producer_task = BashOperator(
-                task_id=f"gdelt_backfill_producer",
+                task_id=f"gdelt_backfill_producer_{batch_id}",
                 pool="spark_pool",
                 bash_command=f"""
                 PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/ingestion/gdelt_backfill_producer.py \
@@ -85,7 +85,7 @@ with DAG(
 
             # Task 2: Bronze Consumer (기존 스크립트 재사용)
             consumer_task = SparkSubmitOperator(
-                task_id=f"gdelt_bronze_consumer",
+                task_id=f"gdelt_backfill_producer_{batch_id}",
                 pool="spark_pool",
                 conn_id=SPARK_CONN_ID,
                 packages="io.delta:delta-core_2.12:2.4.0",
@@ -108,7 +108,7 @@ with DAG(
 
             # Task 3: Silver Processor (기존 스크립트 재사용)
             processor_task = SparkSubmitOperator(
-                task_id=f"gdelt_silver_processor",
+                task_id=f"gdelt_backfill_producer_{batch_id}",
                 pool="spark_pool",
                 conn_id=SPARK_CONN_ID,
                 packages="io.delta:delta-core_2.12:2.4.0",
