@@ -32,4 +32,10 @@ sudo chmod +x ./config/superset/*.sh
 # --- Kafka Permissions ---
 sudo chmod +x ./config/kafka/*.sh
 
+# --- Docker Socket Permissions ---
+# DockerOperator가 Docker 소켓에 접근할 수 있도록 권한 설정
+echo "Setting Docker socket permissions for Airflow..."
+sudo chmod 666 /var/run/docker.sock
+sudo chown root:docker /var/run/docker.sock
+
 echo "✅ All permissions have been set successfully!"
