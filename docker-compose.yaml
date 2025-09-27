@@ -237,7 +237,7 @@ services:
       # 운영용 리소스 할당
       placement:
         constraints:
-          - node.role == manager
+          - node.role == worker
       resources:
         limits:
           cpus: '4.0'
@@ -275,7 +275,7 @@ services:
       # 개발용 리소스 할당
       placement:
         constraints:
-          - node.role == manager
+          - node.role == worker
       resources:
         limits:
           cpus: '3.0'
@@ -445,10 +445,10 @@ services:
     deploy:
       placement:
         constraints:
-          - node.role == manager
+          - node.role == worker
       resources:
         limits:
-          memory: 12G
+          memory: 16G
         reservations:
           memory: 8G
 

@@ -13,7 +13,7 @@ from airflow.utils.task_group import TaskGroup
 # 백필 설정
 BACKFILL_START_DATE = datetime(2023, 8, 1)
 BACKFILL_END_DATE = datetime(2023, 9, 1)
-SEQUENTIAL_PROCESSING = False  # 병렬 처리로 변경 (코어 여유 있음)
+SEQUENTIAL_PROCESSING = False  # 병렬 처리 (scheduler가 worker로 이동)
 
 
 def generate_hour_list():
@@ -32,7 +32,7 @@ with DAG(
     schedule=None,
     catchup=False,
     max_active_runs=1,
-    max_active_tasks=8,  # 동시 실행 Task 제한 (코어 여유 있으니 증가)
+    max_active_tasks=4,  # 동시 실행 Task 제한
     tags=["backfill", "gdelt", "micro-batch"],
     doc_md=f"""
     # GDELT 마이크로 배치 백필
