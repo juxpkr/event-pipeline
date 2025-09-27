@@ -86,9 +86,6 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
     # 변수 설정
     kafka_topic = KAFKA_TOPICS[data_type]
     minio_path = MINIO_PATHS[data_type]
-    checkpoint_path = (
-        f"s3a://warehouse/checkpoints/bronze/{data_type}"  # 영구 저장소 사용
-    )
     kafka_bootstrap_servers = os.getenv("KAFKA_BOOTSTRAP_SERVERS", "kafka:9092")
 
     # Lifecycle tracker 초기화
@@ -212,10 +209,9 @@ def setup_streaming_query(spark: SparkSession, data_type: str, logger):
                 f"--- Finished Batch {epoch_id} for {data_type}, Processed {record_count} records ---"
             )
 
-    # writeStream 실행
+    # writeStream 실행 (백필용 - checkpoint 없음)
     query = (
         kafka_df.writeStream.foreachBatch(process_micro_batch)
-        .option("checkpointLocation", checkpoint_path)
         .trigger(once=True)
         .start()
     )
