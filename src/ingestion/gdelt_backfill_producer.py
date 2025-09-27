@@ -312,8 +312,12 @@ def main():
         help="Airflow logical date (data_interval_start)",
     )
     # 백필 모드를 위한 옵션 추가
-    parser.add_argument("--backfill-start", help="Backfill mode start time (YYYY-MM-DDTHH:MM:SS)")
-    parser.add_argument("--backfill-end", help="Backfill mode end time (YYYY-MM-DDTHH:MM:SS)")
+    parser.add_argument(
+        "--backfill-start", help="Backfill mode start time (YYYY-MM-DDTHH:MM:SS)"
+    )
+    parser.add_argument(
+        "--backfill-end", help="Backfill mode end time (YYYY-MM-DDTHH:MM:SS)"
+    )
     args = parser.parse_args()
 
     producer = None
@@ -322,11 +326,12 @@ def main():
     try:
         if args.backfill_start and args.backfill_end:
             # === 백필 모드 ===
-            logger.info(f"Running in BACKFILL mode for period: {args.backfill_start} to {args.backfill_end}")
+            logger.info(
+                f"Running in BACKFILL mode for period: {args.backfill_start} to {args.backfill_end}"
+            )
             start_time_str = args.backfill_start
             end_time_str = args.backfill_end
-            # 🚨 중요: 백필 모드에서는 체크포인트를 사용하지 않고, 업데이트도 하지 않는다!
-            all_types_successful = True # 체크포인트 로직을 건너뛰기 위한 플래그
+            all_types_successful = True
         else:
             # === 실시간 모드 (기존 로직) ===
             logger.info("Running in REAL-TIME mode using checkpoints.")
@@ -344,7 +349,7 @@ def main():
 
             # 이제 get_last_success_timestamp 함수는 첫 실행 시 이 '1시간 전' 값을 사용하게 된다.
             start_time_str = get_last_success_timestamp(default_start_time)
-            all_types_successful = True # 초기값
+            all_types_successful = True  # 초기값
 
         # STEP 2: 시작 시간부터 끝나는 시간까지 처리해야 할 모든 URL 목록을 생성한다.
         data_types = ["events", "mentions", "gkg"]
@@ -393,7 +398,7 @@ def main():
                     "url_count": len(gdelt_urls.get(data_type, [])),
                 }
 
-        # STEP 3: 체크포인트 업데이트는 실시간 모드에서만!
+        # STEP 3: 체크포인트 업데이트는 실시간 모드에서만
         if not (args.backfill_start and args.backfill_end) and all_types_successful:
             save_success_timestamp(end_time_str)
             logger.info("All data types processed successfully. Checkpoint updated.")
