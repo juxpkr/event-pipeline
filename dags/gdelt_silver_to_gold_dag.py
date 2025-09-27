@@ -160,6 +160,7 @@ with DAG(
     update_gold_lifecycle = PythonOperator(
         task_id="update_gold_lifecycle",
         python_callable=mark_gold_lifecycle_complete,
+        env={"PYTHONPATH": "/opt/airflow"},
         doc_md="""
         Gold Processing Lifecycle 업데이트
         - SILVER_COMPLETE 이벤트들을 GOLD_COMPLETE로 상태 변경
@@ -171,6 +172,7 @@ with DAG(
     update_postgres_lifecycle = PythonOperator(
         task_id="update_postgres_lifecycle",
         python_callable=mark_postgres_lifecycle_complete,
+        env={"PYTHONPATH": "/opt/airflow"},
         doc_md="""
         PostgreSQL Migration Lifecycle 업데이트
         - GOLD_COMPLETE 이벤트들을 POSTGRES_COMPLETE로 상태 변경
