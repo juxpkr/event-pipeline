@@ -88,7 +88,7 @@ with DAG(
             pool="spark_pool",
             conn_id=SPARK_CONN_ID,
             packages="io.delta:delta-core_2.12:2.4.0",
-            application=f"{PROJECT_ROOT}/src/ingestion/gdelt_bronze_consumer.py",
+            application=f"{PROJECT_ROOT}/src/ingestion/gdelt_backfill_bronze_consumer.py",
             application_args=["--logical-date", "{{ data_interval_start }}"],
             env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
             conf={
@@ -112,7 +112,7 @@ with DAG(
             pool="spark_pool",
             conn_id=SPARK_CONN_ID,
             packages="io.delta:delta-core_2.12:2.4.0",
-            application=f"{PROJECT_ROOT}/src/processing/gdelt_silver_processor.py",
+            application=f"{PROJECT_ROOT}/src/processing/gdelt_backfill_silver_processor.py",
             application_args=["--logical-date", "{{ data_interval_start }}"],
             env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
             conf={

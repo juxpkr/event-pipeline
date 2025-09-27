@@ -1,80 +1,45 @@
-"""
-시간별 GDELT 데이터 처리기 (마이크로 배치용)
-- daily_gdelt_processor를 시간 단위로 개선
-- Bronze → Silver 변환 (기존 로직 재사용)
+"""GDELT 3-Way Silver Processor
+
+Bronze Layer에서 수집된 원본 데이터를 정제하고, 가공하여 Gold Layer에서 분석하기 좋은 형태로 변환
+주요 기능으로는 데이터 타입 변환, null 값 처리, 칼럼 정규화, 3-Way 조인
 """
 
 import os
 import sys
 import logging
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
-
-# 프로젝트 루트 추가
-project_root = os.getenv("PROJECT_ROOT", str(Path(__file__).resolve().parents[2]))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
 from pyspark.sql import SparkSession, DataFrame, functions as F
 from pyspark.sql.types import *
 from datetime import datetime, timezone
+
+
+# 모듈 임포트
+sys.path.append("/opt/airflow")
 from src.utils.spark_builder import get_spark_session
 from src.utils.redis_client import redis_client
 from src.utils.schemas.gdelt_schemas import GDELTSchemas
 from src.audit.lifecycle_updater import EventLifecycleUpdater
 
-# 기존 변환 로직 재사용
+# Transformers
 from src.processing.transformers.events_transformer import transform_events_to_silver
-from src.processing.transformers.mentions_transformer import transform_mentions_to_silver
+from src.processing.transformers.mentions_transformer import (
+    transform_mentions_to_silver,
+)
 from src.processing.transformers.gkg_transformer import transform_gkg_to_silver
-from src.processing.joiners.gdelt_three_way_joiner import perform_three_way_join, select_final_columns
+
+# Joiners
+from src.processing.joiners.gdelt_three_way_joiner import (
+    perform_three_way_join,
+    select_final_columns,
+)
+
+# Partitioning
 from src.processing.partitioning.gdelt_date_priority import create_priority_date
 from src.processing.partitioning.gdelt_partition_writer import write_to_delta_lake
 
 # 로깅 설정
-logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def read_hourly_bronze_data(spark: SparkSession, hour_str: str) -> dict:
-    """시간별 Bronze 데이터 읽기"""
-    logger.info(f"Reading Bronze data for {hour_str}")
-
-    # hour_str 형식: "2023-08-01-14"
-    hour_obj = datetime.strptime(hour_str, "%Y-%m-%d-%H")
-    year = hour_obj.year
-    month = hour_obj.month
-    day = hour_obj.day
-    hour = hour_obj.hour
-
-    bronze_paths = {
-        "events": "s3a://warehouse/bronze/gdelt_events",
-        "mentions": "s3a://warehouse/bronze/gdelt_mentions",
-        "gkg": "s3a://warehouse/bronze/gdelt_gkg",
-    }
-
-    dataframes = {}
-
-    for data_type, path in bronze_paths.items():
-        try:
-            # 해당 시간의 파티션만 읽기
-            df = spark.read.format("delta").load(path) \
-                .filter(
-                    (F.col("year") == year) &
-                    (F.col("month") == month) &
-                    (F.col("day") == day) &
-                    (F.col("hour") == hour)
-                )
-
-            if df.first():  # 데이터 존재 확인
-                dataframes[data_type] = df
-                logger.info(f"Loaded {data_type} data for {hour_str}")
-            else:
-                logger.warning(f"No {data_type} data found for {hour_str}")
-
-        except Exception as e:
-            logger.error(f"Failed to read {data_type} Bronze data: {e}")
-
-    return dataframes
 
 def setup_silver_table(
     spark: SparkSession,
@@ -142,63 +107,129 @@ def setup_silver_table(
     spark.sql(f"DELETE FROM delta.`{silver_path}` WHERE year = 9999")
     logger.info(f"Table '{table_name}' structure created successfully.")
 
-def process_hourly_data(hour_str: str):
-    """시간별 데이터 처리 (기존 gdelt_silver_processor 로직 완전 이식)"""
-    logger.info(f"Starting hourly processing for {hour_str}")
 
-    spark = get_spark_session(f"Hourly_GDELT_Processor_{hour_str}", "spark://spark-master:7077")
-    redis_client.register_driver_ui(spark, f"Hourly Processor {hour_str}")
+def read_from_bronze_minio(
+    spark: SparkSession, start_time_str: str, end_time_str: str
+) -> DataFrame:
+    """
+    MinIO Bronze Layer에서 각 데이터 타입별로 데이터를 읽고,
+    DataFrame의 딕셔너리 형태로 반환
+    """
+    logger.info(
+        f"Reading Bronze data from MinIO for period: {start_time_str} to {end_time_str}"
+    )
+    # 백필 전용 Bronze Layer 경로 설정
+    bronze_paths = {
+        "events": "s3a://warehouse/bronze_backfill/gdelt_events",
+        "mentions": "s3a://warehouse/bronze_backfill/gdelt_mentions",
+        "gkg": "s3a://warehouse/bronze_backfill/gdelt_gkg",
+    }
+
+    # 반환 타입을 딕셔너리로 변경 (기존: 통합 dataframe)
+    dataframes = {}
+
+    for data_type, base_path in bronze_paths.items():
+        try:
+            logger.info(f"Reading {data_type.upper()} data from {base_path}")
+
+            # Delta 테이블에서 읽기 (최신 파티션만)
+            bronze_df = (
+                spark.read.format("delta")
+                .load(base_path)
+                .filter(
+                    (F.col("processed_at") >= F.lit(start_time_str).cast("timestamp"))
+                    & (F.col("processed_at") < F.lit(end_time_str).cast("timestamp"))
+                )
+            )
+
+            # count() 대신 first()로 존재 여부만 빠르게 확인하기
+            if bronze_df.first():
+                logger.info(f"Successfully loaded data for {data_type.upper()}.")
+                dataframes[data_type] = bronze_df
+            else:
+                logger.warning(
+                    f"No new data found for {data_type.upper()} in the given time range."
+                )
+
+        except Exception as e:
+            logger.error(f"Failed to read {data_type} from Bronze: {e}")
+            continue  # 하나의 타입이 실패해도 다른 타입은 계속 시도
+
+    return dataframes
+
+
+def main():
+    """메인 실행 함수"""
+    logger.info("Starting GDELT 3-Way Silver Processor (Refactored)...")
+
+    spark = get_spark_session(
+        "GDELT 3Way Silver Processor", "spark://spark-master:7077"
+    )
+    redis_client.register_driver_ui(spark, "GDELT 3Way Silver Processor")
+
+    # Airflow가 넘겨준 인자를 sys.argv를 통해 받음
+    if len(sys.argv) != 3:
+        logger.error("Usage: spark-submit <script> <start_time> <end_time>")
+        sys.exit(1)
+
+    start_time_str = sys.argv[1]
+    end_time_str = sys.argv[2]
 
     # batch_id 생성 (시간 기반)
-    batch_id = f"hourly_batch_{hour_str.replace('-', '_')}"
+    batch_id = (
+        f"batch_{start_time_str.replace(':', '').replace('-', '').replace(' ', '_')}"
+    )
 
     try:
         # Lifecycle Tracker 초기화
         lifecycle_updater = EventLifecycleUpdater(spark)
-
         # 1. Silver 스키마 생성
         logger.info("Creating silver schema...")
-        spark.sql("CREATE SCHEMA IF NOT EXISTS silver LOCATION 's3a://warehouse/silver/'")
+        spark.sql(
+            "CREATE SCHEMA IF NOT EXISTS silver_backfill LOCATION 's3a://warehouse/silver_backfill/'"
+        )
 
-        # 2. Silver 테이블 설정 (기존 로직 재사용)
+        # 2. Silver 테이블 설정
         logger.info("Setting up Silver tables...")
         setup_silver_table(
             spark,
-            "silver.gdelt_events",
-            "s3a://warehouse/silver/gdelt_events",
+            "silver_backfill.gdelt_events",
+            "s3a://warehouse/silver_backfill/gdelt_events",
             GDELTSchemas.get_silver_events_schema(),
             partition_keys=["year", "month", "day", "hour"],
         )
         setup_silver_table(
             spark,
-            "silver.gdelt_events_detailed",
-            "s3a://warehouse/silver/gdelt_events_detailed",
+            "silver_backfill.gdelt_events_detailed",
+            "s3a://warehouse/silver_backfill/gdelt_events_detailed",
             GDELTSchemas.get_silver_events_detailed_schema(),
             partition_keys=["year", "month", "day", "hour"],
         )
 
-        # 3. Bronze 데이터 읽기
-        bronze_dataframes = read_hourly_bronze_data(spark, hour_str)
+        # 3. MinIO Bronze Layer에서 데이터 읽기 (Airflow가 준 시간 인자 전달)
+        bronze_dataframes = read_from_bronze_minio(spark, start_time_str, end_time_str)
 
         if not bronze_dataframes:
-            logger.warning(f"No Bronze data found for {hour_str}. Exiting gracefully.")
+            logger.warning("No Bronze data found in MinIO. Exiting gracefully.")
             return
 
-        # 4. 데이터 타입별 분리 및 변환
+        # 4. 데이터 타입별 분리 및 변환 (이제 filter가 필요 없음!)
         events_df = bronze_dataframes.get("events")
         mentions_df = bronze_dataframes.get("mentions")
         gkg_df = bronze_dataframes.get("gkg")
 
-        # 5. 각 데이터 타입 변환
+        # 5. 각 데이터 타입 변환 (if df 로 None과 Enpty를 동시에 체크할 수 있음)
         events_silver = transform_events_to_silver(events_df) if events_df else None
-        mentions_silver = transform_mentions_to_silver(mentions_df) if mentions_df else None
+        mentions_silver = (
+            transform_mentions_to_silver(mentions_df) if mentions_df else None
+        )
         gkg_silver = transform_gkg_to_silver(gkg_df) if gkg_df else None
 
         # 6. Events 단독 Silver 저장
         if events_silver:
             write_to_delta_lake(
                 df=events_silver,
-                delta_path="s3a://warehouse/silver/gdelt_events",
+                delta_path="s3a://warehouse/silver_backfill/gdelt_events",
                 table_name="Events",
                 partition_col="processed_at",  # Hot: 실시간 대시보드용 (수집시간)
                 merge_key="global_event_id",  # Silver 스키마의 소문자 키
@@ -224,30 +255,39 @@ def process_hourly_data(hour_str: str):
             # 10. Events detailed Silver 저장
             write_to_delta_lake(
                 df=final_silver_df,
-                delta_path="s3a://warehouse/silver/gdelt_events_detailed",
+                delta_path="s3a://warehouse/silver_backfill/gdelt_events_detailed",
                 table_name="Events detailed GDELT",
                 partition_col="priority_date",  # 사건 시간 기준
                 merge_key="global_event_id",  # Silver 스키마의 소문자 키
             )
 
             # Silver 처리 완료 시점 기록
-            final_event_ids = final_silver_df.select("global_event_id").rdd.map(lambda row: row[0]).collect()
+            final_event_ids = (
+                final_silver_df.select("global_event_id")
+                .rdd.map(lambda row: row[0])
+                .collect()
+            )
             lifecycle_updater.mark_silver_processing_complete(final_event_ids, batch_id)
 
             # 실제 GKG 조인 성공률 로깅
-            actually_joined_count = final_silver_df.filter(F.col("gkg_record_id").isNotNull()).count()
+            actually_joined_count = final_silver_df.filter(
+                F.col("gkg_record_id").isNotNull()
+            ).count()
             total_events = final_silver_df.count()
-            actual_join_rate = (actually_joined_count / total_events * 100) if total_events > 0 else 0
-            logger.info(f"Silver processing complete: {total_events} events processed, {actually_joined_count} with GKG ({actual_join_rate:.1f}% join rate)")
+            actual_join_rate = (
+                (actually_joined_count / total_events * 100) if total_events > 0 else 0
+            )
+            logger.info(
+                f"Silver processing complete: {total_events} events processed, {actually_joined_count} with GKG ({actual_join_rate:.1f}% join rate)"
+            )
 
             logger.info("Sample of Events detailed Silver data:")
             final_silver_df.show(5, vertical=True)
 
-        logger.info(f"Silver Layer processing completed successfully for {hour_str}!")
+        logger.info("Silver Layer processing completed successfully!")
 
     except Exception as e:
-        logger.error(f"Error in hourly Silver processing: {e}", exc_info=True)
-        raise
+        logger.error(f"Error in 3-Way Silver processing: {e}", exc_info=True)
 
     finally:
         try:
@@ -257,18 +297,6 @@ def process_hourly_data(hour_str: str):
         spark.stop()
         logger.info("Spark session closed")
 
+
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        logger.error("Usage: hourly_gdelt_processor.py <YYYY-MM-DD-HH>")
-        sys.exit(1)
-
-    hour_str = sys.argv[1]
-
-    # 시간 형식 검증
-    try:
-        datetime.strptime(hour_str, "%Y-%m-%d-%H")
-    except ValueError:
-        logger.error(f"Invalid hour format: {hour_str}. Use YYYY-MM-DD-HH")
-        sys.exit(1)
-
-    process_hourly_data(hour_str)
+    main()
