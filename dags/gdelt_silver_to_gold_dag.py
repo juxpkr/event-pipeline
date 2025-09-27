@@ -22,7 +22,9 @@ with DAG(
     # 공통 상수
     SPARK_MASTER = "spark://spark-master:7077"
     # Airflow 워커 컨테이너 내부에 있는 dbt 프로젝트 경로를 변수로 지정
-    dbt_project_host_path = f"{os.getenv('PROJECT_ROOT', '/opt/airflow')}/transforms"
+    dbt_project_host_path = (
+        "/app/event-pipeline/transforms"  # VM의 실제 transforms 폴더 경로
+    )
 
     def mark_processing_complete(context):
         """태스크 성공을 기록하는 Python 함수"""
