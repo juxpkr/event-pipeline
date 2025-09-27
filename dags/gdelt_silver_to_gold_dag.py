@@ -29,6 +29,11 @@ with DAG(
 
     def mark_gold_lifecycle_complete(**context):
         """Gold 처리 완료 lifecycle 업데이트"""
+        import sys
+        import os
+        sys.path.insert(0, '/opt/airflow')
+        os.environ['PYTHONPATH'] = '/opt/airflow'
+
         from src.utils.spark_builder import get_spark_session
         from src.audit.lifecycle_updater import EventLifecycleUpdater
 
@@ -63,6 +68,11 @@ with DAG(
 
     def mark_postgres_lifecycle_complete(**context):
         """PostgreSQL 마이그레이션 완료 lifecycle 업데이트"""
+        import sys
+        import os
+        sys.path.insert(0, '/opt/airflow')
+        os.environ['PYTHONPATH'] = '/opt/airflow'
+
         from src.utils.spark_builder import get_spark_session
         from src.audit.lifecycle_updater import EventLifecycleUpdater
 
@@ -160,7 +170,6 @@ with DAG(
     update_gold_lifecycle = PythonOperator(
         task_id="update_gold_lifecycle",
         python_callable=mark_gold_lifecycle_complete,
-        env={"PYTHONPATH": "/opt/airflow"},
         doc_md="""
         Gold Processing Lifecycle 업데이트
         - SILVER_COMPLETE 이벤트들을 GOLD_COMPLETE로 상태 변경
@@ -172,7 +181,6 @@ with DAG(
     update_postgres_lifecycle = PythonOperator(
         task_id="update_postgres_lifecycle",
         python_callable=mark_postgres_lifecycle_complete,
-        env={"PYTHONPATH": "/opt/airflow"},
         doc_md="""
         PostgreSQL Migration Lifecycle 업데이트
         - GOLD_COMPLETE 이벤트들을 POSTGRES_COMPLETE로 상태 변경
