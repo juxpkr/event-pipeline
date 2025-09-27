@@ -137,7 +137,7 @@ def save_to_bronze(spark: SparkSession, records: list, data_type: str):
         logger.warning(f"No records to save for {data_type}")
         return
 
-    # 기존 Bronze 스키마 사용 (processed_at 없음)
+    # Bronze 스키마 (daily_gdelt_collector와 동일하게)
     schema = StructType([
         StructField("data_type", StringType(), True),
         StructField("bronze_data", ArrayType(StringType()), True),
@@ -151,6 +151,9 @@ def save_to_bronze(spark: SparkSession, records: list, data_type: str):
 
     df = spark.createDataFrame(records, schema)
 
+    # processed_at 컬럼 추가 (현재 시간)
+    df = df.withColumn("processed_at", F.current_timestamp())
+
     # Primary key 추출 (첫 번째 컬럼)
     if data_type == "gkg":
         merge_key = "GKGRECORDID"
@@ -159,12 +162,12 @@ def save_to_bronze(spark: SparkSession, records: list, data_type: str):
         merge_key = "GLOBALEVENTID"
         df = df.withColumn("GLOBALEVENTID", F.col("bronze_data")[0])
 
-    # 기존 partition writer 사용 (processed_at 자동 추가됨)
+    # 기존 partition writer 사용
     write_to_delta_lake(
         df=df,
         delta_path=BRONZE_PATHS[data_type],
         table_name=f"Bronze {data_type}",
-        partition_col="processed_at",  # write_to_delta_lake가 자동 생성
+        partition_col="processed_at",
         merge_key=merge_key,
     )
 
