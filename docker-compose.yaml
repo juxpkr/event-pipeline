@@ -196,7 +196,7 @@ services:
       - ./config/spark/spark.env
     deploy:
       mode: replicated
-      replicas: 2
+      replicas: 6
       resources:
         limits:
           memory: 24G
