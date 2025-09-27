@@ -130,4 +130,4 @@ with DAG(
         )
         processor_tasks.append(processor_task)
 
-    producer_task >> consumer_task >> processor_task
+    producer_tasks >> consumer_tasks >> processor_tasks
