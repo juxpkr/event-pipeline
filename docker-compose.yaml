@@ -374,6 +374,8 @@ services:
       - "8082:8080" # <--- Spark와 충돌하지 않도록 8082 포트 사용
     networks:
       - data-network
+    group_add:
+      - "123"
     environment:
       - PROJECT_ROOT=/app/event-pipeline
       - AIRFLOW__DATABASE__SQL_ALCHEMY_POOL_SIZE=10
@@ -418,6 +420,8 @@ services:
     user: "${AIRFLOW_UID:-50000}"
     networks:
       - data-network
+    group_add:
+      - "123"
     environment:
       - PROJECT_ROOT=/app/event-pipeline
     env_file:
@@ -443,6 +447,7 @@ services:
         airflow scheduler
       "
     deploy:
+      replicas: 2
       placement:
         constraints:
           - node.role == worker
