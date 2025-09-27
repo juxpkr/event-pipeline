@@ -38,20 +38,20 @@ with DAG(
     **처리 기간**: {BACKFILL_START_DATE.strftime("%Y-%m-%d")} ~ {BACKFILL_END_DATE.strftime("%Y-%m-%d")}
 
     ## 전략
-    - 1개월을 **하루 단위**로 쪼개서 처리
-    - 각 날짜별로 독립적인 Task Group
-    - 실패 시 해당 날짜만 재실행
-    - 최대 {MAX_PARALLEL_TASKS}개 날짜 동시 처리
+    - 1개월을 **시간 단위**로 쪼개서 처리
+    - 각 시간별로 독립적인 Task Group
+    - 실패 시 해당 시간만 재실행
+    - 순차 처리로 안정적 실행
 
     ## 구조
     ```
-    daily_2023_08_01 [TaskGroup]
-    ├── collect_2023_08_01    # GDELT 서버에서 직접 다운로드
-    └── process_2023_08_01    # Bronze → Silver 처리
+    hourly_2023_08_01_00 [TaskGroup]
+    ├── collect_2023_08_01_00    # GDELT 서버에서 시간별 다운로드
+    └── process_2023_08_01_00    # Bronze → Silver 처리
 
-    daily_2023_08_02 [TaskGroup]
-    ├── collect_2023_08_02
-    └── process_2023_08_02
+    hourly_2023_08_01_01 [TaskGroup]
+    ├── collect_2023_08_01_01
+    └── process_2023_08_01_01
     ...
     ```
     """,
