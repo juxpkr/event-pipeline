@@ -8,6 +8,7 @@ from datetime import datetime, timedelta
 from airflow.models.dag import DAG
 from airflow.operators.bash import BashOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
+from airflow.utils.task_group import TaskGroup
 import os
 import pendulum
 
@@ -32,16 +33,16 @@ with DAG(
     schedule=None,  # 수동 실행
     catchup=False,
     max_active_runs=1,
-    max_active_tasks=4,  # 동시 4개 시간 처리
+    max_active_tasks=12,  # TaskGroup별 병렬 실행 허용
     doc_md=f"""
-    GDELT 백필 Pipeline
+    GDELT 백필 Pipeline (TaskGroup 병렬 최적화)
     - 목적: 과거 GDELT 데이터 백필 ({BACKFILL_START_DATE.strftime("%Y-%m-%d")} ~ {BACKFILL_END_DATE.strftime("%Y-%m-%d")})
-    - 방식: 기존 Producer → Consumer → Processor 파이프라인 재활용
+    - 방식: 기존 Producer → Consumer → Processor 파이프라인을 TaskGroup으로 그룹화
 
-    실행 순서:
-    1. GDELT Backfill Producer → Kafka (지정된 시간 데이터)
-    2. Bronze Consumer → MinIO Bronze Layer (기존 로직)
-    3. Silver Processor → MinIO Silver Layer (기존 로직)
+    병렬 실행 전략:
+    1. 각 15분 배치를 TaskGroup으로 그룹화
+    2. TaskGroup 간 병렬 실행으로 전체 처리 시간 단축
+    3. 각 TaskGroup 내부는 Producer → Consumer → Processor 순차 실행
     """,
 ) as dag:
 
@@ -60,72 +61,73 @@ with DAG(
         ).strftime("%Y-%m-%dT%H:%M:%S")
         batch_id = timestamp_start.replace("-", "_").replace(":", "_")
 
-        # Task 1: GDELT 백필 Producer → Kafka
-        producer_task = BashOperator(
-            task_id=f"gdelt_backfill_producer_{batch_id}",
-            pool="spark_pool",
-            bash_command=f"""
-            PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/ingestion/gdelt_backfill_producer.py \
-                --logical-date '{{{{ data_interval_start }}}}' \
-                --backfill-start '{timestamp_start}' \
-                --backfill-end '{timestamp_end}'
-            """,
-            execution_timeout=timedelta(minutes=20),
-            env=dict(os.environ),
-            doc_md=f"""
-            GDELT 백필 Producer ({timestamp_start})
-            - {timestamp_start} ~ {timestamp_end} (15분 배치) 데이터 수집
-            - 3개 Kafka 토픽에 분리 저장
-            """,
-        )
+        # 시간 단위를 TaskGroup으로 묶기
+        with TaskGroup(group_id=f"batch_{batch_id}") as batch_group:
 
-        # Task 2: Bronze Consumer (기존 스크립트 재사용)
-        consumer_task = SparkSubmitOperator(
-            task_id=f"gdelt_bronze_consumer_{batch_id}",
-            pool="spark_pool",
-            conn_id=SPARK_CONN_ID,
-            packages="io.delta:delta-core_2.12:2.4.0",
-            application=f"{PROJECT_ROOT}/src/ingestion/gdelt_bronze_consumer.py",
-            application_args=["--logical-date", "{{ data_interval_start }}"],
-            env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
-            conf={
-                "spark.cores.max": "4",
-                "spark.executor.instances": "2",
-                "spark.executor.memory": "2g",
-                "spark.executor.cores": "2",
-                "spark.driver.memory": "1g",
-            },
-            execution_timeout=timedelta(minutes=20),
-            doc_md=f"""
-            Bronze Consumer ({timestamp_start})
-            - Kafka에서 {timestamp_start} 데이터 읽어서 Bronze Layer 저장
-            """,
-        )
+            # Task 1: GDELT 백필 Producer → Kafka
+            producer_task = BashOperator(
+                task_id=f"gdelt_backfill_producer",
+                pool="spark_pool",
+                bash_command=f"""
+                PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/ingestion/gdelt_backfill_producer.py \
+                    --logical-date '{{{{ data_interval_start }}}}' \
+                    --backfill-start '{timestamp_start}' \
+                    --backfill-end '{timestamp_end}'
+                """,
+                execution_timeout=timedelta(minutes=20),
+                env=dict(os.environ),
+                doc_md=f"""
+                GDELT 백필 Producer ({timestamp_start})
+                - {timestamp_start} ~ {timestamp_end} (15분 배치) 데이터 수집
+                - 3개 Kafka 토픽에 분리 저장
+                """,
+            )
 
-        # Task 3: Silver Processor (기존 스크립트 재사용)
-        processor_task = SparkSubmitOperator(
-            task_id=f"gdelt_silver_processor_{batch_id}",
-            pool="spark_pool",
-            conn_id=SPARK_CONN_ID,
-            packages="io.delta:delta-core_2.12:2.4.0",
-            application=f"{PROJECT_ROOT}/src/processing/gdelt_silver_processor.py",
-            application_args=["--logical-date", "{{ data_interval_start }}"],
-            env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
-            conf={
-                "spark.cores.max": "4",
-                "spark.executor.instances": "2",
-                "spark.executor.memory": "2g",
-                "spark.executor.cores": "2",
-                "spark.driver.memory": "1g",
-            },
-            execution_timeout=timedelta(minutes=30),
-            doc_md=f"""
-            Silver Processor ({timestamp_start})
-            - Bronze Layer에서 {timestamp_start} 데이터 읽어서 Silver Layer 변환
-            """,
-        )
+            # Task 2: Bronze Consumer (기존 스크립트 재사용)
+            consumer_task = SparkSubmitOperator(
+                task_id=f"gdelt_bronze_consumer",
+                pool="spark_pool",
+                conn_id=SPARK_CONN_ID,
+                packages="io.delta:delta-core_2.12:2.4.0",
+                application=f"{PROJECT_ROOT}/src/ingestion/gdelt_bronze_consumer.py",
+                application_args=["--logical-date", "{{ data_interval_start }}"],
+                env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
+                conf={
+                    "spark.cores.max": "4",
+                    "spark.executor.instances": "2",
+                    "spark.executor.memory": "2g",
+                    "spark.executor.cores": "2",
+                    "spark.driver.memory": "1g",
+                },
+                execution_timeout=timedelta(minutes=20),
+                doc_md=f"""
+                Bronze Consumer ({timestamp_start})
+                - Kafka에서 {timestamp_start} 데이터 읽어서 Bronze Layer 저장
+                """,
+            )
 
-        # 각 배치 내부 순서만: Producer → Consumer → Processor
-        producer_task >> consumer_task >> processor_task
+            # Task 3: Silver Processor (기존 스크립트 재사용)
+            processor_task = SparkSubmitOperator(
+                task_id=f"gdelt_silver_processor",
+                pool="spark_pool",
+                conn_id=SPARK_CONN_ID,
+                packages="io.delta:delta-core_2.12:2.4.0",
+                application=f"{PROJECT_ROOT}/src/processing/gdelt_silver_processor.py",
+                application_args=["--logical-date", "{{ data_interval_start }}"],
+                env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
+                conf={
+                    "spark.cores.max": "4",
+                    "spark.executor.instances": "2",
+                    "spark.executor.memory": "2g",
+                    "spark.executor.cores": "2",
+                    "spark.driver.memory": "1g",
+                },
+                execution_timeout=timedelta(minutes=30),
+                doc_md=f"""
+                Silver Processor ({timestamp_start})
+                - Bronze Layer에서 {timestamp_start} 데이터 읽어서 Silver Layer 변환
+                """,
+            )
 
-        # 배치 간 의존성 제거 = 병렬 실행
+            # TaskGroup 내부 의존성: Producer → Consumer → Processor
+            producer_task >> consumer_task >> processor_task
