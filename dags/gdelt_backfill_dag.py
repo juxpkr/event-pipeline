@@ -14,7 +14,7 @@ import pendulum
 
 # 백필 설정
 BACKFILL_START_DATE = datetime(2023, 8, 20)
-BACKFILL_END_DATE = datetime(2023, 8, 27)  # 일주일 테스트
+BACKFILL_END_DATE = datetime(2023, 8, 20, 1)  # 딱 한시간 (4개 배치)
 
 
 def generate_15min_list():
@@ -22,12 +22,9 @@ def generate_15min_list():
     timestamps = []
     current = BACKFILL_START_DATE
     while current < BACKFILL_END_DATE:
-        timestamps.append(current)  # 문자열 대신 datetime 객체로 추가
+        timestamps.append(current.strftime("%Y-%m-%dT%H:%M:%S"))
         current += timedelta(minutes=15)  # 15분씩 증가
-
-    # 중복을 차단하고, 정렬한 뒤, 마지막에 문자열로 변환
-    unique_timestamps = sorted(list(set(timestamps)))
-    return [dt.strftime("%Y-%m-%dT%H:%M:%S") for dt in unique_timestamps]
+    return timestamps
 
 
 with DAG(
