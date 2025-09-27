@@ -6,6 +6,7 @@ from airflow.operators.bash import BashOperator
 from airflow.providers.apache.spark.operators.spark_submit import SparkSubmitOperator
 from airflow.providers.docker.operators.docker import DockerOperator
 from airflow.operators.trigger_dagrun import TriggerDagRunOperator
+from airflow.operators.python import PythonOperator
 from docker.types import Mount
 
 with DAG(
@@ -26,15 +27,14 @@ with DAG(
         "/app/event-pipeline/transforms"  # VM의 실제 transforms 폴더 경로
     )
 
-    def mark_processing_complete(context):
-        """태스크 성공을 기록하는 Python 함수"""
+    def mark_gold_lifecycle_complete(**context):
+        """Gold 처리 완료 lifecycle 업데이트"""
         from src.utils.spark_builder import get_spark_session
         from src.audit.lifecycle_updater import EventLifecycleUpdater
 
-        task_id = context["task_instance_key_str"]
-        print(f"Task {task_id} has completed.")
+        print("Starting Gold lifecycle update...")
 
-        spark = get_spark_session("Gold_Complete_Callback", "spark://spark-master:7077")
+        spark = get_spark_session("Gold_Lifecycle_Update", "spark://spark-master:7077")
         try:
             lifecycle_updater = EventLifecycleUpdater(spark)
 
@@ -56,19 +56,20 @@ with DAG(
                 print(
                     f"Marked {len(silver_complete_events)} events as Gold processing complete"
                 )
+            else:
+                print("No SILVER_COMPLETE events found to update")
         finally:
             spark.stop()
 
-    def mark_postgres_complete(context):
-        """Postgres 마이그레이션 완료를 기록하는 Python 함수"""
+    def mark_postgres_lifecycle_complete(**context):
+        """PostgreSQL 마이그레이션 완료 lifecycle 업데이트"""
         from src.utils.spark_builder import get_spark_session
         from src.audit.lifecycle_updater import EventLifecycleUpdater
 
-        task_id = context["task_instance_key_str"]
-        print(f"Task {task_id} has completed.")
+        print("Starting PostgreSQL lifecycle update...")
 
         spark = get_spark_session(
-            "Postgres_Complete_Callback", "spark://spark-master:7077"
+            "Postgres_Lifecycle_Update", "spark://spark-master:7077"
         )
         try:
             lifecycle_updater = EventLifecycleUpdater(spark)
@@ -91,6 +92,8 @@ with DAG(
                 print(
                     f"Marked {len(gold_complete_events)} events as Postgres migration complete"
                 )
+            else:
+                print("No GOLD_COMPLETE events found to update")
         finally:
             spark.stop()
 
@@ -99,7 +102,6 @@ with DAG(
         task_id="dbt_transformation",
         image=os.getenv("DBT_IMAGE", "juxpkr/geoevent-dbt:0.3"),
         mount_tmp_dir=False,
-        on_success_callback=mark_processing_complete,  # 태스크 성공 직후 호출
         command=[
             "/bin/sh",
             "-c",
@@ -140,7 +142,6 @@ with DAG(
         conn_id="spark_conn",
         application="/opt/airflow/src/processing/migration/gdelt_gold_to_postgres.py",
         packages="org.postgresql:postgresql:42.5.0,io.delta:delta-core_2.12:2.4.0",
-        on_success_callback=mark_postgres_complete,  # Postgres 마이그레이션 완료 직후 호출
         conf={
             "spark.executor.instances": "5",
             "spark.executor.memory": "8g",
@@ -155,7 +156,29 @@ with DAG(
         """,
     )
 
-    # Task 3: Lifecycle Audit 트리거 (마이그레이션 완료 직후)
+    # Task 2.5: Gold Lifecycle 업데이트 (dbt 완료 후)
+    update_gold_lifecycle = PythonOperator(
+        task_id="update_gold_lifecycle",
+        python_callable=mark_gold_lifecycle_complete,
+        doc_md="""
+        Gold Processing Lifecycle 업데이트
+        - SILVER_COMPLETE 이벤트들을 GOLD_COMPLETE로 상태 변경
+        - dbt transformation 완료 직후 실행
+        """,
+    )
+
+    # Task 3.5: PostgreSQL Lifecycle 업데이트 (마이그레이션 완료 후)
+    update_postgres_lifecycle = PythonOperator(
+        task_id="update_postgres_lifecycle",
+        python_callable=mark_postgres_lifecycle_complete,
+        doc_md="""
+        PostgreSQL Migration Lifecycle 업데이트
+        - GOLD_COMPLETE 이벤트들을 POSTGRES_COMPLETE로 상태 변경
+        - PostgreSQL 마이그레이션 완료 직후 실행
+        """,
+    )
+
+    # Task 4: Lifecycle Audit 트리거 (마이그레이션 완료 직후)
     trigger_lifecycle_audit = TriggerDagRunOperator(
         task_id="trigger_lifecycle_audit",
         trigger_dag_id="gdelt_lifecycle_audit",
@@ -168,5 +191,11 @@ with DAG(
         """,
     )
 
-    # 작업 순서 정의
-    (dbt_transformation >> migrate_to_postgres_task >> trigger_lifecycle_audit)
+    # 작업 순서 정의 (명시적인 lifecycle 업데이트 태스크 추가)
+    (
+        dbt_transformation
+        >> update_gold_lifecycle
+        >> migrate_to_postgres_task
+        >> update_postgres_lifecycle
+        >> trigger_lifecycle_audit
+    )
