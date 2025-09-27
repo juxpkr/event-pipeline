@@ -53,6 +53,8 @@ with DAG(
     # 15분 간격 시간 리스트 생성
     timestamps_to_process = generate_15min_list()
 
+    previous_processor_task = None
+
     for i, timestamp_start in enumerate(timestamps_to_process):
         # 다음 15분 계산
         timestamp_end = (
@@ -114,7 +116,7 @@ with DAG(
             conf={
                 "spark.cores.max": "4",
                 "spark.executor.instances": "2",
-                "spark.executor.memory": "3g",
+                "spark.executor.memory": "2g",
                 "spark.executor.cores": "2",
                 "spark.driver.memory": "1g",
             },
@@ -125,5 +127,12 @@ with DAG(
             """,
         )
 
-        # 순서: Producer → Consumer → Processor
+        # 각 배치 내부 순서: Producer → Consumer → Processor
         producer_task >> consumer_task >> processor_task
+
+        # 순차 처리: 이전 배치의 Processor가 끝난 후 다음 배치의 Producer 시작
+        if previous_processor_task is not None:
+            previous_processor_task >> producer_task
+
+        # 다음 루프를 위해 현재 processor_task 저장
+        previous_processor_task = processor_task
