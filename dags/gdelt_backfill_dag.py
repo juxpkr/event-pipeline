@@ -55,14 +55,15 @@ with DAG(
 
     for i, timestamp_start in enumerate(timestamps_to_process):
         # 다음 15분 계산
-        timestamp_end = (datetime.fromisoformat(timestamp_start) + timedelta(minutes=15)).strftime(
-            "%Y-%m-%dT%H:%M:%S"
-        )
+        timestamp_end = (
+            datetime.fromisoformat(timestamp_start) + timedelta(minutes=15)
+        ).strftime("%Y-%m-%dT%H:%M:%S")
         batch_id = timestamp_start.replace("-", "_").replace(":", "_")
 
         # Task 1: GDELT 백필 Producer → Kafka
         producer_task = BashOperator(
             task_id=f"gdelt_backfill_producer_{batch_id}",
+            pool="spark_pool",
             bash_command=f"""
             PYTHONPATH={PROJECT_ROOT} python {PROJECT_ROOT}/src/ingestion/gdelt_backfill_producer.py \
                 --logical-date '{{{{ data_interval_start }}}}' \
@@ -81,6 +82,7 @@ with DAG(
         # Task 2: Bronze Consumer (기존 스크립트 재사용)
         consumer_task = SparkSubmitOperator(
             task_id=f"gdelt_bronze_consumer_{batch_id}",
+            pool="spark_pool",
             conn_id=SPARK_CONN_ID,
             packages="io.delta:delta-core_2.12:2.4.0",
             application=f"{PROJECT_ROOT}/src/streaming/gdelt_bronze_consumer.py",
@@ -103,6 +105,7 @@ with DAG(
         # Task 3: Silver Processor (기존 스크립트 재사용)
         processor_task = SparkSubmitOperator(
             task_id=f"gdelt_silver_processor_{batch_id}",
+            pool="spark_pool",
             conn_id=SPARK_CONN_ID,
             packages="io.delta:delta-core_2.12:2.4.0",
             application=f"{PROJECT_ROOT}/src/processing/gdelt_silver_processor.py",
@@ -117,8 +120,8 @@ with DAG(
             },
             execution_timeout=timedelta(minutes=30),
             doc_md=f"""
-            Silver Processor ({timestamp_start})
-            - Bronze Layer에서 {timestamp_start} 데이터 읽어서 Silver Layer 변환
+            Silver Processor ({hour_start})
+            - Bronze Layer에서 {hour_start} 데이터 읽어서 Silver Layer 변환
             """,
         )
 
