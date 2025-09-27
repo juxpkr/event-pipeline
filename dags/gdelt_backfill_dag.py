@@ -53,8 +53,6 @@ with DAG(
     # 15분 간격 시간 리스트 생성
     timestamps_to_process = generate_15min_list()
 
-    previous_processor_task = None
-
     for i, timestamp_start in enumerate(timestamps_to_process):
         # 다음 15분 계산
         timestamp_end = (
@@ -127,12 +125,7 @@ with DAG(
             """,
         )
 
-        # 각 배치 내부 순서: Producer → Consumer → Processor
+        # 각 배치 내부 순서만: Producer → Consumer → Processor
         producer_task >> consumer_task >> processor_task
 
-        # 순차 처리: 이전 배치의 Processor가 끝난 후 다음 배치의 Producer 시작
-        if previous_processor_task is not None:
-            previous_processor_task >> producer_task
-
-        # 다음 루프를 위해 현재 processor_task 저장
-        previous_processor_task = processor_task
+        # 배치 간 의존성 제거 = 병렬 실행
