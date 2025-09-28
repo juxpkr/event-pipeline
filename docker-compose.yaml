@@ -221,13 +221,14 @@ services:
       - ./config/spark/spark.env
     environment:
       # 동적 자원 할당
-      SPARK_DYNAMIC_cores_max: 3
-      SPARK_DYNAMIC_driver_memory: 2g
+      SPARK_DYNAMIC_ALLOCATION_ENABLED: "true"
+      SPARK_DYNAMIC_SHUFFLE_TRACKING_ENABLED: "true"
 
-      SPARK_DYNAMIC_MIN_EXECUTORS: 2
-      SPARK_DYNAMIC_MAX_EXECUTORS: 4
-      SPARK_DYNAMIC_EXECUTOR_MEMORY: 8g
-      SPARK_DYNAMIC_EXECUTOR_CORES: 4
+      SPARK_DYNAMIC_cores_max: 6
+      SPARK_DYNAMIC_driver_memory: 4g
+      SPARK_DYNAMIC_min_excuter: 3
+      SPARK_DYNAMIC_max_excutor: 4
+      SPARK_DYNAMIC_executor_cores: 2
       SPARK_CONF_spark.sql.shuffle.partitions: 100
     networks:
       - data-network
