@@ -25,7 +25,7 @@ WITH new_events AS (
         actor2_geo_long,
         avg_tone,
         processed_at
-    FROM {{ ref('gold_daily_detailed_events') }}
+    FROM {{ ref('stg_seed_mapping') }}
     WHERE 
         mp_actor1_geo_country_iso IS NOT NULL AND mp_actor2_geo_country_iso IS NOT NULL
         AND actor1_geo_lat IS NOT NULL AND actor1_geo_long IS NOT NULL
