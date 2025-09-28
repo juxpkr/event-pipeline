@@ -44,11 +44,6 @@ class GDELTGoldMigrator:
                 "postgres_schema": "gold",
                 "description": "준실시간 이벤트 요약 테이블",
             },
-            "gold_prod.gold_superset_view": {
-                "postgres_table": "gold_superset_view",
-                "postgres_schema": "gold",
-                "description": "Superset 대시보드용 뷰 테이블",
-            },
             "gold_prod.gold_daily_actor_network": {
                 "postgres_table": "gold_daily_actor_network",
                 "postgres_schema": "gold",
@@ -68,6 +63,11 @@ class GDELTGoldMigrator:
                 "postgres_table": "gold_chart_events_count_avgtone",
                 "postgres_schema": "gold",
                 "description": "전체 기간 이벤트 수 및 평균 톤 추이 차트용 테이블 (꺾은선 + 막대차트)",
+            },
+            "gold_prod.gold_daily_rich_story": {
+                "postgres_table": "gold_daily_rich_story",
+                "postgres_schema": "gold",
+                "description": "일일/국가별 대표 스토리 테이블",
             },
         }
 

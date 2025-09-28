@@ -117,19 +117,17 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
             "skipped": True,
         }
 
-    # agg로 집계 (collect 최소화) - 4개 테이블 모두 체크
+    # agg로 집계 (collect 최소화) - 6개 테이블 모두 체크
     gold_counts = spark.sql(
         """
         SELECT
-            SUM(CASE WHEN table_name = 'gold_superset_view' THEN cnt ELSE 0 END) as superset_count,
             SUM(CASE WHEN table_name = 'gold_near_realtime_summary' THEN cnt ELSE 0 END) as realtime_count,
             SUM(CASE WHEN table_name = 'gold_daily_actor_network' THEN cnt ELSE 0 END) as actor_count,
             SUM(CASE WHEN table_name = 'gold_chart_events_category' THEN cnt ELSE 0 END) as category_count,
             SUM(CASE WHEN table_name = 'gold_chart_weekday_event_ratio' THEN cnt ELSE 0 END) as event_ratio_count,
-            SUM(CASE WHEN table_name = 'gold_chart_events_count_avgtone' THEN cnt ELSE 0 END) as events_count_avgtone_count
+            SUM(CASE WHEN table_name = 'gold_chart_events_count_avgtone' THEN cnt ELSE 0 END) as events_count_avgtone_count,
+            SUM(CASE WHEN table_name = 'gold_daily_rich_story' THEN cnt ELSE 0 END) as daily_rich_story_count
         FROM (
-            SELECT 'gold_superset_view' as table_name, COUNT(*) as cnt FROM gold_prod.gold_superset_view
-            UNION ALL
             SELECT 'gold_near_realtime_summary' as table_name, COUNT(*) as cnt FROM gold_prod.gold_near_realtime_summary
             UNION ALL
             SELECT 'gold_daily_actor_network' as table_name, COUNT(*) as cnt FROM gold_prod.gold_daily_actor_network
@@ -139,30 +137,22 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
             SELECT 'gold_chart_weekday_event_ratio' as table_name, COUNT(*) as cnt FROM gold_prod.gold_chart_weekday_event_ratio
             UNION ALL
             SELECT 'gold_chart_events_count_avgtone' as table_name, COUNT(*) as cnt FROM gold_prod.gold_chart_events_count_avgtone
+            UNION ALL
+            SELECT 'gold_daily_rich_story' as table_name, COUNT(*) as cnt FROM gold_prod.gold_daily_rich_story
         )
     """
     ).collect()[0]
 
     gold_count = (
-        (gold_counts["superset_count"] or 0)
-        + (gold_counts["realtime_count"] or 0)
+        (gold_counts["realtime_count"] or 0)
         + (gold_counts["actor_count"] or 0)
         + (gold_counts["category_count"] or 0)
         + (gold_counts["event_ratio_count"] or 0)
         + (gold_counts["events_count_avgtone_count"] or 0)
+        + (gold_counts["daily_rich_story_count"] or 0)
     )
 
-    # Postgres도 동일하게 4개 테이블 체크
-    postgres_superset = (
-        spark.read.format("jdbc")
-        .option("url", postgres_url)
-        .option("dbtable", "gold.gold_superset_view")
-        .option("user", postgres_user)
-        .option("password", postgres_password)
-        .load()
-        .count()
-    )
-
+    # Postgres도 동일하게 6개 테이블 체크
     postgres_realtime = (
         spark.read.format("jdbc")
         .option("url", postgres_url)
@@ -211,13 +201,23 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
         .count()
     )
 
+    postgres_daily_rich_story = (
+        spark.read.format("jdbc")
+        .option("url", postgres_url)
+        .option("dbtable", "gold.gold_daily_rich_story")
+        .option("user", postgres_user)
+        .option("password", postgres_password)
+        .load()
+        .count()
+    )
+
     postgres_count = (
-        postgres_superset
-        + postgres_realtime
+        postgres_realtime
         + postgres_actor
         + postgres_category
         + postgres_event_ratio_count
         + postgres_events_count_avgtone_count
+        + postgres_daily_rich_story
     )
     sync_accuracy = 100.0 if gold_count == postgres_count else 0.0
 
