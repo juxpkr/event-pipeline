@@ -21,7 +21,7 @@ analytics_dbt:
       connect_retries: 5
       connect_timeout: 60
       retry_all: true
-      threads: 4
+      threads: 8
       conf:
         - "spark.app.name='dbt-run-{{ invocation_id[:8] }}'"
     # =================================================================
