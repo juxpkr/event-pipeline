@@ -57,9 +57,10 @@ with DAG(
         application="/opt/airflow/src/ingestion/gdelt_bronze_consumer.py",
         env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
         conf={
-            "spark.cores.max": "4",
             "spark.executor.memory": "8g",
             "spark.executor.cores": "2",
+            "spark.executor.instances": "5",
+            "spark.driver.memory": "4g",
         },
     )
 
@@ -77,6 +78,7 @@ with DAG(
             "spark.executor.memory": "8g",
             "spark.executor.cores": "2",
             "spark.driver.memory": "4g",
+            "spark.sql.shuffle.partitions": "100",
         },
         doc_md="""
         Silver Layer Processing
