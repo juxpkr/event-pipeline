@@ -9,12 +9,14 @@
 ) }}
 
 -- CTE 1: 새로 들어온 GKG/Mentions 데이터가 속한 날짜들을 먼저 찾습니다. (대표 스토리 재계산을 위함)
-WITH dates_with_new_events AS (
-    SELECT DISTINCT event_date
+WITH new_gkg_events AS (
+    SELECT
+        global_event_id,
+        processed_at,
+        event_date
     FROM {{ ref('stg_gkg_detailed_events') }}
     WHERE event_date >= '2025-09-26'
-    AND mp_action_geo_country_iso IS NOT NULL -- 국가 코드가 없는 GKG 데이터는 제외
-
+    
     {% if is_incremental() %}
     {% set max_query %}
         SELECT MAX(processed_at) FROM {{ this }}
@@ -31,11 +33,19 @@ WITH dates_with_new_events AS (
     {% endif %}
 ),
 
+dates_with_new_events AS (
+    SELECT DISTINCT se.event_date
+    FROM new_gkg_events AS gkg
+    INNER JOIN {{ ref('stg_seed_mapping') }} AS se
+        ON gkg.global_event_id = se.global_event_id
+    WHERE se.mp_action_geo_country_iso IS NOT NULL
+),
+
 -- CTE 2: 위에서 찾은 날짜에 해당하는 모든 이벤트(과거+신규)를 다시 불러와 대표 스토리를 재계산합니다.
 events_to_recalculate AS (
     SELECT *
     FROM {{ ref('stg_seed_mapping') }}
-    WHERE event_date IN (SELECT event_date FROM dates_with_new_events)
+    WHERE event_date IN (SELECT event_date FROM dates_with_new_events) AND mp_action_geo_country_iso IS NOT NULL
 ),
 
 -- CTE 3: Staging 모델들을 모두 조인하여 상세 정보를 만듭니다.
@@ -57,7 +67,7 @@ joined_sources AS (
 
 -- [성능 최적화] CTE 4: 각 복잡한 필드를 병렬로 처리하고 재집계합니다.
 persons_aggregated AS (
-    SELECT global_event_id, ARRAY_JOIN(SLICE(COLLECT_SET(INITCAP(TRIM(p))), 1, 3), ', ') AS key_persons
+    SELECT global_event_id, ARRAY_JOIN(SLICE(COLLECT_SET(INITCAP(TRIM(p))), 1, 2), ', ') AS key_persons
     FROM joined_sources LATERAL VIEW EXPLODE(SPLIT(v2_persons, ';')) exploded_p AS p WHERE v2_persons IS NOT NULL AND LENGTH(TRIM(p)) > 2 GROUP BY 1
 ),
 orgs_aggregated AS (
@@ -129,15 +139,19 @@ stories_with_kpi AS (
                 ' 간의 ' || CASE WHEN avg_tone > 0 THEN '긍정적인 ' ELSE '부정적인 ' END || COALESCE(mp_event_categories, '알 수 없는') || 
                 ' 이벤트가 발생했습니다.'
             ELSE
+                -- 1. 중요도 접두사
                 COALESCE(CASE WHEN ABS(goldstein_scale) > 8 THEN '주요 사건: ' WHEN ABS(goldstein_scale) > 5 THEN '중요 사건: ' WHEN ABS(goldstein_scale) > 3 THEN '주목할 만한 사건: ' ELSE '' END, '') ||
-                COALESCE(CASE WHEN key_persons IS NOT NULL AND LOCATE(LOWER(SPLIT(key_persons, ', ')[0]), LOWER(COALESCE(actor1_info, actor1_name))) = 0 THEN SPLIT(key_persons, ', ')[0] || ' (' || COALESCE(actor1_info, actor1_name) || ' 소속)' ELSE COALESCE(actor1_info, actor1_name) END, '알 수 없는 주체') || '이(가) ' ||
-                COALESCE(SPLIT(action_geo_fullname, ',')[0], '알 수 없는 장소') || '에서 ' ||
-                CASE WHEN actor2_name IS NOT NULL THEN COALESCE(actor2_info, actor2_name) || '에게 ' ELSE '' END ||
+                -- 2. 메인 스토리 문장
+                COALESCE(actor1_info, actor1_name, '알 수 없는 주체') || '이(가) ' ||
+                COALESCE(mp_action_geo_country_kor, '알 수 없는 국가') || '에서 ' ||
+                CASE WHEN actor2_name IS NOT NULL THEN COALESCE(actor2_info, actor2_name, '알 수 없는 대상') || '에게 ' ELSE '' END ||
                 CASE WHEN avg_tone > 5 THEN '매우 긍정적인 방식으로 ' WHEN avg_tone > 2 THEN '긍정적인 감정으로 ' WHEN avg_tone < -5 THEN '강한 부정적 감정으로 ' WHEN avg_tone < -2 THEN '긴장 상황 속에서 ' ELSE '중립적인 톤으로 ' END ||
                 COALESCE(mp_event_info, '알 수 없는 행동') || ' 관련 논의를 했습니다.' ||
-                COALESCE(' (' || rich_themes || '에 관해)', '') ||
-                COALESCE(' (' || key_organizations || '와 관련하여)', '') ||
-                COALESCE(' (' || key_amounts || ' 규모로)', '') ||
+                -- 3. 보조 정보 (괄호 안)
+                COALESCE(' (테마: ' || rich_themes || ')', '') ||
+                COALESCE(' (핵심 인물: ' || key_persons || ')', '') ||
+                COALESCE(' (핵심 단체: ' || key_organizations || ')', '') ||
+                COALESCE(' (규모: ' || key_amounts || ')', '') ||
                 ' (' || COALESCE(num_articles, 0) || '개 기사에서 보도됨' || CASE WHEN mention_source_name IS NOT NULL THEN ', ' || mention_source_name || ' 포함' ELSE '' END || ')'
         END AS rich_story
     FROM final_join
