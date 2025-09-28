@@ -135,7 +135,8 @@ with DAG(
             "DBT_TARGET": "prod",
         },
         cpus=4,
-        auto_remove="success",  # 실행 후 컨테이너 자동 삭제
+        auto_remove= False,
+        #auto_remove="success",  # 실행 후 컨테이너 자동 삭제
         doc_md="""
         dbt Gold Layer Transformation (DockerOperator)
         - Silver Layer 데이터를 분석용 Gold Layer로 변환
