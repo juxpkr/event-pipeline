@@ -221,11 +221,12 @@ services:
       - ./config/spark/spark.env
     environment:
       # 동적 자원 할당
-      - SPARK_CONF_spark.driver.memory=8g
-      - SPARK_CONF_spark.executor.instances=8
-      - SPARK_CONF_spark.executor.cores=4
-      - SPARK_CONF_spark.executor.memory=8g
-      - SPARK_CONF_spark.sql.shuffle.partitions=100
+      SPARK_DYNAMIC_MIN_EXECUTORS: 2
+      SPARK_DYNAMIC_MAX_EXECUTORS: 16
+      SPARK_DYNAMIC_EXECUTOR_MEMORY: 8g
+      SPARK_DYNAMIC_EXECUTOR_CORES: 4
+      SPARK_DYNAMIC_DRIVER_MEMORY: 8g
+      SPARK_CONF_spark.sql.shuffle.partitions: 100
     networks:
       - data-network
     ports:
@@ -242,11 +243,11 @@ services:
           - node.role == worker
       resources:
         limits:
-          cpus: '8.0'     
-          memory: 32G      
-        reservations:
           cpus: '4.0'
-          memory: 16G 
+          memory: 8G
+        reservations:
+          cpus: '2.0'
+          memory: 4G
 
   spark-thrift-server-dev:
     image: juxpkr/geoevent-spark-base:2.2
