@@ -127,7 +127,7 @@ stories_with_kpi AS (
             WHEN v2_persons IS NULL AND v2_organizations IS NULL AND rich_themes IS NULL THEN
                 COALESCE(mp_action_geo_country_kor, '알 수 없는 국가') || '에서 ' || COALESCE(actor1_info, actor1_name, '알 수 없는 주체') || '와(과) ' || COALESCE(actor2_info, actor2_name, '알 수 없는 대상') || 
                 ' 간의 ' || CASE WHEN avg_tone > 0 THEN '긍정적인 ' ELSE '부정적인 ' END || COALESCE(mp_event_categories, '알 수 없는') || 
-                ' 이벤트가 발생했습니다. (상세 내용은 준비 중입니다.)'
+                ' 이벤트가 발생했습니다.'
             ELSE
                 COALESCE(CASE WHEN ABS(goldstein_scale) > 8 THEN '주요 사건: ' WHEN ABS(goldstein_scale) > 5 THEN '중요 사건: ' WHEN ABS(goldstein_scale) > 3 THEN '주목할 만한 사건: ' ELSE '' END, '') ||
                 COALESCE(CASE WHEN key_persons IS NOT NULL AND LOCATE(LOWER(SPLIT(key_persons, ', ')[0]), LOWER(COALESCE(actor1_info, actor1_name))) = 0 THEN SPLIT(key_persons, ', ')[0] || ' (' || COALESCE(actor1_info, actor1_name) || ' 소속)' ELSE COALESCE(actor1_info, actor1_name) END, '알 수 없는 주체') || '이(가) ' ||
