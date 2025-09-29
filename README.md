@@ -36,6 +36,7 @@
   <img src="https://github.com/user-attachments/assets/8c0ff56a-89ec-463c-942f-b4715498ffe4" width="48%" />
 </p>
 
+----
 
 ### 📂 사용 데이터 출처
 
