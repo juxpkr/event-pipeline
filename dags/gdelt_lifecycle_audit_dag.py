@@ -20,48 +20,6 @@ with DAG(
     tags=["gdelt", "audit", "monitoring"],
 ) as dag:
 
-    # Lifecycle Consolidation Task
-    consolidate_lifecycle = SparkSubmitOperator(
-        task_id="consolidate_lifecycle_data",
-        conn_id="spark_conn",
-        packages="io.delta:delta-core_2.12:2.4.0",
-        execution_timeout=timedelta(minutes=10),
-        application="/opt/airflow/src/audit/lifecycle_consolidator.py",
-        conf={
-            # Driver
-            'spark.driver.memory': '8g',
-            'spark.driver.cores': '2',
-
-            # Executor 
-            'spark.executor.instances': '6',
-            'spark.executor.memory': '24g',
-            'spark.executor.cores': '6',
-
-            # Shuffle 및 메모리 관리 최적화. 불필요한 디스크 I/O 감소
-            'spark.sql.shuffle.partitions': '50',
-            'spark.default.parallelism': '72',
-
-            # Memory 최적화
-            'spark.memory.fraction': '0.8',
-            'spark.executor.memoryOverhead': '4g',
-
-            # AQE 활성화: 스파크가 스스로 최적화
-            'spark.sql.adaptive.enabled': 'true',
-            'spark.sql.adaptive.coalescePartitions.enabled': 'true', 
-
-            #"spark.cores.max": "1",
-            #"spark.executor.memory": "1g",
-            #"spark.executor.cores": "1",
-        },
-        doc_md="""
-        Lifecycle Data Consolidation
-        - Read from staging tables: lifecycle_staging_event, lifecycle_staging_gkg
-        - Merge into main table: s3a://warehouse/audit/lifecycle
-        - Clean up processed staging data
-        - Maintain audit trail integrity
-        """,
-    )
-
     # Lifecycle Audit 실행
     lifecycle_audit_task = SparkSubmitOperator(
         task_id="run_lifecycle_audit",
@@ -82,6 +40,10 @@ with DAG(
             "POSTGRES_USER": "airflow",
             "POSTGRES_PASSWORD": "airflow",
         },
+        doc_md="""
+        Lifecycle Audit
+        - Main lifecycle 테이블에서 이벤트 상태 통계 생성
+        - Prometheus Pushgateway에 메트릭 전송
+        - Collection Rate, Join Yield, Sync Accuracy 검증
+        """,
     )
-
-    consolidate_lifecycle >> lifecycle_audit_task

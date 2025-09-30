@@ -85,7 +85,31 @@ with DAG(
         },
     )
 
-    # Task 3: Silver Layer Processing
+    # Task 3: Lifecycle Consolidator (Staging → Main)
+    consolidate_lifecycle = SparkSubmitOperator(
+        task_id="consolidate_lifecycle",
+        conn_id=SPARK_CONN_ID,
+        packages="io.delta:delta-core_2.12:2.4.0",
+        application="/opt/airflow/src/audit/lifecycle_consolidator.py",
+        execution_timeout=timedelta(minutes=10),
+        conf={
+            'spark.driver.memory': '4g',
+            'spark.driver.cores': '2',
+            'spark.executor.instances': '2',
+            'spark.executor.memory': '8g',
+            'spark.executor.cores': '2',
+            'spark.sql.shuffle.partitions': '20',
+            'spark.sql.adaptive.enabled': 'true',
+        },
+        doc_md="""
+        Lifecycle Consolidator
+        - Staging 테이블 (lifecycle_staging_event, lifecycle_staging_gkg) 데이터를 Main lifecycle 테이블로 통합
+        - WAITING 상태 이벤트를 Silver Processor가 읽을 수 있도록 준비
+        - Staging 테이블 정리
+        """,
+    )
+
+    # Task 4: Silver Layer Processing
     silver_processor = SparkSubmitOperator(
         task_id="silver_processor",
         conn_id=SPARK_CONN_ID,
@@ -99,7 +123,7 @@ with DAG(
             'spark.driver.memory': '8g',
             'spark.driver.cores': '2',
 
-            # Executor 
+            # Executor
             'spark.executor.instances': '6',
             'spark.executor.memory': '24g',
             'spark.executor.cores': '6',
@@ -137,5 +161,5 @@ with DAG(
         wait_for_completion=False,  # 일단 호출만 하고 나는 내 할 일 끝냄
     )
 
-    # Task 의존성 정의: Producer → Bronze → Silver → dbt
-    gdelt_producer >> bronze_consumer >> silver_processor >> trigger_dbt_gold_pipeline
+    # Task 의존성 정의: Producer → Bronze → Consolidator → Silver → dbt
+    gdelt_producer >> bronze_consumer >> consolidate_lifecycle >> silver_processor >> trigger_dbt_gold_pipeline
