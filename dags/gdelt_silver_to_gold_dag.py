@@ -112,18 +112,7 @@ with DAG(
         task_id="dbt_transformation",
         image=os.getenv("DBT_IMAGE", "juxpkr/geoevent-dbt:0.3"),
         mount_tmp_dir=False,
-        command=[
-            "/bin/sh",
-            "-c",
-            # 1. Seed 초기화 로직
-            "if [ ! -f /app/.seed_initialized ]; then dbt seed --full-refresh && touch /app/.seed_initialized; else dbt seed; fi && "
-            # 2. dbt 모델 초기화 로직 추가
-            "if [ ! -f /app/.dbt_initialized ]; then "
-            "    dbt build --target prod --full-refresh && touch /app/.dbt_initialized; "
-            "else "
-            "    dbt build --target prod; "
-            "fi",
-        ],
+        command="dbt build --target prod",
         network_mode="geoevent_data-network",  # docker-compose 네트워크
         mounts=[
             Mount(source=dbt_project_host_path, target="/app", type="bind"),
