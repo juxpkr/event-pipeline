@@ -58,25 +58,25 @@ with DAG(
         env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
         conf={
             # Driver
-            'spark.driver.memory': '6g',
+            'spark.driver.memory': '8g',
             'spark.driver.cores': '2',
 
-            # Executor - worker 설정과 일치
+            # Executor 
             'spark.executor.instances': '6',
             'spark.executor.memory': '24g',
             'spark.executor.cores': '6',
 
-            # Parallelism
-            'spark.sql.shuffle.partitions': '72',
+            # Shuffle 및 메모리 관리 최적화. 불필요한 디스크 I/O 감소
+            'spark.sql.shuffle.partitions': '50',
             'spark.default.parallelism': '72',
 
             # Memory 최적화
             'spark.memory.fraction': '0.8',
-            'spark.executor.memoryOverhead': '3g',
+            'spark.executor.memoryOverhead': '4g',
 
-            # AQE
+            # AQE 활성화: 스파크가 스스로 최적화
             'spark.sql.adaptive.enabled': 'true',
-            'spark.sql.adaptive.coalescePartitions.enabled': 'true',
+            'spark.sql.adaptive.coalescePartitions.enabled': 'true', # 작은 파티션을 알아서 합쳐줌
 
             #"spark.executor.memory": "8g",
             #"spark.executor.cores": "2",
@@ -96,23 +96,23 @@ with DAG(
         application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
         conf={
             # Driver
-            'spark.driver.memory': '6g',
+            'spark.driver.memory': '8g',
             'spark.driver.cores': '2',
 
-            # Executor - worker 설정과 일치
+            # Executor 
             'spark.executor.instances': '6',
             'spark.executor.memory': '24g',
             'spark.executor.cores': '6',
 
-            # Parallelism
-            'spark.sql.shuffle.partitions': '72',
+            # Shuffle 및 메모리 관리 최적화. 불필요한 디스크 I/O 감소
+            'spark.sql.shuffle.partitions': '50',
             'spark.default.parallelism': '72',
 
             # Memory 최적화
             'spark.memory.fraction': '0.8',
-            'spark.executor.memoryOverhead': '3g',
+            'spark.executor.memoryOverhead': '4g',
 
-            # AQE
+            # AQE 활성화: 스파크가 스스로 최적화
             'spark.sql.adaptive.enabled': 'true',
             'spark.sql.adaptive.coalescePartitions.enabled': 'true',
 

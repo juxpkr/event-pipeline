@@ -154,10 +154,30 @@ with DAG(
         application="/opt/airflow/src/processing/migration/gdelt_gold_to_postgres.py",
         packages="org.postgresql:postgresql:42.5.0,io.delta:delta-core_2.12:2.4.0",
         conf={
-            "spark.executor.instances": "5",
-            "spark.executor.memory": "8g",
-            "spark.executor.cores": "2",
-            "spark.driver.memory": "4g",
+            # Driver
+            'spark.driver.memory': '8g',
+            'spark.driver.cores': '2',
+
+            # Executor 
+            'spark.executor.instances': '6',
+            'spark.executor.memory': '24g',
+            'spark.executor.cores': '6',
+
+            # Shuffle 및 메모리 관리 최적화. 불필요한 디스크 I/O 감소
+            'spark.sql.shuffle.partitions': '50',
+            'spark.default.parallelism': '72',
+
+            # Memory 최적화
+            'spark.memory.fraction': '0.8',
+            'spark.executor.memoryOverhead': '4g',
+
+            # AQE 활성화: 스파크가 스스로 최적화
+            'spark.sql.adaptive.enabled': 'true',
+            'spark.sql.adaptive.coalescePartitions.enabled': 'true',     
+            #"spark.executor.instances": "5",
+            #"spark.executor.memory": "8g",
+            #"spark.executor.cores": "2",
+            #"spark.driver.memory": "4g",
         },
         doc_md="""
         Gold Layer to PostgreSQL Migration

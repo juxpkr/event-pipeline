@@ -29,25 +29,25 @@ with DAG(
         application="/opt/airflow/src/audit/lifecycle_consolidator.py",
         conf={
             # Driver
-            'spark.driver.memory': '6g',
+            'spark.driver.memory': '8g',
             'spark.driver.cores': '2',
 
-            # Executor - worker 설정과 일치
+            # Executor 
             'spark.executor.instances': '6',
             'spark.executor.memory': '24g',
             'spark.executor.cores': '6',
 
-            # Parallelism
-            'spark.sql.shuffle.partitions': '72',
+            # Shuffle 및 메모리 관리 최적화. 불필요한 디스크 I/O 감소
+            'spark.sql.shuffle.partitions': '50',
             'spark.default.parallelism': '72',
 
             # Memory 최적화
             'spark.memory.fraction': '0.8',
-            'spark.executor.memoryOverhead': '3g',
+            'spark.executor.memoryOverhead': '4g',
 
-            # AQE
+            # AQE 활성화: 스파크가 스스로 최적화
             'spark.sql.adaptive.enabled': 'true',
-            'spark.sql.adaptive.coalescePartitions.enabled': 'true',
+            'spark.sql.adaptive.coalescePartitions.enabled': 'true', 
 
             #"spark.cores.max": "1",
             #"spark.executor.memory": "1g",
