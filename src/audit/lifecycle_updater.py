@@ -19,17 +19,16 @@ class EventLifecycleUpdater:
         self.spark = spark
         self.lifecycle_path = MAIN_LIFECYCLE_PATH
 
-    def mark_silver_processing_complete(self, event_ids: list, batch_id: str):
-        """Silver 처리 완료 상태로 업데이트"""
-        if not event_ids:
+    def mark_silver_processing_complete(self, events_df: DataFrame, batch_id: str):
+        """Silver 처리 완료 상태로 업데이트 (DataFrame 기반)"""
+        if events_df is None or events_df.rdd.isEmpty():
             return 0
 
         current_time = datetime.now(timezone.utc)
 
-        event_df = self.spark.createDataFrame(
-            [(event_id,) for event_id in event_ids], ["global_event_id"]
-        )
-        event_df.createOrReplaceTempView("silver_completed_events_temp")
+        # DataFrame에서 global_event_id만 추출 (collect 없이)
+        event_ids_df = events_df.select("global_event_id").distinct()
+        event_ids_df.createOrReplaceTempView("silver_completed_events_temp")
 
         merge_sql = f"""
         MERGE INTO delta.`{self.lifecycle_path}` AS lifecycle
@@ -42,7 +41,10 @@ class EventLifecycleUpdater:
         """
 
         self.spark.sql(merge_sql)
-        return len(event_ids)
+
+        # 업데이트된 레코드 수 반환
+        updated_count = event_ids_df.count()
+        return updated_count
 
     def mark_gold_processing_complete(self, event_ids: list, batch_id: str):
         """Gold 처리 완료 상태로 업데이트"""

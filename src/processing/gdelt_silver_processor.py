@@ -252,6 +252,9 @@ def main():
             # 9. 최종 컬럼 선택
             final_silver_df = select_final_columns(joined_with_priority)
 
+            # DataFrame 캐싱 (중복 계산 방지)
+            final_silver_df.cache()
+
             # 10. Events detailed Silver 저장
             write_to_delta_lake(
                 df=final_silver_df,
@@ -261,13 +264,8 @@ def main():
                 merge_key="global_event_id",  # Silver 스키마의 소문자 키
             )
 
-            # Silver 처리 완료 시점 기록
-            final_event_ids = (
-                final_silver_df.select("global_event_id")
-                .rdd.map(lambda row: row[0])
-                .collect()
-            )
-            lifecycle_updater.mark_silver_processing_complete(final_event_ids, batch_id)
+            # Silver 처리 완료 시점 기록 (DataFrame 직접 전달 - collect 제거)
+            lifecycle_updater.mark_silver_processing_complete(final_silver_df, batch_id)
 
             # 실제 GKG 조인 성공률 로깅
             actually_joined_count = final_silver_df.filter(
@@ -280,6 +278,9 @@ def main():
             logger.info(
                 f"Silver processing complete: {total_events} events processed, {actually_joined_count} with GKG ({actual_join_rate:.1f}% join rate)"
             )
+
+            # 캐시 해제
+            final_silver_df.unpersist()
 
             logger.info("Sample of Events detailed Silver data:")
             final_silver_df.show(5, vertical=True)
