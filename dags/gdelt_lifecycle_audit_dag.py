@@ -28,9 +28,30 @@ with DAG(
         execution_timeout=timedelta(minutes=10),
         application="/opt/airflow/src/audit/lifecycle_consolidator.py",
         conf={
-            "spark.cores.max": "1",
-            "spark.executor.memory": "1g",
-            "spark.executor.cores": "1",
+            # Driver
+            'spark.driver.memory': '6g',
+            'spark.driver.cores': '2',
+
+            # Executor - worker 설정과 일치
+            'spark.executor.instances': '6',
+            'spark.executor.memory': '24g',
+            'spark.executor.cores': '6',
+
+            # Parallelism
+            'spark.sql.shuffle.partitions': '72',
+            'spark.default.parallelism': '72',
+
+            # Memory 최적화
+            'spark.memory.fraction': '0.8',
+            'spark.executor.memoryOverhead': '3g',
+
+            # AQE
+            'spark.sql.adaptive.enabled': 'true',
+            'spark.sql.adaptive.coalescePartitions.enabled': 'true',
+
+            #"spark.cores.max": "1",
+            #"spark.executor.memory": "1g",
+            #"spark.executor.cores": "1",
         },
         doc_md="""
         Lifecycle Data Consolidation
