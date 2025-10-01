@@ -229,7 +229,7 @@ def calculate_gold_postgres_sync(spark: SparkSession) -> Dict:
 
 
 def calculate_stage_durations(lifecycle_df, hours_back: int = 24) -> Dict:
-    """단계별 소요시간 계산 (agg 사용)"""
+    """단계별 소요시간 계산 (최근 완료 이벤트 기준)"""
     recent_cutoff = datetime.now(timezone.utc) - timedelta(hours=hours_back)
 
     complete_events = lifecycle_df.filter(
@@ -244,72 +244,69 @@ def calculate_stage_durations(lifecycle_df, hours_back: int = 24) -> Dict:
     complete_count = complete_events.count()
     if complete_count == 0:
         return {
-            "avg_silver_duration_hours": 0.0,
-            "avg_gold_duration_hours": 0.0,
-            "avg_postgres_duration_hours": 0.0,
-            "avg_e2e_duration_hours": 0.0,
+            "latest_silver_duration_hours": 0.0,
+            "latest_gold_duration_hours": 0.0,
+            "latest_postgres_duration_hours": 0.0,
+            "latest_e2e_duration_hours": 0.0,
             "analyzed_events": 0,
         }
 
-    # agg로 평균 계산
-    from pyspark.sql.functions import avg, when, unix_timestamp
+    # 최근 완료된 이벤트 1개 선택
+    from pyspark.sql.functions import unix_timestamp
 
-    duration_stats = complete_events.agg(
-        avg(
-            when(
-                col("audit.silver_processing_end_time").isNotNull(),
-                (
-                    unix_timestamp("audit.silver_processing_end_time")
-                    - unix_timestamp("audit.bronze_arrival_time")
-                )
-                / 3600.0,
-            )
-        ).alias("avg_silver_hours"),
-        avg(
-            when(
-                col("audit.gold_processing_end_time").isNotNull(),
-                (
-                    unix_timestamp("audit.gold_processing_end_time")
-                    - unix_timestamp("audit.silver_processing_end_time")
-                )
-                / 3600.0,
-            )
-        ).alias("avg_gold_hours"),
-        avg(
-            when(
-                col("audit.postgres_migration_end_time").isNotNull(),
-                (
-                    unix_timestamp("audit.postgres_migration_end_time")
-                    - unix_timestamp("audit.gold_processing_end_time")
-                )
-                / 3600.0,
-            )
-        ).alias("avg_postgres_hours"),
-        avg(
-            when(
-                col("audit.postgres_migration_end_time").isNotNull(),
-                (
-                    unix_timestamp("audit.postgres_migration_end_time")
-                    - unix_timestamp("audit.bronze_arrival_time")
-                )
-                / 3600.0,
-            )
-        ).alias("avg_e2e_hours"),
-    ).collect()[
-        0
-    ]  # 단일 집계 결과만 collect
+    latest_event = (
+        complete_events.filter(col("audit.postgres_migration_end_time").isNotNull())
+        .orderBy(col("audit.postgres_migration_end_time").desc())
+        .limit(1)
+        .select(
+            col("audit.bronze_arrival_time"),
+            col("audit.silver_processing_end_time"),
+            col("audit.gold_processing_end_time"),
+            col("audit.postgres_migration_end_time"),
+        )
+        .collect()
+    )
+
+    if len(latest_event) == 0:
+        return {
+            "latest_silver_duration_hours": 0.0,
+            "latest_gold_duration_hours": 0.0,
+            "latest_postgres_duration_hours": 0.0,
+            "latest_e2e_duration_hours": 0.0,
+            "analyzed_events": complete_count,
+        }
+
+    event = latest_event[0]
+    bronze_time = event["bronze_arrival_time"]
+    silver_time = event["silver_processing_end_time"]
+    gold_time = event["gold_processing_end_time"]
+    postgres_time = event["postgres_migration_end_time"]
+
+    # 각 단계별 duration 계산 (시간 단위)
+    silver_duration = (
+        (silver_time - bronze_time).total_seconds() / 3600.0 if silver_time else 0.0
+    )
+    gold_duration = (
+        (gold_time - silver_time).total_seconds() / 3600.0
+        if gold_time and silver_time
+        else 0.0
+    )
+    postgres_duration = (
+        (postgres_time - gold_time).total_seconds() / 3600.0
+        if postgres_time and gold_time
+        else 0.0
+    )
+    e2e_duration = (
+        (postgres_time - bronze_time).total_seconds() / 3600.0
+        if postgres_time and bronze_time
+        else 0.0
+    )
 
     return {
-        "avg_silver_duration_hours": round(
-            float(duration_stats["avg_silver_hours"] or 0), 2
-        ),
-        "avg_gold_duration_hours": round(
-            float(duration_stats["avg_gold_hours"] or 0), 2
-        ),
-        "avg_postgres_duration_hours": round(
-            float(duration_stats["avg_postgres_hours"] or 0), 2
-        ),
-        "avg_e2e_duration_hours": round(float(duration_stats["avg_e2e_hours"] or 0), 2),
+        "latest_silver_duration_hours": round(silver_duration, 2),
+        "latest_gold_duration_hours": round(gold_duration, 2),
+        "latest_postgres_duration_hours": round(postgres_duration, 2),
+        "latest_e2e_duration_hours": round(e2e_duration, 2),
         "analyzed_events": complete_count,
     }
 
@@ -395,7 +392,7 @@ class LifecycleAuditor:
                 )
                 self.audit_results["stage_durations"] = duration_results
                 logger.info(
-                    f"E2E Duration: {duration_results['avg_e2e_duration_hours']}h"
+                    f"E2E Duration: {duration_results['latest_e2e_duration_hours']}h"
                 )
             except Exception as e:
                 logger.error(f"Stage duration calculation failed: {e}")
