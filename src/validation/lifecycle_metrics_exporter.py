@@ -133,23 +133,23 @@ class LifecycleMetricsExporter:
         durations = audit_results.get("stage_durations", {})
         add_metric(
             "gdelt_pipeline_duration_hours",
-            durations.get("avg_e2e_duration_hours", 0),
+            durations.get("latest_e2e_duration_hours", 0),
             labels={"stage": "e2e"},
-            help_text="Average pipeline duration by stage in hours",
+            help_text="Latest pipeline duration by stage in hours",
         )
         add_metric(
             "gdelt_pipeline_duration_hours",
-            durations.get("avg_silver_duration_hours", 0),
+            durations.get("latest_silver_duration_hours", 0),
             labels={"stage": "silver"},
         )
         add_metric(
             "gdelt_pipeline_duration_hours",
-            durations.get("avg_gold_duration_hours", 0),
+            durations.get("latest_gold_duration_hours", 0),
             labels={"stage": "gold"},
         )
         add_metric(
             "gdelt_pipeline_duration_hours",
-            durations.get("avg_postgres_duration_hours", 0),
+            durations.get("latest_postgres_duration_hours", 0),
             labels={"stage": "postgres"},
         )
 
