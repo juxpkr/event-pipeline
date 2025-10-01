@@ -31,8 +31,9 @@ with DAG(
         """Gold 처리 완료 lifecycle 업데이트"""
         import sys
         import os
-        sys.path.insert(0, '/opt/airflow')
-        os.environ['PYTHONPATH'] = '/opt/airflow'
+
+        sys.path.insert(0, "/opt/airflow")
+        os.environ["PYTHONPATH"] = "/opt/airflow"
 
         from src.utils.spark_builder import get_spark_session
         from src.audit.lifecycle_updater import EventLifecycleUpdater
@@ -70,8 +71,9 @@ with DAG(
         """PostgreSQL 마이그레이션 완료 lifecycle 업데이트"""
         import sys
         import os
-        sys.path.insert(0, '/opt/airflow')
-        os.environ['PYTHONPATH'] = '/opt/airflow'
+
+        sys.path.insert(0, "/opt/airflow")
+        os.environ["PYTHONPATH"] = "/opt/airflow"
 
         from src.utils.spark_builder import get_spark_session
         from src.audit.lifecycle_updater import EventLifecycleUpdater
@@ -124,8 +126,8 @@ with DAG(
             "DBT_TARGET": "prod",
         },
         cpus=4,
-        auto_remove= False,
-        #auto_remove="success",  # 실행 후 컨테이너 자동 삭제
+        auto_remove=False,
+        # auto_remove="success",  # 실행 후 컨테이너 자동 삭제
         doc_md="""
         dbt Gold Layer Transformation (DockerOperator)
         - Silver Layer 데이터를 분석용 Gold Layer로 변환
@@ -144,25 +146,21 @@ with DAG(
         packages="org.postgresql:postgresql:42.5.0,io.delta:delta-core_2.12:2.4.0",
         conf={
             # Driver
-            'spark.driver.memory': '8g',
-            'spark.driver.cores': '2',
-
-            # Executor 
-            'spark.executor.instances': '5',
-            'spark.executor.memory': '24g',
-            'spark.executor.cores': '6',
-
+            "spark.driver.memory": "8g",
+            "spark.driver.cores": "2",
+            # Executor
+            "spark.executor.instances": "5",
+            "spark.executor.memory": "24g",
+            "spark.executor.cores": "6",
             # Shuffle 및 메모리 관리 최적화. 불필요한 디스크 I/O 감소
-            'spark.sql.shuffle.partitions': '50',
-            'spark.default.parallelism': '72',
-
+            "spark.sql.shuffle.partitions": "50",
+            "spark.default.parallelism": "72",
             # Memory 최적화
-            'spark.memory.fraction': '0.8',
-            'spark.executor.memoryOverhead': '4g',
-
+            "spark.memory.fraction": "0.8",
+            "spark.executor.memoryOverhead": "4g",
             # AQE 활성화: 스파크가 스스로 최적화
-            'spark.sql.adaptive.enabled': 'true',
-            'spark.sql.adaptive.coalescePartitions.enabled': 'true',     
+            "spark.sql.adaptive.enabled": "true",
+            "spark.sql.adaptive.coalescePartitions.enabled": "true",
         },
         doc_md="""
         Gold Layer to PostgreSQL Migration

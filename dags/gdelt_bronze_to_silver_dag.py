@@ -58,30 +58,25 @@ with DAG(
         env_vars={"REDIS_HOST": "redis", "REDIS_PORT": "6379"},
         conf={
             # Driver
-            'spark.driver.memory': '8g',
-            'spark.driver.cores': '2',
-
-            # Executor 
-            'spark.executor.instances': '6',
-            'spark.executor.memory': '24g',
-            'spark.executor.cores': '6',
-
+            "spark.driver.memory": "8g",
+            "spark.driver.cores": "2",
+            # Executor
+            "spark.executor.instances": "6",
+            "spark.executor.memory": "24g",
+            "spark.executor.cores": "6",
             # Shuffle 및 메모리 관리 최적화. 불필요한 디스크 I/O 감소
-            'spark.sql.shuffle.partitions': '50',
-            'spark.default.parallelism': '72',
-
+            "spark.sql.shuffle.partitions": "50",
+            "spark.default.parallelism": "72",
             # Memory 최적화
-            'spark.memory.fraction': '0.8',
-            'spark.executor.memoryOverhead': '4g',
-
+            "spark.memory.fraction": "0.8",
+            "spark.executor.memoryOverhead": "4g",
             # AQE 활성화: 스파크가 스스로 최적화
-            'spark.sql.adaptive.enabled': 'true',
-            'spark.sql.adaptive.coalescePartitions.enabled': 'true', # 작은 파티션을 알아서 합쳐줌
-
-            #"spark.executor.memory": "8g",
-            #"spark.executor.cores": "2",
-            #"spark.executor.instances": "5",
-            #"spark.driver.memory": "4g",
+            "spark.sql.adaptive.enabled": "true",
+            "spark.sql.adaptive.coalescePartitions.enabled": "true",  # 작은 파티션을 알아서 합쳐줌
+            # "spark.executor.memory": "8g",
+            # "spark.executor.cores": "2",
+            # "spark.executor.instances": "5",
+            # "spark.driver.memory": "4g",
         },
     )
 
@@ -94,25 +89,21 @@ with DAG(
         execution_timeout=timedelta(minutes=10),
         conf={
             # Driver
-            'spark.driver.memory': '8g',
-            'spark.driver.cores': '2',
-
-            # Executor 
-            'spark.executor.instances': '5',
-            'spark.executor.memory': '24g',
-            'spark.executor.cores': '6',
-
+            "spark.driver.memory": "8g",
+            "spark.driver.cores": "2",
+            # Executor
+            "spark.executor.instances": "5",
+            "spark.executor.memory": "24g",
+            "spark.executor.cores": "6",
             # Shuffle 및 메모리 관리 최적화
-            'spark.sql.shuffle.partitions': '72',
-            'spark.default.parallelism': '72',
-
+            "spark.sql.shuffle.partitions": "72",
+            "spark.default.parallelism": "72",
             # Memory 최적화
-            'spark.memory.fraction': '0.8',
-            'spark.executor.memoryOverhead': '4g',
-
+            "spark.memory.fraction": "0.8",
+            "spark.executor.memoryOverhead": "4g",
             # AQE 활성화
-            'spark.sql.adaptive.enabled': 'true',
-            'spark.sql.adaptive.coalescePartitions.enabled': 'true',
+            "spark.sql.adaptive.enabled": "true",
+            "spark.sql.adaptive.coalescePartitions.enabled": "true",
         },
         doc_md="""
         Lifecycle Consolidator
@@ -133,25 +124,21 @@ with DAG(
         application_args=["{{ data_interval_start }}", "{{ data_interval_end }}"],
         conf={
             # Driver
-            'spark.driver.memory': '8g',
-            'spark.driver.cores': '2',
-
+            "spark.driver.memory": "8g",
+            "spark.driver.cores": "2",
             # Executor
-            'spark.executor.instances': '5',
-            'spark.executor.memory': '24g',
-            'spark.executor.cores': '6',
-
+            "spark.executor.instances": "5",
+            "spark.executor.memory": "24g",
+            "spark.executor.cores": "6",
             # Shuffle 및 메모리 관리 최적화. 불필요한 디스크 I/O 감소
-            'spark.sql.shuffle.partitions': '50',
-            'spark.default.parallelism': '72',
-
+            "spark.sql.shuffle.partitions": "50",
+            "spark.default.parallelism": "72",
             # Memory 최적화
-            'spark.memory.fraction': '0.8',
-            'spark.executor.memoryOverhead': '4g',
-
+            "spark.memory.fraction": "0.8",
+            "spark.executor.memoryOverhead": "4g",
             # AQE 활성화: 스파크가 스스로 최적화
-            'spark.sql.adaptive.enabled': 'true',
-            'spark.sql.adaptive.coalescePartitions.enabled': 'true',
+            "spark.sql.adaptive.enabled": "true",
+            "spark.sql.adaptive.coalescePartitions.enabled": "true",
         },
         doc_md="""
         Silver Layer Processing
@@ -169,4 +156,10 @@ with DAG(
     )
 
     # Task 의존성 정의: Producer → Bronze → Consolidator → Silver → dbt
-    gdelt_producer >> bronze_consumer >> consolidate_lifecycle >> silver_processor >> trigger_dbt_gold_pipeline
+    (
+        gdelt_producer
+        >> bronze_consumer
+        >> consolidate_lifecycle
+        >> silver_processor
+        >> trigger_dbt_gold_pipeline
+    )

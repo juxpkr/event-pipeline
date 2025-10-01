@@ -84,7 +84,9 @@ def load_staging_table_safely(spark: SparkSession, path: str):
 def ensure_main_table_exists(spark: SparkSession, main_path: str):
     """Main lifecycle 테이블이 없으면 빈 테이블로 생성"""
     if not DeltaTable.isDeltaTable(spark, main_path):
-        logger.info(f"Main lifecycle table not found at {main_path}. Creating empty table...")
+        logger.info(
+            f"Main lifecycle table not found at {main_path}. Creating empty table..."
+        )
         empty_df = spark.createDataFrame([], LIFECYCLE_SCHEMA)
         empty_df.write.format("delta").partitionBy(
             "year", "month", "day", "hour", "event_type"

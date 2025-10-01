@@ -180,12 +180,19 @@ def send_bronze_data_to_kafka(
                 except UnicodeDecodeError:
                     try:
                         c.seek(0)
-                        reader = csv.reader(io.TextIOWrapper(c, "latin-1"), delimiter="\t")
+                        reader = csv.reader(
+                            io.TextIOWrapper(c, "latin-1"), delimiter="\t"
+                        )
                         logger.info(f"Using latin-1 encoding for {csv_filename}")
                     except UnicodeDecodeError:
                         c.seek(0)
-                        reader = csv.reader(io.TextIOWrapper(c, "utf-8", errors='ignore'), delimiter="\t")
-                        logger.warning(f"Using UTF-8 with error ignore for {csv_filename}")
+                        reader = csv.reader(
+                            io.TextIOWrapper(c, "utf-8", errors="ignore"),
+                            delimiter="\t",
+                        )
+                        logger.warning(
+                            f"Using UTF-8 with error ignore for {csv_filename}"
+                        )
 
                 record_count = 0
                 batch_records = []
@@ -362,7 +369,7 @@ def main():
                 )
                 total_stats[data_type] = {
                     "record_count": processed_count,
-                    "url_count": len(gdelt_urls[data_type])
+                    "url_count": len(gdelt_urls[data_type]),
                 }
             except Exception as e:
                 logger.error(
@@ -371,7 +378,7 @@ def main():
                 all_types_successful = False
                 total_stats[data_type] = {
                     "record_count": 0,
-                    "url_count": len(gdelt_urls.get(data_type, []))
+                    "url_count": len(gdelt_urls.get(data_type, [])),
                 }
 
         # STEP 3: 모든 작업이 성공적으로 끝났을 때만 체크포인트를 업데이트한다.
@@ -393,7 +400,9 @@ def main():
 
         grand_total = 0
         for data_type, stats in total_stats.items():
-            record_count = stats.get('record_count', 0) if isinstance(stats, dict) else stats
+            record_count = (
+                stats.get("record_count", 0) if isinstance(stats, dict) else stats
+            )
             logger.info(
                 f"{data_type.upper()}: {record_count:,} records → {KAFKA_TOPICS[data_type]}"
             )

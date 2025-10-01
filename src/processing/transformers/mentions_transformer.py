@@ -35,8 +35,12 @@ def transform_mentions_to_silver(df: DataFrame) -> DataFrame:
         # 조인키
         F.col("bronze_data")[0].alias("global_event_id"),
         # 시간 정보 (YYYYMMDDHHMMSS 형식을 TimestampType으로 변환)
-        F.to_timestamp(F.col("bronze_data")[1], "yyyyMMddHHmmss").alias("event_time_date"),
-        F.to_timestamp(F.col("bronze_data")[2], "yyyyMMddHHmmss").alias("mention_time_date"),
+        F.to_timestamp(F.col("bronze_data")[1], "yyyyMMddHHmmss").alias(
+            "event_time_date"
+        ),
+        F.to_timestamp(F.col("bronze_data")[2], "yyyyMMddHHmmss").alias(
+            "mention_time_date"
+        ),
         # Mention 기본 정보
         F.col("bronze_data")[3].cast(IntegerType()).alias("mention_type"),
         F.col("bronze_data")[4].alias("mention_source_name"),
