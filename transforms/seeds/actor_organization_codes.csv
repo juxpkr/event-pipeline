@@ -1,120 +1,146 @@
 code,type,description
-ACC,IGO,Arab Cooperation Council
-ADB,IGO,Asian Development Bank
-AEU,IGO,Arab Economic Unity Council
-AFB,IGO,African Development Bank
-ALC,Party,All Liberia Coalition Party
-AMF,IGO,Arab Monetary Fund
-AMN,NGO,Amnesty International
-AMU,IGO,Arab Maghreb Union
-ANO,Rebel,Abu Nidal Organization
-ANP,Party,"Motherland Party (ANAP)"
-AAM,Rebel,Al Aqsa Martyrs Brigade
-AKP,Party,"Justice and Development Party (AKP)"
-ALQ,IMG,Al Qaeda
-ARL,IGO,Arab League
-ASN,IGO,"Association of Southeast Asian Nations (ASEAN)"
-BTH,Party,Baath Party
-BHF,Government,"Bosniak/Croat Federation of Bosnia and Herzegovina"
-BIS,IGO,Bank for International Settlements
-BTH,PTY,Baath Party
-CFD,NGO,Campaign for Democracy
-CHP,Party,"Republican People’s Party (CHP)"
-CIS,IGO,Commonwealth of Independent States
-CMN,Party,Communist Party
-COE,IGO,Council of Europe
-CRC,NGO,International Fed. of Red Cross and Red Crescent (ICRC)
-CWN,IGO,Commonwealth of Nations
-DFL,Rebel,"Democratic Front for the Liberation of Palestine (DFLP)"
-DSP,Party,"Democratic Left Party (DSP)"
-DTP,Party,Democratic Society Party (DTP)
-DYP,Party,"True Path Party (DYP)"
-EBR,IGO,European Bank for Reconstruction and Development
-ECA,IGO,Economic Community of Central African States
-EEC,IGO,European Union
-EFT,IGO,European Free Trade Association
-FAZ,Party,Virtue Party (Fazilet)
-FID,NGO,International Federation of Human Rights (FIDH)
-FIS,Party,Islamic Salvation Front
-FLN,Party,National Liberation Front
-FTA,Government,"Fatah (d.r.)"
-GCC,IGO,Gulf Cooperation Council
-GIA,Rebel,"Armed Islamic Group (GIA)"
-GOE,IGO,"Group of Eight (G-8)"
-GOS,IGO,"Group of Seven (G-7)"
-GSS,IGO,"Group of Seventy-Seven (G-77)"
-HAM,Government,"Hamas (d.r.)"
-HDP,Party,"Democratic People’s Party (DEHAP/HADEP)"
-HEZ,Rebel,Hezbullah
-HIP,IGO,Highly Indebted Poor Countries
-HRW,NGO,Human Rights Watch
-IAE,IGO,"International Atomic Energy Agency (IAEA)"
-ICG,NGO,International Crisis Group
-ICJ,IGO,"International Court of Justice (ICJ)"
-ICO,IGO,"International Cocoa Organization (ICCO)"
-ICRC,NGO,International Fed. of Red Cross and Red Crescent
-IDB,IGO,Islamic Development Bank
-IHF,NGO,International Helsinki Federation for Human Rights
-ILO,IGO,International Labor Organization
-IMF,IGO,"International Monetary Fund (IMF)"
-IOM,NGO,International Organization for Migration
-IPU,IGO,Inter-Parliamentary Union
-IRA,Rebel,Irish Republican Army
-IRC,NGO,Red Cross
-ISJ,Rebel,Palestinian Islamic Jihad
-ITP,IGO,Interpol
-JUR,NGO,International Commission of Jurists
-KDP,Party,"Kurdish Democratic Party (KDP)"
-KMR,Rebel,Khmer Rouge
-LAP,Party,"Liberia Action Party (d.r.)"
-LBA,Party,"Israeli Labor Party (d.r.)"
-LKD,Party,"Likud Party (d.r.)"
-LPC,Rebel,Liberia Peace Council
-LUR,Rebel,"Liberians United for Reconciliation and Democracy (LURD)"
-MAD,Rebel,"Movement for the Advancement of Democracy (MAD)"
-MDF,Rebel,Movement of Democratic Forces of Casamance
-MHP,Party,"National Action Party (MHP)"
-MRZ,Party,"Meretz Party (d.r.)"
-MSF,NGO,Medecins Sans Frontieres (Doctors Without Borders)
-MSP,Party,"Movement of the Society for Peace"
-N_D_M,Party,New Deal Movement
-NADECO,NGO,"National Democratic Coalition of Nigeria (NADECO)"
-NAT,IGO,"North Atlantic Treaty Organization (NATO)"
-NDP,Party,"National Democratic Party of Liberia (d.r.)"
-NON,IGO,Organization of Non-Aligned Countries
-NPF,Party,"National Patriotic Front of Liberia (NPFL) (d.r.)"
-OAS,IGO,Organization of American States
-OAU,IGO,"Organization of African Unity (OAU)"
-OIC,IGO,"Organization of Islamic Conferences (OIC)"
-OPC,IGO,"Organization of Petroleum Exporting Countries (OPEC)"
-OSCE,IGO,"Council of Security and Cooperation in Europe (OSCE)"
-PFL,Rebel,"People’s Front for the Liberation of Palestine (PFLP)"
-PKK,Rebel,"Kurdistan Workers’ Party (PKK)"
-PLF,Rebel,Palestine Liberation Front
-PLO,Organization,Palestine Liberation Organization
-PMD,Rebel,People's Mujahedeen
-PRC,IGO,Paris Club
-RCR,NGO,Red Crescent
-REP,Party,"Welfare Party (Refah) (d.r.)"
-RND,Party,Democratic National Rally
-RPF,Government,"Rwandan Patriotic Front (d.r.)"
-RUF,Rebel,Revolutionary United Front
-SAA,IGO,South Asian Association
-SAD,IGO,Southern African Development Community
-SEATO,IGO,Southeast Asia Collective Defense Treaty (SEATO)
-SHA,Party,"Shas Party (d.r.)"
-SLA,Rebel,South Lebanon Army
-SPL,Rebel,Sudan People’s Liberation Army
-SRP,Government,Bosnian Serb Republika Srpska
-TAL,Rebel,"Taliban (d.r.)"
-UEM,IGO,Economic and Monetary Union of West Africa (UEMOA)
-ULM,Rebel,United Liberation Front for Democracy
-UNI,Rebel,"National Union for the Total Independence of Angola (UNITA)"
-UNO,IGO,United Nations
-UPP,Party,"United People’s Party (d.r.)"
-WAS,IGO,"Economic Community of West African States (ECOWAS)"
-WBK,IGO,World Bank
-WEF,NGO,World Economic Forum
-WHO,IGO,World Health Organization
-WTO,IGO,World Trade Organization
-XFM,NGO,Oxfam
+BHF,정부,"보스니아 헤르체고비나 연방"
+FTA,정부,"파타"
+HAM,정부,"하마스"
+RPF,정부,"르완다 애국 전선"
+SRP,정부,"스릅스카 공화국"
+ABD,국제기구,"아프리카 경제 개발을 위한 아랍은행"
+ACC,국제기구,"아랍 협력 위원회"
+ADB,국제기구,"아시아 개발 은행"
+AEU,국제기구,"아랍 경제 동맹"
+AFB,국제기구,"아프리카 개발 은행"
+AMF,국제기구,"아랍 통화 기금"
+AMU,국제기구,"아랍 마그레브 연합"
+APE,국제기구,"아랍 석유 수출국 기구(OAPEC)"
+ARL,국제기구,"아랍 연맹"
+ASN,국제기구,"동남아시아 국가 연합(ASEAN)"
+ATD,국제기구,"동남아프리카 무역 개발 은행"
+BCA,국제기구,"중앙아프리카 국가 은행(BEAC)"
+BIS,국제기구,"국제 결제 은행"
+CES,국제기구,"동남아프리카 공동시장"
+CFA,국제기구,"아프리카 프랑 공동체"
+CIS,국제기구,"독립국가연합"
+COE,국제기구,"유럽 평의회"
+CPA,국제기구,"코코아 생산국 연합"
+CPC,국제기구,"커피 생산국 연합"
+CSS,국제기구,"사헬-사하라 국가 공동체(CENSAD)"
+CWN,국제기구,"영연방"
+EAC,국제기구,"동아프리카 공동체"
+EBR,국제기구,"유럽 부흥 개발 은행"
+ECA,국제기구,"중앙아프리카 경제 공동체"
+EEC,국제기구,"유럽 연합"
+EFT,국제기구,"유럽 자유 무역 연합"
+FAO,국제기구,"유엔 식량 농업 기구"
+GCC,국제기구,"걸프 협력 회의"
+GOE,국제기구,"G8 (주요 8개국)"
+GOS,국제기구,"G7 (주요 7개국)"
+GSS,국제기구,"77 그룹"
+HCR,국제기구,"유엔 난민 고등 판무관 사무소"
+HIP,국제기구,"고채무 빈곤국"
+IAC,국제기구,"아프리카 커피 기구(IACO)"
+IAD,국제기구,"정부간 개발 기구(IGAD)"
+IAE,국제기구,"국제 원자력 기구(IAEA)"
+ICC,국제기구,"국제 형사 재판소"
+ICJ,국제기구,"국제 사법 재판소(ICJ)"
+ICO,국제기구,"국제 코코아 기구(ICCO)"
+IDB,국제기구,"이슬람 개발 은행"
+ILO,국제기구,"국제 노동 기구"
+IMF,국제기구,"국제 통화 기금(IMF)"
+IPU,국제기구,"국제의회연맹"
+ITP,국제기구,"인터폴"
+KID,국제기구,"유엔 아동 기금(UNICEF)"
+NAT,국제기구,"북대서양 조약 기구(NATO)"
+NEP,국제기구,"아프리카 개발을 위한 새로운 파트너십"
+NON,국제기구,"비동맹 운동"
+OAS,국제기구,"미주 기구"
+OAU,국제기구,"아프리카 통일 기구(OAU)"
+OIC,국제기구,"이슬람 협력 기구(OIC)"
+OPC,국제기구,"석유 수출국 기구(OPEC)"
+OSCE,국제기구,"유럽 안보 협력 기구(OSCE)"
+PAP,국제기구,"범아프리카 의회"
+PRC,국제기구,"파리 클럽"
+SAA,국제기구,"남아시아 지역 협력 연합"
+SAD,국제기구,"남부 아프리카 개발 공동체"
+SEATO,국제기구,"동남아시아 조약 기구(SEATO)"
+UEM,국제기구,"서아프리카 경제 통화 동맹(UEMOA)"
+UNO,국제기구,"유엔(UN)"
+WAD,국제기구,"서아프리카 개발 은행"
+WAM,국제기구,"서아프리카 통화 동맹"
+WAS,국제기구,"서아프리카 경제 공동체(ECOWAS)"
+WBK,국제기구,"세계은행"
+WCT,국제기구,"국제 전범 재판소"
+WFP,국제기구,"세계 식량 계획"
+WHO,국제기구,"세계 보건 기구(WHO)"
+WTO,국제기구,"세계 무역 기구(WTO)"
+ALQ,국제무장단체,"알카에다"
+PLO,단체,"팔레스타인 해방 기구"
+AMN,비정부기구,"국제앰네스티"
+CFD,비정부기구,"민주주의를 위한 캠페인"
+CRC,비정부기구,"국제 적십자·적신월사 연맹(ICRC)"
+FID,비정부기구,"국제 인권 연맹(FIDH)"
+GRP,비정부기구,"그린피스"
+HRW,비정부기구,"휴먼 라이츠 워치"
+ICG,비정부기구,"국제 위기 그룹"
+ICRC,비정부기구,"국제 적십자 위원회"
+IHF,비정부기구,"국제 헬싱키 인권 연맹"
+IOM,비정부기구,"국제 이주 기구"
+IRC,비정부기구,"국제 적십자사"
+JUR,비정부기구,"국제 법학자 위원회"
+MSF,비정부기구,"국경 없는 의사회"
+NADECO,비정부기구,"나이지리아 국가 민주 연합(NADECO)"
+RCR,비정부기구,"적신월사"
+WEF,비정부기구,"세계 경제 포럼"
+XFM,비정부기구,"옥스팜"
+AKP,정당,"정의개발당(AKP)"
+ALC,정당,"전 라이베리아 연합당"
+ANP,정당,"조국당(ANAP)"
+BTH,정당,"바트당"
+CHP,정당,"공화인민당(CHP)"
+CMN,정당,"공산당"
+DSP,정당,"민주좌파당(DSP)"
+DTP,정당,"민주사회당(DTP)"
+DYP,정당,"정도당(DYP)"
+ENN,정당,"엔나흐다 운동"
+FAZ,정당,"미덕당"
+FIS,정당,"이슬람 구국 전선"
+FLN,정당,"민족해방전선"
+HDP,정당,"민주인민당(DEHAP/HADEP)"
+KDP,정당,"쿠르드 민주당(KDP)"
+LAP,정당,"라이베리아 행동당"
+LBA,정당,"이스라엘 노동당"
+LKD,정당,"리쿠드당"
+MHP,정당,"민족주의자 운동당(MHP)"
+MRZ,정당,"메레츠당"
+MSP,정당,"평화 사회 운동"
+NDM,정당,"신거래 운동"
+NDP,정당,"국가 민주당"
+NPF,정당,"국가 애국 전선(NPFL)"
+REP,정당,"복지당"
+RND,정당,"민주 국민 연합"
+SHA,정당,"샤스당"
+UPP,정당,"연합 인민당"
+AAM,반군,"알아크사 순교 여단"
+AML,반군,"아말 민병대"
+ANO,반군,"아부 니달 조직"
+DFL,반군,"팔레스타인 해방민주전선(DFLP)"
+GIA,반군,"무장 이슬람 그룹(GIA)"
+HEZ,반군,"헤즈볼라"
+IRA,반군,"아일랜드 공화국군"
+ISJ,반군,"팔레스타인 이슬람 지하드"
+KMR,반군,"크메르 루주"
+LPC,반군,"라이베리아 평화 위원회"
+LUR,반군,"라이베리아 화해 민주 연합(LURD)"
+MAD,반군,"민주주의 발전 운동(MAD)"
+MDF,반군,"카자망스 민주군 운동"
+PFL,반군,"팔레스타인 해방인민전선(PFLP)"
+PKK,반군,"쿠르디스탄 노동자당(PKK)"
+PLF,반군,"팔레스타인 해방 전선"
+PMD,반군,"인민 무자헤딘"
+RUF,반군,"혁명 연합 전선"
+SLA,반군,"남리비아군"
+SPL,반군,"수단 인민 해방군"
+TAL,반군,"탈레반"
+ULM,반군,"민주주의를 위한 연합 해방 운동"
+UNI,반군,"앙골라 완전 독립 민족 동맹(UNITA)"
+TAM,반군,"타밀 반군"
+LTTE,반군,"타밀 엘람 해방 호랑이(LTTE)"

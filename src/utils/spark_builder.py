@@ -10,20 +10,18 @@ def get_spark_session(app_name: str, master: str = None) -> SparkSession:
     """
     builder = (
         SparkSession.builder.appName(app_name)
-        # Spark 자원 독점 방지 설정
-        .config("spark.cores.max", "2")
         # --- S3 (MinIO) 접속 설정 ---
         .config(
             "spark.hadoop.fs.s3a.endpoint",
-            os.getenv("MINIO_ENDPOINT", "http://minio:9000"),
+            os.getenv("MINIO_ENDPOINT"),
         )
         .config(
             "spark.hadoop.fs.s3a.access.key",
-            os.getenv("MINIO_ACCESS_KEY", "minioadmin"),
+            os.getenv("MINIO_ROOT_USER"),
         )
         .config(
             "spark.hadoop.fs.s3a.secret.key",
-            os.getenv("MINIO_SECRET_KEY", "minioadmin"),
+            os.getenv("MINIO_ROOT_PASSWORD"),
         )
         .config("spark.hadoop.fs.s3a.path.style.access", "true")
         .config("spark.hadoop.fs.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
@@ -43,6 +41,10 @@ def get_spark_session(app_name: str, master: str = None) -> SparkSession:
             "spark.hadoop.hive.metastore.uris",
             os.getenv("HIVE_METASTORE_URIS", "thrift://hive-metastore:9083"),
         )
+        # 시간 해석기 옛날 버전을 사용하도록 설정
+        .config("spark.sql.legacy.timeParserPolicy", "LEGACY")
+        # Spark 세션 타임존을 UTC로 설정 (시간 동기화)
+        .config("spark.sql.session.timeZone", "UTC")
         .enableHiveSupport()
     )
 

@@ -186,7 +186,7 @@ class GDELTSchemas:
         """
         Silver Layer Events 스키마 (GDELT 2.0 코드북 완전 준수)
 
-        [팀원명]이 설계한 완전체 스키마를 기준으로 구현
+        DE2님이 설계한 완전체 스키마를 기준으로 구현
         DA팀이 이미 이 스키마 기준으로 dbt 모델링 작업을 수행함
         """
         return StructType(
@@ -258,8 +258,13 @@ class GDELTSchemas:
                 StructField("date_added", TimestampType(), True),
                 StructField("source_url", StringType(), True),
                 # 메타데이터
-                StructField("processed_time", TimestampType(), False),
+                StructField("processed_at", TimestampType(), False),
                 StructField("source_file", StringType(), True),
+                # 파티션 컬럼들
+                StructField("year", IntegerType(), True),
+                StructField("month", IntegerType(), True),
+                StructField("day", IntegerType(), True),
+                StructField("hour", IntegerType(), True),
             ]
         )
 
@@ -301,53 +306,12 @@ class GDELTSchemas:
                 StructField("v2_enhanced_themes", StringType(), True),  # 테마
                 StructField("amounts", StringType(), True),  # 금액/수량
                 # 메타데이터
-                StructField("processed_time", TimestampType(), False),
-            ]
-        )
-
-    @staticmethod
-    def get_silver_mentions_schema() -> StructType:
-        """Silver Layer Mentions 스키마 (정제된 버전)"""
-        return StructType(
-            [
-                StructField("global_event_id", StringType(), False),
-                StructField("mention_time_date", DateType(), True),
-                StructField("mention_type", IntegerType(), True),
-                StructField("mention_source_name", StringType(), True),
-                StructField("document_identifier", StringType(), True),  # 조인키
-                StructField("confidence", IntegerType(), True),
-                StructField("mention_doc_tone", DoubleType(), True),
-                StructField("mention_doc_len", IntegerType(), True),
-                # 처리 메타데이터
-                StructField("processed_at", TimestampType(), True),
-                StructField("data_quality_score", DoubleType(), True),
-            ]
-        )
-
-    @staticmethod
-    def get_silver_gkg_schema() -> StructType:
-        """Silver Layer GKG 스키마 (정제된 버전)"""
-        return StructType(
-            [
-                StructField("gkg_record_id", StringType(), False),
-                StructField("date", StringType(), True),
-                StructField("source_common_name", StringType(), True),
-                StructField("document_identifier", StringType(), True),  # 조인키
-                # 파싱된 복합 필드들
-                StructField("themes", ArrayType(StringType()), True),
-                StructField("locations", ArrayType(StringType()), True),
-                StructField("persons", ArrayType(StringType()), True),
-                StructField("organizations", ArrayType(StringType()), True),
-                # Tone 정보 (파싱됨)
-                StructField("tone_positive", DoubleType(), True),
-                StructField("tone_negative", DoubleType(), True),
-                StructField("tone_polarity", DoubleType(), True),
-                StructField("tone_activity", DoubleType(), True),
-                StructField("tone_self_reference", DoubleType(), True),
-                StructField("tone_word_count", IntegerType(), True),
-                # 처리 메타데이터
-                StructField("processed_at", TimestampType(), True),
-                StructField("data_quality_score", DoubleType(), True),
+                StructField("processed_at", TimestampType(), False),
+                # 파티션 컬럼들
+                StructField("year", IntegerType(), True),
+                StructField("month", IntegerType(), True),
+                StructField("day", IntegerType(), True),
+                StructField("hour", IntegerType(), True),
             ]
         )
 

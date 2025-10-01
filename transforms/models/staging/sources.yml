@@ -1,24 +1,221 @@
 version: 2
 
 sources:
-  - name: gdelt_silver_layer 
+  - name: gdelt_silver_layer
     description: "MinIO S3에 저장된 GDELT Silver Layer (Delta Lake 형식)"
-    schema: default 
-    tables: 
-      - name: gdelt_silver_events
+    schema: silver
+    tables:
+      - name: gdelt_events
         description: "15분마다 수집되는 GDELT 실시간 이벤트 데이터 (Silver)"
         columns:
+          # 기본 정보
           - name: global_event_id
             description: "GDELT 고유 이벤트 ID"
-          - name: day
-            description: "이벤트 발생일"
-          - name: actor1_country_code
-            description: "주체 국가 코드 (ISO 3자리)"
+          - name: event_date
+            description: "이벤트 발생일(YYYYMMDD 형식)"
+
+          # 이벤트 속성
+          - name: is_root_event
+            description: "핵심(루트) 이벤트 여부(1=루트, 0=아님)"
+          - name: event_code
+            description: "CAMEO 이벤트 상세 코드(4자리)"
+          - name: event_base_code
+            description: "CAMEO 이벤트 중분류 코드(3자리)"
           - name: event_root_code
-            description: "CAMEO 이벤트 루트 코드"
+            description: "CAMEO 이벤트 대분류 코드(2자리)"
+          - name: quad_class
+            description: "이벤트를 4가지(협력/갈등)로 분류한 코드"
+          - name: goldstein_scale
+            description: "이벤트의 강도를 나타내는 점수(-10 ~ +10)"
+          - name: num_mentions
+            description: "총 언급 횟수"
+          - name: num_sources
+            description: "총 출처 수"
+          - name: num_articles
+            description: "총 기사 수"
           - name: avg_tone
-            description: "이벤트 톤 (-100~100, 부정적~긍정적)"
+            description: "관련 기사의 평균 톤(감성 점수)"
+
+          # 행위자1(Actor1) 속성
+          - name: actor1_code
+            description: "행위자1 전체 코드"
           - name: actor1_name
-            description: "주체 이름"
-          - name: processed_time
+            description: "행위자1 이름"
+          - name: actor1_country_code
+            description: "행위자1 소속 국가 코드(ISO 3자리)"
+          - name: actor1_known_group_code
+            description: "행위자1 알려진 그룹 코드"
+          - name: actor1_ethnic_code
+            description: "행위자1 민족 코드"
+          - name: actor1_religion1_code
+            description: "행위자1 주 종교 코드"
+          - name: actor1_religion2_code
+            description: "행위자1 부가 종교 코드"
+          - name: actor1_type1_code
+            description: "행위자1 주 역할 코드"
+          - name: actor1_type2_code
+            description: "행위자1 부가 역할 코드"
+          - name: actor1_type3_code
+            description: "행위자1 추가 역할 코드"
+
+          # 행위자2(Actor2) 속성
+          - name: actor2_code
+            description: "행위자2 전체 코드"
+          - name: actor2_name
+            description: "행위자2 이름"
+          - name: actor2_country_code
+            description: "행위자2 소속 국가 코드(ISO 3자리)"
+          - name: actor2_known_group_code
+            description: "행위자2 알려진 그룹 코드"
+          - name: actor2_ethnic_code
+            description: "행위자2 민족 코드"
+          - name: actor2_religion1_code
+            description: "행위자2 주 종교 코드"
+          - name: actor2_religion2_code
+            description: "행위자2 부가 종교 코드"
+          - name: actor2_type1_code
+            description: "행위자2 주 역할 코드"
+          - name: actor2_type2_code
+            description: "행위자2 부가 역할 코드"
+          - name: actor2_type3_code
+            description: "행위자2 추가 역할 코드"
+          
+          # 행위자1 위치 정보
+          - name: actor1_geo_type
+            description: "행위자1 위치의 타입"
+          - name: actor1_geo_fullname
+            description: "행위자1 위치의 전체 이름"
+          - name: actor1_geo_country_code
+            description: "행위자1 위치의 국가 코드(FIPS 2자리)"
+          - name: actor1_geo_adm1_code
+            description: "행위자1 위치의 1단계 행정구역 코드(FIPS)"
+          - name: actor1_geo_lat
+            description: "행위자1 위치의 위도"
+          - name: actor1_geo_long
+            description: "행위자1 위치의 경도"
+          - name: actor1_geo_feature_id
+            description: "행위자1 위치의 특성 ID"
+          
+          # 행위자2 지리 정보
+          - name: actor2_geo_type
+            description: "행위자2 위치의 타입"
+          - name: actor2_geo_fullname
+            description: "행위자2 위치의 전체 이름"
+          - name: actor2_geo_country_code
+            description: "행위자2 위치의 국가 코드(FIPS 2자리)"
+          - name: actor2_geo_adm1_code
+            description: "행위자2 위치의 1단계 행정구역 코드(FIPS)"
+          - name: actor2_geo_lat
+            description: "행위자2 위치의 위도"
+          - name: actor2_geo_long
+            description: "행위자2 위치의 경도"
+          - name: actor2_geo_feature_id
+            description: "행위자2 위치의 특성 ID"
+          
+          # 이벤트 발생지 지리 정보
+          - name: action_geo_type
+            description: "이벤트 발생지의 타입"
+          - name: action_geo_fullname
+            description: "이벤트 발생지 전체 이름"
+          - name: action_geo_country_code
+            description: "이벤트 발생지 국가 코드(FIPS 2자리)"
+          - name: action_geo_adm1_code
+            description: "이벤트 발생지 1단계 행정구역 코드(FIPS)"
+          - name: action_geo_lat
+            description: "이벤트 발생지 위도"
+          - name: action_geo_long
+            description: "이벤트 발생지 경도"
+          - name: action_geo_feature_id
+            description: "이벤트 발생지 특성 ID"
+          
+          # 메타 데이터
+          - name: date_added
+            description: "데이터 추가일"
+          - name: source_url
+            description: "이벤트의 원본 기사 URL"
+          - name: processed_at
             description: "데이터 처리 시간"
+          - name: source_file
+            description: "소스 파일명"
+
+          # 파티션 컬럼
+          - name: year
+            description: "(파티션) 연도"
+          - name: month
+            description: "(파티션) 월"
+          - name: day
+            description: "(파티션) 일"
+          - name: hour
+            description: "(파티션) 시간"
+
+      # 상세 테이블(Events + GKG + Mentions) 정의
+      - name: gdelt_events_detailed
+        description: "[Silver] Events, GKG, Mentions 데이터를 조인한 상세 이벤트 정보 테이블"
+        columns:
+          # Events 테이블
+          - name: global_event_id
+            description: "GDELT 고유 이벤트 ID"
+          - name: event_date
+            description: "이벤트 발생일(YYYYMMDD 형식)"
+          - name: event_code
+            description: "CAMEO 이벤트 상세 코드(4자리)"
+          - name: event_base_code
+            description: "CAMEO 이벤트 중분류 코드(3자리)"
+          - name: goldstein_scale
+            description: "이벤트의 강도를 나타내는 점수(-10 ~ +10)"
+          - name: num_mentions
+            description: "총 언급 횟수"
+          - name: num_articles
+            description: "총 기사 수"
+          - name: avg_tone
+            description: "관련 기사의 평균 톤(감성 점수)"
+          - name: actor1_code
+            description: "행위자1 전체 코드"
+          - name: actor1_name
+            description: "행위자1 이름"
+          - name: actor1_country_code
+            description: "행위자1 소속 국가 코드(ISO 3자리)"
+          - name: actor2_code
+            description: "행위자2 전체 코드"
+          - name: actor2_name
+            description: "행위자2 이름"
+          - name: actor2_country_code
+            description: "행위자2 소속 국가 코드(ISO 3자리)"
+          - name: action_geo_fullname
+            description: "이벤트 발생지 전체 이름"
+          - name: action_geo_country_code
+            description: "이벤트 발생지 국가 코드(FIPS 2자리)"
+          - name: action_geo_lat
+            description: "이벤트 발생지 위도"
+          - name: action_geo_long
+            description: "이벤트 발생지 경도"
+          - name: source_url
+            description: "이벤트의 원본 기사 URL"
+          
+          # Mentions 테이블
+          - name: mention_source_name
+            description: "이벤트를 언급한 언론사 이름"
+          - name: mention_doc_tone
+            description: "언급 기사의 톤(감성 점수)"
+
+          # GKG 테이블
+          - name: v2_persons
+            description: "기사에 언급된 관련 인물 목록"
+          - name: v2_organizations
+            description: "기사에 언급된 관련 조직 목록"
+          - name: v2_enhanced_themes
+            description: "기사의 주제를 나타내는 GKG 테마 목록"
+          - name: amounts
+            description: "기사에 언급된 금액/규모 정보"
+          - name: processed_at
+            description: "데이터 처리 시간"
+
+            # 파티션 컬럼
+          - name: year
+            description: "(파티션) 연도"
+          - name: month
+            description: "(파티션) 월"
+          - name: day
+            description: "(파티션) 일"
+          - name: hour
+            description: "(파티션) 시간"

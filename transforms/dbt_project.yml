@@ -33,13 +33,18 @@ models:
   analytics_dbt:
     staging:
       +materialized: view
-      +schema: silver
+      +schema: "staging_{{ target.name }}"
     marts:
-      +materialized: table
+      +materialized: incremental # Gold 모델은 증분 모델을 기본으로
       +file_format: delta
-      +schema: gold
+      +schema: "gold_{{ target.name }}"
 
-# dbt run 시작 시 가장 먼저 이 매크로를 실행하라는 명령
+seeds:
+  analytics_dbt:
+    +schema: "seed_{{ target.name }}"
+
+# dbt 실행 전 필요한 스키마들 자동 생성
 on-run-start:
-  - "{{ create_schema(relation=none, schema_name='silver') }}"
-  - "{{ create_schema(relation=none, schema_name='gold') }}"
+  - "{{ create_schema(none, 'seed_' ~ target.name) }}"
+  - "{{ create_schema(none, 'staging_' ~ target.name) }}"
+  - "{{ create_schema(none, 'gold_' ~ target.name) }}"

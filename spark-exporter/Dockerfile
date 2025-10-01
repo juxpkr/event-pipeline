@@ -18,5 +18,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # 5. 나머지 코드 전체를 복사한다.
 COPY . .
 
+COPY wait-for-it.sh /usr/local/bin/wait-for-it.sh
+RUN chmod +x /usr/local/bin/wait-for-it.sh
+
 # 6. 컨테이너가 시작될 때, main.py를 실행
 CMD ["python", "main.py"]

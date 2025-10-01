@@ -11,7 +11,11 @@ echo "Postgres connection already verified by wait-for-it.sh"
 #     sleep 5
 # done
 
-# 2. 매번 초기화 실행 (권한 문제 방지)
+# 2. Superset 설정 파일 복사
+echo "Copying Superset configuration..."
+cp /config/superset_config.py /app/superset_home/
+
+# 3. 매번 초기화 실행 (권한 문제 방지)
 echo "Initializing Superset (every startup for stability)..."
 
 # Upgrade Superset database

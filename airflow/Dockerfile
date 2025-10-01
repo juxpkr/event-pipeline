@@ -61,6 +61,8 @@ COPY monitoring/jmx/spark_jmx_config.yml /opt/spark/conf/jmx-config.yml
 COPY scripts/wait-for-it.sh /usr/local/bin/wait-for-it.sh
 RUN chmod +x /usr/local/bin/wait-for-it.sh
 
+RUN groupadd --gid 999 docker_in_docker && usermod -aG docker_in_docker airflow
+
 # 9. pip install을 실행하기 전에, 반드시 airflow 사용자로 돌아와야 함
 USER airflow
 
