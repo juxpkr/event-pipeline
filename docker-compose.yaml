@@ -193,9 +193,9 @@ services:
       - spark-jars:/opt/spark/jars
     environment:
       # 동적 자원 할당
-      SPARK_DYNAMIC_cores_max: 8
-      SPARK_DYNAMIC_executor_memory: 4g
-      SPARK_DYNAMIC_executor_cores: 2
+      SPARK_DYNAMIC_cores_max: 8          # 노드당 최대 8코어
+      SPARK_DYNAMIC_executor_memory: 24g  # executor당 24G까지 허용
+      SPARK_DYNAMIC_executor_cores: 6     # executor당 6코어까지 서룡
     env_file:
       - ./.env
       - ./config/spark/spark.env
