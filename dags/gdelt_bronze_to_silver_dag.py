@@ -98,7 +98,7 @@ with DAG(
             'spark.driver.cores': '2',
 
             # Executor 
-            'spark.executor.instances': '6',
+            'spark.executor.instances': '5',
             'spark.executor.memory': '24g',
             'spark.executor.cores': '6',
 
@@ -137,7 +137,7 @@ with DAG(
             'spark.driver.cores': '2',
 
             # Executor
-            'spark.executor.instances': '6',
+            'spark.executor.instances': '5',
             'spark.executor.memory': '24g',
             'spark.executor.cores': '6',
 
@@ -152,12 +152,6 @@ with DAG(
             # AQE 활성화: 스파크가 스스로 최적화
             'spark.sql.adaptive.enabled': 'true',
             'spark.sql.adaptive.coalescePartitions.enabled': 'true',
-
-            #"spark.executor.instances": "5",
-            #"spark.executor.memory": "8g",
-            #"spark.executor.cores": "2",
-            #"spark.driver.memory": "4g",
-            #"spark.sql.shuffle.partitions": "100",
         },
         doc_md="""
         Silver Layer Processing
