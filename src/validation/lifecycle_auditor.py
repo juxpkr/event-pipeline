@@ -356,7 +356,13 @@ class LifecycleAuditor:
             )
             if expired_count > 0:
                 logger.info(f"Expired {expired_count} old waiting events")
-                # 데이터가 변경되었으므로 캐시 새로고침
+
+            # 2. EXPIRED 이벤트 삭제 (17시간 기준)
+            self.lifecycle_updater.delete_expired_events(hours_threshold=17)
+            logger.info("Deleted old expired events")
+
+            # 데이터가 변경되었으므로 캐시 새로고침
+            if expired_count > 0:
                 self.lifecycle_df.unpersist()
                 self.lifecycle_df = (
                     self.spark.read.format("delta")

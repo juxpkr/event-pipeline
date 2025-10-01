@@ -147,6 +147,20 @@ class EventLifecycleUpdater:
         print(f"Expired {expired_count} events older than {hours_threshold} hours")
         return expired_count
 
+    def delete_expired_events(self, hours_threshold: int = 17):
+        """N시간 지난 EXPIRED 이벤트 삭제"""
+        cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours_threshold)
+
+        delete_sql = f"""
+        DELETE FROM delta.`{self.lifecycle_path}`
+        WHERE status = 'EXPIRED'
+        AND event_type IN ('EVENT', 'GKG')
+        AND audit.bronze_arrival_time < '{cutoff_time}'
+        """
+
+        self.spark.sql(delete_sql)
+        print(f"Deleted EXPIRED events older than {hours_threshold} hours")
+
     def get_lifecycle_stats(self, hours_back: int = 24) -> dict:
         """최근 N시간 lifecycle 통계 조회"""
         cutoff_time = datetime.now(timezone.utc) - timedelta(hours=hours_back)
