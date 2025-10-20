@@ -125,16 +125,16 @@ Silver Layer의 데이터가 준비되면, **dbt**가 복잡한 비즈니스 로
 `섹션 4`에서 언급했듯이, 프로젝트 안정화 초기에는 `4.1`의 클러스터 문제(커넥션 누수, 의존성 충돌 등)와 `4.2`의 비효율적인 조인 로직 등 복합적인 문제들이 동시에 발생했습니다.
 
 아래는 이 문제 해결 전(Before), 파이프라인 Health가 UNHEALTHY 상태에 머무르며 조인 성공률이 8%대에 불과했던 실제 대시보드 화면입니다.
-![data_dashboard_before](data_dashboard_before.png)
+![data_dashboard_before](images/data_dashboard_before.png)
 
 `섹션 4`의 문제들을 모두 해결하고 아키텍처를 개선한 이후(After), 조인 성공률 100%를 달성하며 파이프라인이 HEALTHY 상태를 회복한 것을 볼 수 있습니다.
-![data_dashboard_after](data_dashboard_after.png)
+![data_dashboard_after](images/data_dashboard_after.png)
 
 #### 5.2 시스템 관측 가능성 (Observability) 확보
 `4.3`에서 설명한 Custom Spark Exporter를 개발하여, 기존 JMX Exporter나 Prometheus Servlet 방식의 한계를 극복하고 Spark의 상세 내부 지표(Driver/Executor의 CPU, Memory, GC 등)를 실시간으로 수집했습니다.
 
 아래는 이 Exporter를 통해 구축한 Spark 리소스 모니터링 대시보드의 실제 운영 화면으로, 이를 통해 성능 병목을 데이터 기반으로 진단하고 튜닝할 수 있는 심층적인 관측 가능성을 확보했습니다.
-![spark-metrics-final](spark-metrics-final.png)
+![spark-metrics-final](images/spark-metrics-final.png)
 ### 6. 기술 스택 (Tech Stack)
 - **Data Pipeline**: `Kafka`, `Spark`, `Airflow`, `dbt`, `Hive Metastore`, `Delta Lake`
 - **Infrastructure**: `Docker`, `Docker Swarm`, `MinIO`, `PostgreSQL`
