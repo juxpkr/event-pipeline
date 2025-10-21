@@ -1,3 +1,4 @@
+**[💼Main Portfolio (juseong.dev)](https://www.juseong.dev/)** 
 
 ### 1. 프로젝트 개요 (Overview)
 이 프로젝트는 전 세계 뉴스 데이터(GDELT)를 실시간으로 처리하여, 다차원적인 글로벌 이벤트 분석이 가능한 End-to-End 데이터 플랫폼을 구축하는 것을 목표로 합니다.
