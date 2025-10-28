@@ -108,7 +108,7 @@ Silver Layer의 데이터가 준비되면, **dbt**가 복잡한 비즈니스 로
 - **해결:** 분석 결과, 이미 종료된 Airflow 컨테이너가 반납하지 않은 100개 이상의 비정상 '유휴 커넥션(Idle Connection)'이 모든 커넥션 풀을 독점하고 있음을 데이터로 확인했습니다 . 이는 분산 환경의 특성을 고려하지 않은 Airflow의 기본 설정 문제로 인한 '커넥션 누수(Connection Leak)'였습니다. Airflow의 `sql_alchemy_pool_recycle(300초)` 설정을 적용하여, DB가 5분 이상 유휴 상태인 커넥션을 선제적으로 회수하도록 튜닝하여 문제를 원천 차단했습니다 .
 
 #### 4.3 Spark Job 연쇄 실패 및 메모리 튜닝
-- **문제:** 위 DB 장애와는 **별개로**, Spark Job이 32GB VM 환경임에도 불구하고 반복적으로 실패했습니다 .
+- **문제:** 위 DB 장애와는 별개로, Spark Job이 32GB VM 환경임에도 불구하고 반복적으로 실패했습니다 .
 - **분석:** `dmesg` 로그를 통해 커널 레벨의 OOM Killer를 의심했으나, Spark 실패와 직접적인 관련이 없음을 확인했습니다 . `Spark UI`의 Executors 탭 및 로그를 분석하여, 개별 Executor에 할당된 메모리가 수백 MB 수준으로 매우 낮게 설정되어 있음을 발견했습니다. 이는 가용한 VM 자원에 비해 현저히 낮은 수준으로, 작업 수행 중 메모리 부족으로 인한 실패의 직접적인 원인이었습니다.
 - **해결:** Airflow `SparkSubmitOperator`의 `conf` 파라미터를 통해 `spark.executor.memory` 및 `spark.executor.cores` 설정을 명시적으로 지정하고, 워크로드에 맞게 상향 조정하여 시스템 안정성을 확보했습니다 .
 
@@ -128,7 +128,7 @@ Silver Layer의 데이터가 준비되면, **dbt**가 복잡한 비즈니스 로
 #### 4.5 Custom 모니터링 시스템 구축
 저는 파이프라인의 모든 동작을 투명하게 관측하고, 장애의 근본 원인을 진단하기 위해 애플리케이션 레벨과 데이터 레벨의 2단계 Custom 모니터링 시스템을 직접 설계하고 구축했습니다.
 #### 4.5.1 애플리케이션 레벨: Spark Custom Exporter 개발
-- **문제**: Prometheus의 기본 JMX Exporter 및 내장 Servlet 방식으로는 Spark의 상세 내부 동작(Executor 메모리, GC 등)을 파악하여 성능 병목을 진단하는 데 한계가 있었습니다. 특히 32GB VM에서도 반복적인 Job 실패 문제 발생 시, 원인 규명에 어려움을 겪었습니다.
+- **문제**: Prometheus의 기본 JMX Exporter 및 내장 Servlet 방식으로는 Spark의 상세 내부 동작(Executor 메모리, GC, Shuffle 지표 등)을 파악하여 성능 병목을 진단하는 데 한계가 있었습니다. 특히 32GB VM에서도 반복적인 Job 실패 문제 발생 시, 원인 규명에 어려움을 겪었습니다.
 - **해결**: 이러한 관측 가능성(Observability) 확보를 위해, Spark REST API를 직접 폴링하는 Python 기반 Custom Exporter를 개발했습니다. 기존 방식들의 한계(상세 지표 부족, Swarm 환경 서비스 디스커버리 불안정)를 극복하고, 네트워크 환경에 구애받지 않는 안정적인 메트릭 수집 시스템을 구축했습니다.
 - **성과**: 이 Exporter를 통해 Executor, Driver 단위의 핵심 시스템 메트릭을 Grafana 대시보드로 실시간 시각화하여, 성능 병목을 데이터 기반으로 빠르게 진단하고 튜닝할 수 있는 심층적인 관측 가능성을 확보했습니다. 이는 Spark 운영의 안정성과 효율성을 높이는 기반이 되었습니다. 
 #### 4.5.2 데이터 레벨: End-to-End Lifecycle Audit 시스템 구축
