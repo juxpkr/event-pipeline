@@ -159,7 +159,7 @@ Silver Layer의 데이터가 준비되면, **dbt**가 복잡한 비즈니스 로
 아래는 이 문제 해결 전(Before), 파이프라인 Health가 UNHEALTHY 상태에 머무르며 조인 성공률이 8%대에 불과했던 실제 대시보드 화면입니다.
 ![data_dashboard_before](images/data_dashboard_before.png)
 
-`섹션 4`의 문제들을 모두 해결하고 아키텍처를 개선한 이후(After), 조인 성공률 100%를 달성하며 파이프라인이 HEALTHY 상태를 회복한 것을 볼 수 있습니다.
+`섹션 4`의 문제들을 모두 해결하고 아키텍처를 개선한 이후(After), 파이프라인이 HEALTHY 상태를 회복한 것을 볼 수 있습니다. `4.4`에서 분석했듯이 0.4%의 예외 케이스로 인해 전체 평균 조인 성공률은 99.6% 수준을 유지했으며, 아래 After 스크린샷은 예외 케이스가 없던 특정 배치가 100% 조인에 성공하며 안정적으로 운영되고 있음을 보여주는 실제 대시보드 화면입니다.
 ![data_dashboard_after](images/data_dashboard_after.png)
 
 #### 5.2 시스템 관측 가능성 (Observability) 확보
