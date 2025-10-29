@@ -60,6 +60,8 @@ pip-delete-this-directory.txt
 .env
 .env.local
 .env.*.local
+**/*.env
+!**/*.env.example
 config/*.yaml
 !config/*.example.yaml
 config/config.ini

@@ -16,3 +16,10 @@ spark-ivy-cache/
 
 # IDE 설정 파일 제외
 .vscode/
+
+# 환경 변수 파일 제외 (민감정보 보호)
+.env
+.env.local
+.env.*.local
+**/*.env
+!**/*.env.example
