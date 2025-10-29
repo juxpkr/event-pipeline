@@ -1,4 +1,0 @@
-requests
-sseclient-py
-kafka-python
-python-dotenv
