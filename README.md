@@ -173,7 +173,7 @@ Silver Layer의 데이터가 준비되면, **dbt**가 복잡한 비즈니스 로
 	- **최적화된 쿼리:** "2024년 1월" 분석 쿼리 시, Spark는 파티션 프루닝을 통해 `year=2024/month=01/` 파티션에 직접 접근합니다.
 3. `priority_date` Fallback 로직 (무결성 확보)
 	- **문제:** `priority_date` 파티셔닝의 최대 리스크는 키 값이 NULL이 되는 것입니다. NULL 키는 파티셔닝 실패 및 데이터 정합성 문제를 유발합니다.
-	- **해결:** 이 문제를 방지하기 위해, 3개 소스(Events, Mentions, GKG)의 시간 정확도를 고려하여 `F.coalesce()` Fallback 로직을 구현하여 100% 유효한 파티션 키를 보장했습니다.
+	- **해결:** 이 문제를 방지하기 위해, 3개 소스(Events, Mentions, GKG)의 시간 정확도를 고려하여 `F.coalesce()` Fallback 로직을 구현하여 유효한 파티션 키를 보장했습니다.
 
 **성과**:
 - Overview 쿼리: 파티션 프루닝으로 최근 24개 파티션만 스캔
@@ -192,7 +192,7 @@ Silver Layer의 데이터가 준비되면, **dbt**가 복잡한 비즈니스 로
 ### 5. 시스템 운영 및 결과 (System Operation & Results)
 이 프로젝트는 단순히 구축에서 끝나지 않고, 안정적인 운영을 목표로 설계되었습니다. 본 파이프라인은 8-node Docker Swarm 클러스터 환경에서 25개의 컨테이너 서비스로 운영되었습니다.
 #### 5.1 파이프라인 안정화(Before & After)
-`섹션 4`에서 언급했듯이, 프로젝트 안정화 초기에는 `4.6`의 클러스터 문제(커넥션 누수, 의존성 충돌 등)와 `4.4`의 비효율적인 조인 로직 등 복합적인 문제들이 동시에 발생했습니다.
+`섹션 4`에서 언급했듯이, 프로젝트 안정화 초기에는 `4.2`,`4.3`의 클러스터 문제(커넥션 누수, 의존성 충돌 등)와 `4.4`의 비효율적인 조인 로직 등 복합적인 문제들이 동시에 발생했습니다.
 
 아래는 이 문제 해결 전(Before), 파이프라인 Health가 UNHEALTHY 상태에 머무르며 조인 성공률이 8%대에 불과했던 실제 대시보드 화면입니다.
 ![data_dashboard_before](images/data_dashboard_before.png)
@@ -201,7 +201,7 @@ Silver Layer의 데이터가 준비되면, **dbt**가 복잡한 비즈니스 로
 ![data_dashboard_after](images/data_dashboard_after.png)
 
 #### 5.2 시스템 관측 가능성 (Observability) 확보
-`4.5`에서 설명한 Custom Spark Exporter를 개발하여, 기존 JMX Exporter나 Prometheus Servlet 방식의 한계를 극복하고 Spark의 상세 내부 지표(Driver/Executor의 CPU, Memory, GC 등)를 실시간으로 수집했습니다.
+`4.6.1`에서 설명한 Custom Spark Exporter를 개발하여, 기존 JMX Exporter나 Prometheus Servlet 방식의 한계를 극복하고 Spark의 상세 내부 지표(Driver/Executor의 CPU, Memory, GC 등)를 실시간으로 수집했습니다.
 
 아래는 이 Exporter를 통해 구축한 Spark 리소스 모니터링 대시보드의 실제 운영 화면으로, 이를 통해 성능 병목을 데이터 기반으로 진단하고 튜닝할 수 있는 심층적인 관측 가능성을 확보했습니다.
 ![spark-metrics-final](images/spark-metrics-final.png)
